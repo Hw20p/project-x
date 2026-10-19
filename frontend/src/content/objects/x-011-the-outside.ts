@@ -1,0 +1,212 @@
+import type { ContainmentObject } from '../../engine/types'
+
+// 최종 객체. 5급 일반 객체를 모두 성공한 수석에게 배정되며, 마지막 선택이 성공하면 엔딩(content/endings.ts)으로 판이 끝난다.
+export default {
+  id: 'x-011',
+  code: 'X-011',
+  name: '바깥',
+  tier: 5,
+  finale: true,
+  summary: '가장 깊은 층의 문 하나. 시설이 가둬 온 것이 아니라, 시설이 가려 온 것이 그 너머에 있다.',
+  observation: [
+    '지하 최하층, 문 하나. 손잡이는 바깥쪽에만 달려 있다.',
+    '시설의 모든 객체는 이 문에서 가까운 순서대로 발견되었다.',
+    '문 너머를 본 사람의 기록이 있다. 그 기록을 읽은 사람의 기록도 있다. 모두 같은 문장으로 시작한다. “저는 처음부터 알고 있었습니다.”',
+  ],
+  manual: [
+    '문을 열기 전에, 지금까지 관리한 모든 객체의 기록을 다시 읽는다.',
+    '문은 안쪽에서 열 수 없다. 바깥쪽 손잡이를 쥘 수 있었던 사람은 지금까지 한 명뿐이다.',
+    '(작성자 서명란은 비어 있다. 수석 관리자의 사번만 적혀 있다.)',
+  ],
+  failureTolerance: 1,
+  stages: [
+    {
+      id: 's1',
+      title: '가장 깊은 층',
+      years: 1,
+      text: '수석의 사원증으로만 내려갈 수 있는 마지막 층. 복도 끝에는 문 하나뿐이다. 바닥에는 당신이 지금까지 관리한 객체의 번호가 순서대로 새겨져 있고, 마지막 칸은 비어 있다.',
+      choices: [
+        {
+          id: 'read-floor',
+          text: '바닥의 번호를 하나씩 소리 내어 읽으며 걸어간다',
+          risk: 1,
+          baseChance: 0.78,
+          statWeights: { knowledge: 0.004, sanity: 0.003 },
+          success: {
+            text: '번호를 모두 읽자 문 앞에 닿았다. 마지막 빈칸은 당신의 사번과 정확히 같은 길이였다.',
+            effects: { knowledge: 6, reputation: 6 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '번호 하나를 건너뛰자 바닥이 한 칸 낮아졌다. 돌아오는 길이 길어졌다.',
+            effects: { sanity: -12 },
+          },
+        },
+        {
+          id: 'measure-door',
+          text: '문을 측정하고 문틀의 재질을 분석한다',
+          risk: 2,
+          baseChance: 0.6,
+          statWeights: { knowledge: 0.005 },
+          success: {
+            text: '문틀은 뼈도 돌도 아니었다. 그리고 안쪽에서 무언가 세어지고 있었다. 우리가 세는 것과 같은 속도로.',
+            effects: { knowledge: 9, reputation: 6, sanity: -4 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '측정기는 문 반대편의 값을 돌려주었다. 이쪽이 문의 반대편인 듯했다.',
+            effects: { sanity: -13 },
+          },
+        },
+        {
+          id: 'knock',
+          text: '문을 두드려 안쪽의 응답을 기다린다',
+          risk: 5,
+          baseChance: 0.2,
+          statWeights: { sanity: 0.006, knowledge: 0.004 },
+          success: {
+            text: '세 번째 노크에 응답이 왔다. 문 안쪽에서, 당신과 같은 박자로.',
+            effects: { knowledge: 14, reputation: 10, sanity: -12 },
+            finish: true,
+            endingId: 'answered',
+          },
+          failure: {
+            kind: 'death',
+            text: '응답은 오지 않았다. 대신 당신이 문 너머에서 두드리는 쪽이 되었다.',
+          },
+        },
+      ],
+    },
+    {
+      id: 's2',
+      title: '기록 보관실',
+      years: 1,
+      text: '문 옆의 보관실에는 역대 수석 관리자의 기록이 있다. 모든 기록의 첫 줄이 같다. 마지막 장은 비어 있고, 그 위에는 이미 당신의 필체로 날짜가 적혀 있다.',
+      choices: [
+        {
+          id: 'read-all',
+          text: '기록을 처음부터 끝까지 읽는다',
+          risk: 1,
+          baseChance: 0.7,
+          statWeights: { sanity: 0.004, knowledge: 0.003 },
+          success: {
+            text: '모든 수석이 같은 선택지 앞에 섰고, 서로 다른 선택을 했다. 그 선택의 결과를 쓴 사람은 아무도 없었다.',
+            effects: { knowledge: 8, reputation: 5, sanity: -6 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '읽는 도중 기록 속의 이름이 하나씩 당신의 이름으로 바뀌었다.',
+            effects: { sanity: -14 },
+          },
+        },
+        {
+          id: 'ask-predecessor',
+          text: '전임 수석을 찾아가 직접 묻는다',
+          risk: 2,
+          baseChance: 0.55,
+          statWeights: { reputation: 0.005, knowledge: 0.003 },
+          success: {
+            text: '전임은 문 쪽을 보지 않고 말했다. “열쇠를 쥔 사람은 문의 바깥에 있어야 해.” 은퇴한 지 오래된 사람이었다.',
+            effects: { knowledge: 8, reputation: 8 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '전임은 당신을 알아보지 못했다. 정확히는, 당신이 아닌 누군가를 알아보았다.',
+            effects: { sanity: -12, reputation: -4 },
+          },
+        },
+        {
+          id: 'burn-records',
+          text: '기록을 모두 태우고 처음부터 시작한다',
+          risk: 4,
+          baseChance: 0.3,
+          statWeights: { sanity: 0.005, reputation: 0.003 },
+          success: {
+            text: '기록이 타는 동안 문 쪽에서 안도하는 소리가 났다. 이해할 수 없었다.',
+            effects: { knowledge: 10, reputation: 10, sanity: -8 },
+          },
+          failure: {
+            kind: 'demotion',
+            text: '소각 기록은 감사실에 남았다. 당신은 직위를 박탈당했다. 문은 그대로였다.',
+            effects: { reputation: -14, sanity: -8 },
+          },
+        },
+      ],
+    },
+    {
+      id: 's3',
+      title: '마지막 결정',
+      years: 1,
+      text: '문 앞에 섰다. 선택지는 어디에도 적혀 있지 않다. 당신이 관리해 온 모든 객체가 이 문 앞에서 조용히 당신을 본다. 지금 이 순간 당신의 사원증이 수석 관리자의 마지막 서명이 된다.',
+      choices: [
+        {
+          id: 'walk-away',
+          text: '아무것도 하지 않고 문을 등지고 걸어 나간다',
+          risk: 1,
+          baseChance: 0.8,
+          statWeights: { sanity: 0.003 },
+          success: {
+            text: '엘리베이터는 정확히 한 번 멈췄다. 지상으로 나왔을 때는 아침이었다. 당신은 사원증을 반납했다.',
+            effects: { sanity: 10 },
+            endingId: 'walkaway',
+          },
+          failure: {
+            kind: 'setback',
+            text: '엘리베이터는 올라가지 않았다. 문 쪽에서 천천히 다가오는 발소리만 들렸다.',
+            effects: { sanity: -14 },
+          },
+        },
+        {
+          id: 'pass-key',
+          text: '후임자를 지명하고 열쇠를 넘긴 뒤 떠난다',
+          risk: 2,
+          baseChance: 0.6,
+          statWeights: { reputation: 0.005, knowledge: 0.003 },
+          success: {
+            text: '후임자는 열쇠를 받고 한참 문을 바라보았다. 그의 뒷모습이 첫 출근 날의 당신과 닮아 있었다.',
+            effects: { reputation: 10 },
+            endingId: 'succession',
+          },
+          failure: {
+            kind: 'setback',
+            text: '후임자가 열쇠를 돌려주었다. “저는 아직 모르겠습니다.” 당신도 아직 몰랐다.',
+            effects: { reputation: -5, sanity: -6 },
+          },
+        },
+        {
+          id: 'seal-door',
+          text: '문을 영구 봉인하고 그 자리에 남는다',
+          risk: 3,
+          baseChance: 0.42,
+          statWeights: { sanity: 0.005, knowledge: 0.005 },
+          success: {
+            text: '봉인은 완성되었고, 문은 처음으로 조용해졌다. 당신은 문 앞의 의자에 앉았다.',
+            effects: { knowledge: 12, reputation: 12, sanity: -8 },
+            endingId: 'sealed',
+          },
+          failure: {
+            kind: 'demotion',
+            text: '봉인이 갈라졌다. 상부는 책임자를 찾았고, 문은 아직 닫혀 있었다. 아직은.',
+            effects: { reputation: -14, sanity: -10 },
+          },
+        },
+        {
+          id: 'open-door',
+          text: '바깥쪽 손잡이를 잡고 문을 연다',
+          risk: 5,
+          baseChance: 0.2,
+          statWeights: { sanity: 0.006, knowledge: 0.005 },
+          success: {
+            text: '문이 열렸다. 그 너머를 본 당신은 문장 하나를 떠올렸다. “저는 처음부터 알고 있었습니다.”',
+            effects: { knowledge: 20, reputation: 15, sanity: -20 },
+            endingId: 'opened',
+          },
+          failure: {
+            kind: 'death',
+            text: '문은 열렸다. 안쪽에서 열린 것인지 바깥쪽에서 열린 것인지는 기록되지 않았다. 이튿날 엘리베이터는 한 층 더 깊이 내려가 있었다.',
+          },
+        },
+      ],
+    },
+  ],
+} satisfies ContainmentObject

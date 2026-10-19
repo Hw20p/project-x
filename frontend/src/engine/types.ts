@@ -1,0 +1,183 @@
+// 엔진(engine/)과 콘텐츠(content/)가 공유하는 타입.
+// 콘텐츠 파일은 `satisfies ContainmentObject`로 작성하면 필드 오타를 컴파일 단계에서 잡을 수 있다.
+
+export const STAT_KEYS = ['sanity', 'health', 'reputation', 'knowledge'] as const
+/** sanity=정신력, health=체력, reputation=평판, knowledge=지식 */
+export type StatKey = (typeof STAT_KEYS)[number]
+export type Stats = Record<StatKey, number>
+export type StatDelta = Partial<Record<StatKey, number>>
+
+/** 플레이어 직급이자 객체 등급. 1(수습)에서 시작해 5(수석)까지. */
+export type Rank = 1 | 2 | 3 | 4 | 5
+/** 선택지 위험도 (표시용). 높을수록 성공 확률이 낮고 보상이 큼. */
+export type Risk = 1 | 2 | 3 | 4 | 5
+
+/**
+ * 실패 종류
+ * - setback : 스탯 피해만 입고 다음 단계로 진행
+ * - demotion: 규정 위반 등으로 관리가 즉시 종료되고 한 직급 좌천 (수습이면 해고)
+ * - death   : 즉사 — 그 판이 끝남
+ */
+export type FailureKind = 'setback' | 'demotion' | 'death'
+
+/**
+ * 선택 결과가 스탯 외에 상태에 남기는 것. 객체 선택지와 막간 이벤트 선택지 모두에서 쓴다.
+ * 이게 NPC·큰 줄거리를 "데이터로 추가"하는 기반이다 (플래그로 이야기를 잇고, 관계 값으로 인물과의 사이를 쌓는다).
+ */
+export interface OutcomeExtras {
+  /** 켜는 플래그. 이후 이벤트의 등장 조건(`when.flags`)으로 쓴다. */
+  setFlags?: string[]
+  /** 끄는 플래그 */
+  clearFlags?: string[]
+  /** NPC id → 관계 변화량 (-100~100 범위로 잘림) */
+  relations?: Record<string, number>
+}
+
+export interface SuccessOutcome extends OutcomeExtras {
+  text: string
+  effects?: StatDelta
+  /** true면 남은 단계를 건너뛰고 관리를 바로 끝냄 — 그만큼 시간이 절약됨 (하이리스크 하이리턴) */
+  finish?: boolean
+  /** 최종 객체(`finale`)에서만 사용. 이 선택이 성공하면 해당 엔딩으로 판이 끝난다. */
+  endingId?: string
+}
+
+/** 최종 객체의 선택으로 도달하는 엔딩의 표시용 정의 (`content/endings.ts`) */
+export interface EndingDef {
+  id: string
+  title: string
+  text: string
+}
+
+export interface FailureOutcome extends OutcomeExtras {
+  kind: FailureKind
+  text: string
+  effects?: StatDelta
+}
+
+// ───────────────────────── 막간 이벤트 · NPC ─────────────────────────
+
+/**
+ * 막간 이벤트 종류
+ * - recovery    : 정신력(·체력) 회복
+ * - growth      : 스탯 증가 (교육, 훈련 등. 시간이 들기도 함)
+ * - relationship: 직장 내 관계 (NPC와의 일. 관계 값과 플래그를 쌓음)
+ */
+export type InterludeKind = 'recovery' | 'growth' | 'relationship'
+
+/** 막간 이벤트가 나올 수 있는 조건. 지정한 항목을 모두 만족해야 한다. */
+export interface InterludeCondition {
+  minRank?: Rank
+  maxRank?: Rank
+  /** 정수 나이 기준 */
+  minAge?: number
+  maxAge?: number
+  /** 스탯 범위. 예: 정신력이 낮을 때만 나오는 상담 이벤트는 { sanity: { max: 45 } } */
+  stats?: Partial<Record<StatKey, { min?: number; max?: number }>>
+  /** 모두 켜져 있어야 하는 플래그 */
+  flags?: string[]
+  /** 하나라도 켜져 있으면 안 되는 플래그 */
+  notFlags?: string[]
+  /** NPC id → 관계 값 범위 */
+  relations?: Record<string, { min?: number; max?: number }>
+}
+
+/**
+ * 막간 이벤트. 객체 관리 사이사이에 끼어들고, 선택지와 결과는 객체와 같은 `Choice` 구조를 쓴다.
+ * 막간 이벤트의 실패는 `setback`만 허용한다 (좌천·즉사는 객체 관리 중에만 일어난다).
+ */
+export interface InterludeDef {
+  id: string
+  kind: InterludeKind
+  title: string
+  text: string
+  /** 이 이벤트의 주인공 NPC (표시용·검증용) */
+  npcId?: string
+  /** 이 이벤트에 드는 시간(년). 0.5 단위, 기본 0. */
+  years?: number
+  /** 등장 가중치. 기본 1. */
+  weight?: number
+  /** true면 한 판에 한 번만 나온다 (이야기 이벤트) */
+  once?: boolean
+  /** 같은 이벤트가 다시 나오기까지의 쿨다운(년). 기본값은 `INTERLUDE.defaultCooldownYears`. */
+  cooldownYears?: number
+  when?: InterludeCondition
+  choices: Choice[]
+}
+
+/** 관계 값에 따라 매년 붙는 효과 (동료와 친하면 정신력이 조금씩 회복되는 식) */
+export interface NpcBond {
+  /** 화면에 보여 줄 관계 이름 */
+  label: string
+  minRelation?: number
+  maxRelation?: number
+  yearly: StatDelta
+}
+
+export interface NpcDef {
+  id: string
+  name: string
+  role: string
+  summary: string
+  bonds?: NpcBond[]
+}
+
+export interface Choice {
+  id: string
+  text: string
+  risk: Risk
+  /** 스탯 보정 전 성공 확률 (0~1) */
+  baseChance: number
+  /** 스탯이 기준값(50)보다 1점 높을 때마다 더해지는 확률. 예: { knowledge: 0.005 } */
+  statWeights?: StatDelta
+  success: SuccessOutcome
+  failure: FailureOutcome
+}
+
+export interface Stage {
+  id: string
+  title: string
+  /** 이 단계에 걸리는 시간(년). 0.5 단위. */
+  years: number
+  text: string
+  choices: Choice[]
+}
+
+export interface ContainmentObject {
+  id: string
+  /** 표시용 관리 번호. 정렬 기준이기도 함. */
+  code: string
+  name: string
+  /** 이 객체가 배정되는 직급 */
+  tier: Rank
+  summary: string
+  /** 관찰 기록 — 객체 상세 화면에 보여 줄 사실들 */
+  observation: string[]
+  /** 관리 매뉴얼 — 선택지 판단의 힌트. 일부는 지워져 있거나 불완전할 수 있음. */
+  manual: string[]
+  /** 실패(setback)가 이 횟수 이하면 관리 성공으로 인정. 기본 0. */
+  failureTolerance?: number
+  /**
+   * 최종 객체 여부. 5급(수석)이 5급 일반 객체를 모두 성공하면 배정되고, 이 객체의 마지막 선택(또는 일찍 끝내는 선택)이
+   * 성공하면 `endingId`에 해당하는 엔딩으로 판이 끝난다. 반드시 tier 5여야 한다.
+   */
+  finale?: boolean
+  stages: Stage[]
+}
+
+export interface Career {
+  rank: Rank
+  /** 현재 직급에서 쌓은 승급 점수 */
+  promotionPoints: number
+  /** 연속 관리 성공 횟수 */
+  streak: number
+  totalSuccesses: number
+  totalFailures: number
+}
+
+export interface PlayerState {
+  /** 나이(년). 0.5 단위로 늘어남. 표시할 때는 내림. */
+  age: number
+  stats: Stats
+  career: Career
+}
