@@ -31,6 +31,7 @@ export default {
         {
           id: 'cover-ears',
           text: '귀를 막고 점검표만 채운다',
+          story: '귀마개를 깊이 눌러 끼우고 점검표를 펼쳤다. 숫자를 하나씩 적는 동안에도 물소리가 뼈를 타고 올라왔다.',
           risk: 1,
           baseChance: 0.8,
           statWeights: { sanity: 0.003 },
@@ -47,6 +48,7 @@ export default {
         {
           id: 'transcribe',
           text: '속삭임을 그대로 받아 적는다',
+          story: '수조 앞에 의자를 놓고 필기구를 들었다. 들리는 소리를 음절 그대로 종이에 옮기기 시작했다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.005, sanity: 0.003 },
@@ -63,6 +65,7 @@ export default {
         {
           id: 'answer',
           text: '소리 내어 대답한다',
+          story: '수조를 향해 한 걸음 다가섰다. 목구멍이 말라서 처음에는 소리가 나오지 않았다.',
           risk: 4,
           baseChance: 0.28,
           statWeights: { sanity: 0.005 },
@@ -87,6 +90,7 @@ export default {
         {
           id: 'turn-yourself',
           text: '당신이 수조를 등지고 서서 동료가 점검하게 한다',
+          story: '수조를 등지고 서서 동료에게 점검판을 넘겼다. 등 뒤에서 물소리가 한 박자씩 가까워지는 것이 느껴졌다.',
           risk: 1,
           baseChance: 0.78,
           statWeights: { sanity: 0.003, reputation: 0.002 },
@@ -103,6 +107,7 @@ export default {
         {
           id: 'salt-line',
           text: '수조 주변에 소금으로 선을 긋는다',
+          story: '소금 포대를 열어 수조 둘레에 선을 그었다. 소금이 바닥에 닿을 때마다 물소리가 한 겹씩 얇아졌다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.006 },
@@ -119,6 +124,7 @@ export default {
         {
           id: 'touch-water',
           text: '수조 바닥에 손을 대어 본다',
+          story: '수조의 가장자리를 짚고 바닥으로 손을 뻗었다. 유리는 빈 수조답게 건조한데, 손끝은 이미 젖은 느낌이었다.',
           risk: 3,
           baseChance: 0.4,
           statWeights: { sanity: 0.004, health: 0.003 },

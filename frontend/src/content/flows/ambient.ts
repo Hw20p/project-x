@@ -95,4 +95,76 @@ export default [
   { id: 'amb-object-tier5', kind: 'ambient', when: { objectTiers: [5] }, text: '5급 객체 앞에서는 선임들도 말수가 줄어든다.' },
   { id: 'amb-object-notes', kind: 'ambient', when: { objectTiers: [1, 2, 3, 4, 5] }, text: '{object}의 관리 기록이 책상 위에 쌓여 있다. 쌓일수록 한 장씩 더 가벼워지는 것 같다.' },
   { id: 'amb-object-dream', kind: 'ambient', when: { objectTiers: [1, 2, 3, 4, 5], stats: { sanity: { max: 60 } } }, text: '{object}를 생각하며 잠들었고, 깨어서도 같은 생각이었다.' },
+
+  // ── 어느 때나 (추가) ───────────────────────────────
+  { id: 'amb-printer', kind: 'ambient', text: '복합기가 같은 서류를 두 번 뽑았다. 두 번째 장에는 처음 장에 없던 줄이 하나 더 있었다.' },
+  { id: 'amb-handrail', kind: 'ambient', text: '계단 난간이 오늘따라 차갑다. 어제는 분명 따뜻했다.' },
+  { id: 'amb-lift-mirror', kind: 'ambient', text: '엘리베이터 거울에 비친 층 표시가 한 칸 늦게 바뀌었다.' },
+  { id: 'amb-tea', kind: 'ambient', text: '탕비실에는 누가 채워 넣는지 모르게 티백이 늘 한 통씩 있다.' },
+  { id: 'amb-lunch-silence', kind: 'ambient', text: '점심시간의 식당은 대화가 적다. 숟가락 소리만 고르게 난다.' },
+  { id: 'amb-doorknob', kind: 'ambient', text: '문손잡이가 오늘따라 낮게 달린 것 같았다. 내 키가 줄었는지, 문이 내려앉았는지.' },
+
+  // ── 정신력이 낮을 때 (추가) ────────────────────────
+  { id: 'amb-low-sanity-7', kind: 'ambient', when: { stats: { sanity: { max: 35 } } }, text: '화장실 거울 앞에 한참 서 있었다. 거울이 먼저 고개를 돌렸다.' },
+  { id: 'amb-low-sanity-8', kind: 'ambient', when: { stats: { sanity: { max: 35 } } }, text: '일지의 글씨가 내 것인지 확신이 서지 않는 날이 있다.' },
+  { id: 'amb-low-sanity-9', kind: 'ambient', when: { stats: { sanity: { max: 35 } } }, text: '출근길 복도의 문 번호가 하나씩 어긋나 있다. 어긋난 것은 문일까, 나일까.' },
+
+  // ── 정신력이 높을 때 (추가) ────────────────────────
+  { id: 'amb-high-sanity-4', kind: 'ambient', when: { stats: { sanity: { min: 70 } } }, text: '복도에서 마주친 청소 담당이 먼저 인사했다. 오늘은 그 인사를 제대로 받았다.' },
+  { id: 'amb-high-sanity-5', kind: 'ambient', when: { stats: { sanity: { min: 70 } } }, text: '점심 뒤 짧게 낮잠을 잤다. 꿈속의 얼굴은 모르는 사람이 아니었다.' },
+  { id: 'amb-high-sanity-6', kind: 'ambient', when: { stats: { sanity: { min: 70 } } }, text: '일지를 쓰는 손이 가벼웠다. 가벼운 날은 기록도 짧다.' },
+
+  // ── 체력이 낮을 때 (추가) ──────────────────────────
+  { id: 'amb-low-health-5', kind: 'ambient', when: { stats: { health: { max: 35 } } }, text: '계단을 오르다 층계참에서 쉬었다. 지나가던 누군가가 말없이 속도를 맞춰 주었다.' },
+  { id: 'amb-low-health-6', kind: 'ambient', when: { stats: { health: { max: 35 } } }, text: '의무실 침대의 이불이 눅눅하다. 이 건물에서는 눅눅함도 오래 기억된다.' },
+
+  // ── 나이 (추가) ────────────────────────────────────
+  { id: 'amb-age-30-3', kind: 'ambient', when: { minAge: 30, maxAge: 39 }, text: '서른 중반이 되자 면접 때 꿈꾸던 자리가 어떤 자리였는지 기억나지 않는다.' },
+  { id: 'amb-age-40-3', kind: 'ambient', when: { minAge: 40 }, text: '마흔을 넘기자 기록의 문장이 짧아졌다. 짧게 써도 같은 뜻이 전해진다는 것을 안다.' },
+  { id: 'amb-age-40-4', kind: 'ambient', when: { minAge: 40 }, text: '건강검진 의사가 이 건물 근무자는 대체로 귀가 좋다고 했다. 무엇을 듣느라 그런지는 묻지 않았다.' },
+  { id: 'amb-age-50-4', kind: 'ambient', when: { minAge: 50 }, text: '오래 알고 지낸 사람이 하나둘 지상으로 떠난다. 편지는 한 통씩만 온다.' },
+  { id: 'amb-age-50-5', kind: 'ambient', when: { minAge: 50 }, text: '후임의 사원증 번호를 보고 놀랐다. 내가 입사하던 해의 번호와 비슷했다.' },
+  { id: 'amb-age-60-4', kind: 'ambient', when: { minAge: 60 }, text: '이제 새벽에 먼저 눈이 떠진다. 건물이 숨 쉬는 소리가 조금 더 잘 들린다.' },
+  { id: 'amb-age-70-1', kind: 'ambient', when: { minAge: 70 }, text: '일흔이 가까워지자 사원증 목끈이 너무 길게 느껴진다. 줄이다 만 끈이 아직 그대로다.' },
+  { id: 'amb-age-70-2', kind: 'ambient', when: { minAge: 70 }, text: '아침에 눈을 뜨면 이 건물에 몇 해 있었는지 먼저 세어 본다. 세는 동안 잊어버린다.' },
+
+  // ── 직급 (추가) ────────────────────────────────────
+  { id: 'amb-rank3-3', kind: 'ambient', when: { minRank: 3, maxRank: 3 }, text: '주임이 되자 새 객체의 소문이 먼저 도착한다. 소문이 맞는지는 늘 한참 뒤에야 안다.' },
+  { id: 'amb-rank3-4', kind: 'ambient', when: { minRank: 3, maxRank: 3 }, text: '선임의 퇴근을 기다리다 먼저 가게 되는 날이 늘었다.' },
+  { id: 'amb-rank4-3', kind: 'ambient', when: { minRank: 4, maxRank: 4 }, text: '책임자 회의실의 의자는 한 자리가 늘 비어 있다. 아무도 그 자리에 앉지 않는다.' },
+  { id: 'amb-rank4-4', kind: 'ambient', when: { minRank: 4, maxRank: 4 }, text: '결재 서류가 한 겹 더 쌓였다. 결재할 때마다 앞사람의 도장이 조금씩 연해진다.' },
+  { id: 'amb-rank5-4', kind: 'ambient', when: { minRank: 5 }, text: '수석 사무실의 두 시계 가운데 하나가 멈춰 있는 것을 보았다. 멈춘 시각은 입사한 날의 시각과 같았다.' },
+  { id: 'amb-rank5-5', kind: 'ambient', when: { minRank: 5 }, text: '수석 열람실에는 책이 한 권도 없고 서가의 이름표만 남아 있다.' },
+
+  // ── NPC와의 관계 (추가) ────────────────────────────
+  { id: 'amb-jian-close-3', kind: 'ambient', when: { relations: { jian: { min: 30 } } }, text: '서지안이 퇴근하며 내 사원증 목끈을 한 번 고쳐 매 주었다. 아무 말 없이.' },
+  { id: 'amb-jian-cold-3', kind: 'ambient', when: { relations: { jian: { max: -10 } } }, text: '서지안이 지나가며 내 책상 위의 컵을 치웠다. 말은 없었고 컵은 돌아오지 않았다.' },
+  { id: 'amb-taeseong-close-3', kind: 'ambient', when: { relations: { taeseong: { min: 30 } } }, text: '팀장이 회식 자리에서 처음으로 자기 이야기를 했다. 짧았고 아무도 되묻지 않았다.' },
+  { id: 'amb-taeseong-cold-3', kind: 'ambient', when: { relations: { taeseong: { max: -10 } } }, text: '팀장의 호출 메신저가 오늘은 울리지 않았다. 울리지 않는 것이 더 불안했다.' },
+  { id: 'amb-harin-close-3', kind: 'ambient', when: { relations: { harin: { min: 30 } } }, text: '선임이 일지의 한 줄 옆에 작은 점을 찍어 두고 갔다. 읽으라는 뜻인지 기억하라는 뜻인지는 모른다.' },
+  { id: 'amb-harin-cold-2', kind: 'ambient', when: { relations: { harin: { max: -10 } } }, text: '문하린 선임의 책상에서 노트가 사라졌다. 이제 무엇을 읽어도 같은 질문만 남는다.' },
+
+  // ── 입사 배경 (추가) ───────────────────────────────
+  { id: 'amb-bg-researcher-3', kind: 'ambient', when: { backgrounds: ['researcher'] }, text: '실험 노트 습관으로 날짜와 시각을 적는다. 이 건물에서는 시각 칸이 늘 하나 비어 있다.' },
+  { id: 'amb-bg-researcher-4', kind: 'ambient', when: { backgrounds: ['researcher'] }, text: '옛 동료의 논문 알림이 왔다. 열어 보지 않은 알림이 쌓여 간다.' },
+  { id: 'amb-bg-field-3', kind: 'ambient', when: { backgrounds: ['field'] }, text: '현장에서 들던 무전기의 잡음을 가끔 이곳 복도에서 듣는다. 어느 채널인지는 모른다.' },
+  { id: 'amb-bg-field-4', kind: 'ambient', when: { backgrounds: ['field'] }, text: '다리가 뻣뻣한 날이면 외곽 초소의 계단을 떠올린다. 그 계단은 층마다 높이가 달랐다.' },
+  { id: 'amb-bg-office-3', kind: 'ambient', when: { backgrounds: ['office'] }, text: '본사 시절의 메일 서명을 아직 쓴다. 이 건물에서는 받는 사람이 늘 한 명뿐이다.' },
+  { id: 'amb-bg-office-4', kind: 'ambient', when: { backgrounds: ['office'] }, text: '결재선이 한 줄 짧아졌다. 짧아진 만큼 책임이 가까워졌다.' },
+
+  // ── 방금 끝낸 객체의 여운 ──────────────────────────
+  { id: 'amb-after-x001', kind: 'ambient', when: { objects: ['x-001'] }, text: '휴게실 의자는 다시 비어 있다. 비어 있다는 것을 믿기까지 한참 걸렸다.' },
+  { id: 'amb-after-x002', kind: 'ambient', when: { objects: ['x-002'] }, text: '수조 앞을 지날 때마다 걸음이 조금 빨라진다. 내 이름이 불리기 전에 지나가려는 것이다.' },
+  { id: 'amb-after-x003', kind: 'ambient', when: { objects: ['x-003'] }, text: '저녁 무렵 선반을 지날 때마다 인형의 수를 세어 본다. 열두 개. 아직은 열두 개다.' },
+  { id: 'amb-after-x004', kind: 'ambient', when: { objects: ['x-004'] }, text: '엘리베이터가 4층을 지날 때마다 숨을 멈춘다. 5층에 서기 전까지.' },
+  { id: 'amb-after-x005', kind: 'ambient', when: { objects: ['x-005'] }, text: '상담실 앞을 지나다 거울에 천이 덮여 있는지 확인했다. 덮여 있었다. 덮여 있어서 오히려 안심이 되지 않았다.' },
+  { id: 'amb-after-x006', kind: 'ambient', when: { objects: ['x-006'] }, text: '새로 그려진 지도를 볼 때마다 어디가 먹힐지 가늠한다. 가늠하는 습관이 생겼다.' },
+  { id: 'amb-after-x007', kind: 'ambient', when: { objects: ['x-007'] }, text: '지하 공동의 합창은 이제 들리지 않는다. 들리지 않는다고 멈춘 것은 아니다.' },
+  { id: 'amb-after-x008', kind: 'ambient', when: { objects: ['x-008'] }, text: '거꾸로 자란 나무의 열매가 열리는 철이면 이상하게 옛 기억이 선명하다.' },
+  { id: 'amb-after-x009', kind: 'ambient', when: { objects: ['x-009'] }, text: '새벽 네 시 십칠 분이 되면 손목시계를 확인하게 된다. 확인하고 안심하는 데 한참 걸린다.' },
+  { id: 'amb-after-x012', kind: 'ambient', when: { objects: ['x-012'] }, text: '민원실 앞을 지날 때마다 전광판의 숫자를 확인한다. 확인하는 동안 숫자가 하나 줄어드는 것 같다.' },
+  { id: 'amb-after-x013', kind: 'ambient', when: { objects: ['x-013'] }, text: '비상계단을 이용할 때마다 칸 수를 세지 않으려고 노래를 흥얼거린다. 노래는 열네 박자다.' },
+  { id: 'amb-after-x014', kind: 'ambient', when: { objects: ['x-014'] }, text: '퇴근 때마다 서명란을 한 번 더 확인한다. 아직 내 필체가 맞는지.' },
+  { id: 'amb-after-x015', kind: 'ambient', when: { objects: ['x-015'] }, text: '출근길 로비 벽을 올려다보지 않는 법을 익혔다. 올려다보지 않아도 시선은 느껴진다.' },
+  { id: 'amb-after-x010', kind: 'ambient', when: { objects: ['x-010'] }, text: '밤에 옥상에 올라갈 때마다 별 하나를 오래 보지 못한다. 보면 안 된다는 규칙은 없는데도.' },
 ] satisfies FlowDef[]

@@ -32,6 +32,7 @@ export default {
         {
           id: 'earplugs',
           text: '귀마개를 한 겹 더 끼고 입구에서만 점검한다',
+          story: '귀마개를 한 겹 더 끼우고 입구 난간을 짚었다. 점검표를 한 줄씩 채우는 동안 화음이 발바닥을 타고 올라왔다.',
           risk: 1,
           baseChance: 0.75,
           statWeights: { sanity: 0.003, health: 0.002 },
@@ -48,6 +49,7 @@ export default {
         {
           id: 'cancel-wave',
           text: '역위상 소음을 틀어 합창을 상쇄해 본다',
+          story: '입구에 스피커를 세우고 반대 위상의 소음을 틀었다. 두 소리가 겹치는 지점에서 공기가 얇게 떨렸다.',
           risk: 2,
           baseChance: 0.58,
           statWeights: { knowledge: 0.006 },
@@ -64,6 +66,7 @@ export default {
         {
           id: 'descend',
           text: '공동 안쪽으로 한 층 더 내려간다',
+          story: '철제 계단의 첫 단에 발을 올렸다. 아래로 내려갈수록 합창이 귀가 아니라 가슴뼈 안쪽에서 울렸다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.005, health: 0.003 },
@@ -88,6 +91,7 @@ export default {
         {
           id: 'blindfold-reader',
           text: '악보는 읽지 말고 선임의 허밍을 녹음해 분석한다',
+          story: '선임에게 악보를 맡기고 녹음기만 쥐고 곁에 앉았다. 선임이 허밍을 시작하자 방이 한 음 낮아졌다.',
           risk: 1,
           baseChance: 0.72,
           statWeights: { knowledge: 0.003, reputation: 0.003 },
@@ -104,6 +108,7 @@ export default {
         {
           id: 'read-last-bar',
           text: '악보의 마지막 마디만 읽는다',
+          story: '악보를 맨 뒤로 넘겨 마지막 마디에 손가락을 올렸다. 눈으로 한 음씩 짚으며 소리 내지 않고 입술만 움직였다.',
           risk: 3,
           baseChance: 0.42,
           statWeights: { sanity: 0.004, knowledge: 0.004 },
@@ -120,6 +125,7 @@ export default {
         {
           id: 'conduct',
           text: '악보를 들고 공동으로 내려가 직접 지휘해 본다',
+          story: '악보를 가슴에 안고 공동 한가운데로 걸어 내려갔다. 지휘봉 대신 오른손을 천천히 들어 올렸다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.004 },
@@ -144,6 +150,7 @@ export default {
         {
           id: 'give-nickname',
           text: '임시 별명을 붙여 부르며 사무실에 격리한다',
+          story: '이름을 잃어 가는 팀원에게 새 별명을 지어 불렀다. 사무실의 불을 끄고 팀원 곁에 의자를 끌어다 앉았다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { reputation: 0.004, sanity: 0.002 },
@@ -160,6 +167,7 @@ export default {
         {
           id: 'return-name',
           text: '팀원의 이름을 대신 외쳐 합창에 돌려보낸다',
+          story: '합창이 들리는 입구까지 팀원을 부축해 갔다. 팀원의 이름을 소리 내어 부를 숨을 크게 들이마셨다.',
           risk: 3,
           baseChance: 0.42,
           statWeights: { sanity: 0.005, knowledge: 0.003 },
@@ -176,6 +184,7 @@ export default {
         {
           id: 'trade-places',
           text: '합창에 당신 이름을 대신 내어주고 팀원을 살린다',
+          story: '팀원을 뒤로 물리고 합창 앞에 섰다. 내 이름의 글자 하나하나를 입안에서 굴려 보았다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { sanity: 0.006 },

@@ -169,4 +169,121 @@ export default [
       },
     ],
   },
+  {
+    id: 'gro-field',
+    kind: 'growth',
+    title: '외부 시찰 참관',
+    text: '다른 시설의 시찰단이 방문한다. 안내를 맡은 선임이 한 명 빠져, 참관 자리가 당신에게 돌아왔다.',
+    years: 0.5,
+    cooldownYears: 7,
+    when: { minRank: 3 },
+    choices: [
+      {
+        id: 'observe',
+        text: '옆에서 관찰만 한다',
+        risk: 1,
+        baseChance: 0.85,
+        statWeights: { knowledge: 0.003 },
+        success: {
+          text: '시찰 보고서에 쓸 사실만 골라 담았다. 무엇을 빼야 하는지가 가장 큰 공부였다.',
+          effects: { knowledge: 7, reputation: 3 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '본 것을 기록하기도 전에 잊어버렸다. 메모만 남았다.',
+          effects: { knowledge: 2 },
+        },
+      },
+      {
+        id: 'assist',
+        text: '보조로 직접 나선다',
+        risk: 3,
+        baseChance: 0.5,
+        statWeights: { health: 0.003, sanity: 0.003 },
+        success: {
+          text: '직접 만져 본 감각이 오래 남았다. 손끝이 기억하는 매뉴얼이 있다.',
+          effects: { knowledge: 10, health: -3, reputation: 4 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '무리하다 손목을 다쳤다. 시찰단은 못 본 척했다.',
+          effects: { health: -8, knowledge: 3 },
+        },
+      },
+      {
+        id: 'lead',
+        text: '선임이 비운 자리를 대신 맡는다',
+        risk: 4,
+        baseChance: 0.35,
+        statWeights: { reputation: 0.004, sanity: 0.004 },
+        success: {
+          text: '대신 앞에 섰다. 손은 떨렸지만 말은 끝까지 나왔다.',
+          effects: { reputation: 12, knowledge: 6, sanity: -6 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '말이 끊겼다. 시찰단이 침묵하는 동안 서류만 내려다보았다.',
+          effects: { reputation: -8, sanity: -6 },
+        },
+      },
+    ],
+  },
+  {
+    id: 'gro-mentor',
+    kind: 'growth',
+    title: '후임 지도',
+    text: '새로 들어온 후임이 당신 옆자리에 배정되었다. 첫 객체 관리를 앞두고 무엇이든 물어볼 사람이 필요한 눈빛이다.',
+    years: 0.5,
+    cooldownYears: 6,
+    when: { minRank: 2 },
+    choices: [
+      {
+        id: 'teach-slow',
+        text: '하나씩 천천히 가르친다',
+        risk: 1,
+        baseChance: 0.85,
+        success: {
+          text: '가르치는 동안 내가 잊고 있던 것이 다시 정리되었다.',
+          effects: { knowledge: 6, reputation: 4 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '후임은 고개만 끄덕였다. 이해했는지는 알 수 없다.',
+          effects: { reputation: 1 },
+        },
+      },
+      {
+        id: 'hands-off',
+        text: '스스로 해 보라고 맡긴다',
+        risk: 2,
+        baseChance: 0.6,
+        statWeights: { reputation: 0.003 },
+        success: {
+          text: '후임은 실수를 한 번 하고, 다음에는 하지 않았다.',
+          effects: { reputation: 7, knowledge: 2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '후임이 규정을 어겼고, 보고서에는 내 서명이 있었다.',
+          effects: { reputation: -6 },
+        },
+      },
+      {
+        id: 'tell-truth',
+        text: '지워진 매뉴얼 줄이 있다는 사실까지 말해 준다',
+        risk: 3,
+        baseChance: 0.5,
+        statWeights: { sanity: 0.003, knowledge: 0.003 },
+        success: {
+          text: '후임은 오래 말이 없었다. 그날 이후 내 눈을 똑바로 보았다.',
+          effects: { reputation: 6, knowledge: 6, sanity: -4 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '후임이 다음 날 부서 이동을 신청했다.',
+          effects: { reputation: -5, sanity: -3 },
+        },
+      },
+    ],
+  },
 ] satisfies InterludeDef[]

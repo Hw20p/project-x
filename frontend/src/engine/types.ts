@@ -189,6 +189,11 @@ export interface NpcDef {
 export interface Choice {
   id: string
   text: string
+  /**
+   * 선택을 한 직후, 결과(성공·실패)가 나오기 전에 줄거리 스트림에 흐르는 "선택에 따른 이야기 진행".
+   * 판정과 무관하게 이 선택을 실행하는 과정을 보여 주고, 이어서 성공·실패 결과가 나온다. 없으면 바로 결과가 나온다.
+   */
+  story?: string
   risk: Risk
   /** 스탯 보정 전 성공 확률 (0~1) */
   baseChance: number

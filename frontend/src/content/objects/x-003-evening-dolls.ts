@@ -31,6 +31,7 @@ export default {
         {
           id: 'pair-watch',
           text: '두 명이 교대로 쉬지 않고 지켜본다',
+          story: '두 사람이 마주 앉아 인형 선반을 반씩 나누어 맡았다. 눈을 깜박일 때마다 서로의 이름을 불러 확인했다.',
           risk: 1,
           baseChance: 0.78,
           statWeights: { health: 0.003, reputation: 0.002 },
@@ -47,6 +48,7 @@ export default {
         {
           id: 'log-positions',
           text: '인형들의 위치를 15분 간격으로 기록한다',
+          story: '시계를 책상 위에 올리고 첫 기록란을 펼쳤다. 열다섯 분마다 인형들의 좌표를 하나씩 옮겨 적었다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.005 },
@@ -63,6 +65,7 @@ export default {
         {
           id: 'sunlight',
           text: '인형 한 개를 햇빛이 드는 복도로 꺼낸다',
+          story: '인형 하나를 두 손으로 감싸 안고 복도로 나왔다. 창으로 들어온 저녁 햇빛이 도자기의 얼굴을 따라 천천히 번졌다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.004, knowledge: 0.004 },
@@ -87,6 +90,7 @@ export default {
         {
           id: 'seal-shelf',
           text: '빈 자리를 천으로 덮고 봉인한다',
+          story: '비어 있는 자리 앞에 서서 흰 천을 펼쳤다. 천을 덮자 선반의 먼지가 한꺼번에 가라앉는 것 같았다.',
           risk: 1,
           baseChance: 0.75,
           statWeights: { sanity: 0.003 },
@@ -103,6 +107,7 @@ export default {
         {
           id: 'ask-supervisor',
           text: '상급자에게 빈 자리의 역사를 묻는다',
+          story: '상급자의 방 문을 두드리고 그 자리에 대해 물었다. 상급자는 대답하기 전에 먼저 문을 닫았다.',
           risk: 2,
           baseChance: 0.62,
           statWeights: { reputation: 0.005 },
@@ -119,6 +124,7 @@ export default {
         {
           id: 'sit-in-seat',
           text: '당신이 열세 번째 자리에 앉아 본다',
+          story: '비어 있는 열세 번째 자리 앞에 섰다. 선반의 높이가 의자에 앉은 사람의 눈높이와 같다는 것을 그제야 알았다.',
           risk: 4,
           baseChance: 0.32,
           statWeights: { sanity: 0.005 },

@@ -23,6 +23,7 @@ function LineBody({ item }: { item: FeedItem }): ReactNode {
   switch (item.kind) {
     case 'opening':
     case 'beat':
+    case 'story':
     case 'closing':
       return <p className="narration text-[0.95rem] text-bone">{item.text}</p>
     case 'ambient':

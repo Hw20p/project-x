@@ -14,6 +14,7 @@ import { toParagraphs } from './text'
  * - opening/ambient/beat: 엔진이 만든 흐르는 서술
  * - choice : 플레이어가 고른 선택지 (기록용)
  * - result : 선택의 결과 서술 (실제로 바뀐 스탯·관계, 안내 문구 포함)
+ * - story  : 고른 선택지를 실행하는 이야기 진행 (선택지의 `story`. 결과가 나오기 전에 흐른다)
  * - closing: 객체 관리를 마칠 때의 마무리 서술 (보고서 바로 앞)
  * - report : 객체 한 건의 관리 보고서
  * - assign : 새 객체를 맡게 됨
@@ -24,6 +25,7 @@ export type FeedKind =
   | 'ambient'
   | 'beat'
   | 'choice'
+  | 'story'
   | 'result'
   | 'closing'
   | 'report'
@@ -54,20 +56,26 @@ export function appendFeed(feed: readonly FeedItem[], drafts: readonly FeedDraft
   return [...feed, ...drafts.map((draft, index) => ({ ...draft, id: String(feed.length + index) }))]
 }
 
-/** 방금 고른 선택지를 한 줄로 */
-function describeChoice(ctx: GameContext, state: GameState, age: number): FeedDraft | null {
+/** 방금 고른 선택지 한 줄과, 그 선택을 실행하는 이야기 진행(`story`)이 있으면 이어지는 줄들 */
+function describeChoice(ctx: GameContext, state: GameState, age: number): FeedDraft[] {
   const entry = state.choiceLog[state.choiceLog.length - 1]
   if (!entry) {
-    return null
+    return []
   }
-  if ('interludeId' in entry) {
-    const choice = findInterlude(ctx, entry.interludeId).choices.find((candidate) => candidate.id === entry.choiceId)
-    return choice ? { age, kind: 'choice', text: choice.text } : null
+  const choice =
+    'interludeId' in entry
+      ? findInterlude(ctx, entry.interludeId).choices.find((candidate) => candidate.id === entry.choiceId)
+      : findObject(ctx, entry.objectId)
+          .stages.find((stage) => stage.id === entry.stageId)
+          ?.choices.find((candidate) => candidate.id === entry.choiceId)
+  if (!choice) {
+    return []
   }
-  const choice = findObject(ctx, entry.objectId)
-    .stages.find((stage) => stage.id === entry.stageId)
-    ?.choices.find((candidate) => candidate.id === entry.choiceId)
-  return choice ? { age, kind: 'choice', text: choice.text } : null
+  const story = choice.story ? toParagraphs(choice.story) : []
+  return [
+    { age, kind: 'choice', text: choice.text },
+    ...story.map((text) => ({ age, kind: 'story' as const, text })),
+  ]
 }
 
 /** 결과 서술을 문장 단위 문단으로 쪼개 항목들로 만든다. 스탯·관계·안내는 마지막 문단에 붙는다. */
@@ -102,10 +110,7 @@ export function describeTransition(
 
   // 1) 방금 선택을 했다면 고른 선택지
   if (prev && next.choiceLog.length > prev.choiceLog.length) {
-    const choice = describeChoice(ctx, next, prev.player.age)
-    if (choice) {
-      drafts.push(choice)
-    }
+    drafts.push(...describeChoice(ctx, next, prev.player.age))
   }
 
   // 2) 이번 전이에서 흘러간 서술과 병

@@ -31,6 +31,7 @@ export default {
         {
           id: 'switch-counselor',
           text: '다음 방문 전에 상담자를 교체해 달라고 요청한다',
+          story: '교체 요청서를 작성해 인사 담당에게 직접 전했다. 서류를 내려놓는 손이 평소보다 느리게 움직였다.',
           risk: 1,
           baseChance: 0.75,
           statWeights: { reputation: 0.004 },
@@ -47,6 +48,7 @@ export default {
         {
           id: 'ask-about-self',
           text: '방문자에게 “나에 대해 말해 보라”고 요청한다',
+          story: '방문자와 마주 앉아 천천히 말을 꺼냈다. 상담실의 시계 초침이 두 사람 사이에서 조금 크게 들렸다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { sanity: 0.004, knowledge: 0.004 },
@@ -63,6 +65,7 @@ export default {
         {
           id: 'swap-seats',
           text: '자리를 바꿔 앉아 상담을 이어 간다',
+          story: '일어나 방문자 앞으로 걸어갔다. 의자를 맞바꾸는 동안 두 사람 모두 서로의 얼굴에서 눈을 떼지 않았다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.005, knowledge: 0.003 },
@@ -87,6 +90,7 @@ export default {
         {
           id: 'cover-mirrors',
           text: '상담실의 모든 거울을 덮고 문 앞에서 대기한다',
+          story: '상담실에 있는 거울을 하나씩 떼어 내 천을 덮었다. 마지막 거울을 덮을 때 천이 한 번 안쪽에서 부풀었다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { knowledge: 0.003, sanity: 0.003 },
@@ -103,6 +107,7 @@ export default {
         {
           id: 'record-conversation',
           text: '문밖에서 대화를 녹음한다',
+          story: '문틈에 녹음기를 세워 두고 복도 끝에서 기다렸다. 닫힌 문 너머로 낮은 대화가 일정한 간격으로 오갔다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { knowledge: 0.005 },
@@ -119,6 +124,7 @@ export default {
         {
           id: 'enter',
           text: '문을 열고 들어가 일곱 번째 손님을 직접 맞이한다',
+          story: '문손잡이에 손을 얹고 한참 숨을 골랐다. 안에서 들리던 대화가 문을 돌리기 직전에 뚝 그쳤다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.004 },

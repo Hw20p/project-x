@@ -31,6 +31,7 @@ export default {
         {
           id: 'close-door',
           text: '닫힘 버튼을 연타하며 사번을 소리 내어 외운다',
+          story: '닫힘 버튼을 손바닥으로 연달아 눌렀다. 입으로는 사번을 한 글자씩 또박또박 되뇌었다.',
           risk: 1,
           baseChance: 0.8,
           statWeights: { sanity: 0.003 },
@@ -47,6 +48,7 @@ export default {
         {
           id: 'throw-pen',
           text: '문턱 너머로 펜을 던져 반응을 본다',
+          story: '주머니에서 펜을 꺼내 문턱 너머로 가볍게 던졌다. 펜이 바닥에 닿는 소리가 복도 끝까지 이어졌다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.005 },
@@ -63,6 +65,7 @@ export default {
         {
           id: 'step-out',
           text: '한 걸음만 내려서 복도를 둘러본다',
+          story: '문턱 앞에서 한 번 숨을 멈췄다. 한쪽 발을 내밀어 복도의 바닥이 단단한지 확인했다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.004, knowledge: 0.004 },
@@ -87,6 +90,7 @@ export default {
         {
           id: 'memory-journal',
           text: '매일 기억 일지를 쓰게 하고 서로 대조한다',
+          story: '직원들에게 작은 수첩을 한 권씩 나누어 주었다. 저녁마다 그날 있었던 일을 적고 서로 대조하게 했다.',
           risk: 1,
           baseChance: 0.78,
           statWeights: { knowledge: 0.004, reputation: 0.003 },
@@ -103,6 +107,7 @@ export default {
         {
           id: 'ask-erased',
           text: '기억을 잃은 직원에게 무엇을 잃었는지 묻는다',
+          story: '기억을 잃은 직원을 휴게실로 불러 앉혔다. 질문을 어떻게 시작해야 할지 몰라 먼저 차를 건넸다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { sanity: 0.003, knowledge: 0.004 },
@@ -119,6 +124,7 @@ export default {
         {
           id: 'ride-again',
           text: '일부러 다시 탑승해 층의 구조를 기록한다',
+          story: '업무가 끝난 뒤 다시 엘리베이터에 올랐다. 4층 버튼과 5층 버튼 사이의 빈 벽을 손가락으로 천천히 짚었다.',
           risk: 4,
           baseChance: 0.32,
           statWeights: { sanity: 0.004, knowledge: 0.004 },

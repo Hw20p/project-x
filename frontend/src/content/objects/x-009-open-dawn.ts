@@ -32,6 +32,7 @@ export default {
         {
           id: 'rope-and-sign',
           text: '허리에 밧줄을 묶고 정해진 시각마다 신호를 보내며 들어간다',
+          story: '허리에 밧줄을 두 번 감고 매듭을 확인했다. 정해진 시각마다 신호를 보내기로 약속하고 구역에 들어섰다.',
           risk: 2,
           baseChance: 0.65,
           statWeights: { health: 0.003, knowledge: 0.003, sanity: 0.002 },
@@ -48,6 +49,7 @@ export default {
         {
           id: 'leave-camera',
           text: '자동 촬영 장비만 들여보내고 기록을 회수한다',
+          story: '자동 촬영 장비를 구역 입구에 세워 두고 타이머를 맞췄다. 장비가 안으로 굴러 들어가는 것을 문밖에서 지켜보았다.',
           risk: 3,
           baseChance: 0.5,
           statWeights: { knowledge: 0.005 },
@@ -64,6 +66,7 @@ export default {
         {
           id: 'enter-sleepless',
           text: '각성제를 복용하고 구역 깊숙이 직접 들어간다',
+          story: '각성제를 물과 함께 삼키고 손목시계를 풀어 주머니에 넣었다. 구역 안쪽으로 한 걸음씩 시간을 세며 들어갔다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { health: 0.006, sanity: 0.005 },
@@ -88,6 +91,7 @@ export default {
         {
           id: 'restore-log',
           text: '구역 외부 시계와 일지를 대조하며 숫자를 복원한다',
+          story: '구역 밖 벽시계와 일지를 나란히 펼쳐 놓았다. 어긋난 숫자를 하나씩 짚어 바로잡으며 시간을 맞춰 나갔다.',
           risk: 2,
           baseChance: 0.62,
           statWeights: { knowledge: 0.005, reputation: 0.003 },
@@ -104,6 +108,7 @@ export default {
         {
           id: 'rotate-staff',
           text: '구역 근무자를 교대로 돌려 한 사람이 오래 머물지 않게 한다',
+          story: '근무표를 새로 짜서 한 사람이 구역에 머무는 시간을 반으로 줄였다. 교대 시각마다 문 앞에서 이름을 확인했다.',
           risk: 3,
           baseChance: 0.5,
           statWeights: { reputation: 0.006, sanity: 0.003 },
@@ -120,6 +125,7 @@ export default {
         {
           id: 'stay-and-count',
           text: '구역에 머물며 직접 시간의 흐름을 끝까지 세어 본다',
+          story: '구역 한가운데에 의자를 놓고 앉았다. 초침 소리를 헤아리며 숫자를 입속으로 소리 없이 셌다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, health: 0.005 },
@@ -144,6 +150,7 @@ export default {
         {
           id: 'compare-photo',
           text: '입구 사진과 자신의 얼굴을 비교하고 가족에게 확인을 요청한다',
+          story: '입구에 걸린 사진을 떼어 와 거울 옆에 세웠다. 가족에게 전화를 걸어 사진 속 얼굴이 맞는지 물어볼 말을 골랐다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { reputation: 0.003, sanity: 0.003 },
@@ -160,6 +167,7 @@ export default {
         {
           id: 'seal-exit',
           text: '출구를 봉인해 구역 자체를 격리한다',
+          story: '출구에 철문을 내리고 용접 장비를 챙겼다. 불꽃이 틈새를 따라 천천히 이어 붙는 동안 문 너머가 조용했다.',
           risk: 3,
           baseChance: 0.48,
           statWeights: { knowledge: 0.005, reputation: 0.003 },
@@ -176,6 +184,7 @@ export default {
         {
           id: 'walk-twice',
           text: '출구를 두 번 지나 나온 쪽이 어느 쪽인지 확인한다',
+          story: '출구를 한 번 지나 돌아온 뒤 다시 한 번 걸어갔다. 두 번째에 문턱을 넘을 때 발끝으로 바닥의 방향을 확인했다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.005 },

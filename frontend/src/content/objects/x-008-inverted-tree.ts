@@ -32,6 +32,7 @@ export default {
         {
           id: 'net-fruit',
           text: '열매 아래에 그물을 쳐서 떨어진 열매를 받는다',
+          story: '나무 아래에 가는 그물을 넓게 펼쳤다. 열매가 매달린 가지 밑에서 숨을 죽이고 기다렸다.',
           risk: 1,
           baseChance: 0.74,
           statWeights: { health: 0.003, reputation: 0.003 },
@@ -48,6 +49,7 @@ export default {
         {
           id: 'photograph-fruit',
           text: '열매 속 얼굴을 촬영해 신원을 대조한다',
+          story: '열매에 카메라를 가까이 대고 초점을 맞췄다. 열매 표면에 비친 얼굴이 렌즈 속에서 조금 움직였다.',
           risk: 2,
           baseChance: 0.58,
           statWeights: { knowledge: 0.006 },
@@ -64,6 +66,7 @@ export default {
         {
           id: 'taste-fruit',
           text: '장갑을 끼고 열매를 한 입 베어 문다',
+          story: '장갑을 끼고 열매 하나를 가지에서 조심스럽게 땄다. 입을 가져다 대기 전에 한 번 더 냄새를 맡았다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.005, health: 0.003 },
@@ -88,6 +91,7 @@ export default {
         {
           id: 'read-silently',
           text: '소리 내지 않고 이름표를 읽어 상급자에게만 전달한다',
+          story: '가지에 걸린 이름표에 얼굴을 가까이 가져갔다. 입술을 다문 채 눈으로만 글자를 따라 읽었다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { reputation: 0.004, sanity: 0.003 },
@@ -104,6 +108,7 @@ export default {
         {
           id: 'swap-tags',
           text: '다른 가지의 빈 이름표와 바꿔 달아 본다',
+          story: '다른 가지의 빈 이름표를 조심스럽게 풀었다. 이름표 두 개를 손에 쥐고 서로 바꿔 달 자리를 가늠했다.',
           risk: 3,
           baseChance: 0.42,
           statWeights: { knowledge: 0.005, sanity: 0.003 },
@@ -120,6 +125,7 @@ export default {
         {
           id: 'cut-branch',
           text: '이름표가 걸린 가지를 톱으로 잘라낸다',
+          story: '톱을 가지 밑동에 대고 숨을 골랐다. 톱날이 나무껍질에 닿는 순간 가지 전체가 잔잔히 떨렸다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { health: 0.005, sanity: 0.004 },
@@ -144,6 +150,7 @@ export default {
         {
           id: 'keep-monitoring',
           text: '나무를 그대로 두고 관측만 계속한다',
+          story: '관측 장비를 나무 둘레에 다시 배치했다. 매일 같은 시각에 같은 자리에서 기록을 이어 가기로 했다.',
           risk: 2,
           baseChance: 0.65,
           statWeights: { knowledge: 0.004, reputation: 0.003 },
@@ -160,6 +167,7 @@ export default {
         {
           id: 'prune-roots',
           text: '천장의 뿌리를 일부 잘라 나무를 약하게 만든다',
+          story: '천장에 사다리를 걸치고 가지치기 가위를 쥐었다. 굵은 뿌리 하나를 골라 가위날을 벌렸다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { health: 0.004, knowledge: 0.004 },
@@ -176,6 +184,7 @@ export default {
         {
           id: 'burn-roots',
           text: '뿌리 전체를 태워 나무를 끝낸다',
+          story: '천장에 매달린 뿌리 밑으로 약품 통을 하나씩 옮겼다. 마지막 통의 뚜껑을 열기 전에 환기구를 모두 닫았다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { sanity: 0.005, health: 0.003, knowledge: 0.003 },

@@ -29,6 +29,7 @@ export default {
         {
           id: 'read-floor',
           text: '바닥의 번호를 하나씩 소리 내어 읽으며 걸어간다',
+          story: '복도 바닥에 번호가 하나씩 박혀 있었다. 첫 번호를 소리 내어 읽고, 읽은 숫자만큼 한 걸음씩 걸어 나갔다.',
           risk: 1,
           baseChance: 0.78,
           statWeights: { knowledge: 0.004, sanity: 0.003 },
@@ -45,6 +46,7 @@ export default {
         {
           id: 'measure-door',
           text: '문을 측정하고 문틀의 재질을 분석한다',
+          story: '줄자로 문의 높이와 너비를 쟀다. 문틀을 두드려 소리를 들으며 재질 표본을 긁어냈다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.005 },
@@ -61,6 +63,7 @@ export default {
         {
           id: 'knock',
           text: '문을 두드려 안쪽의 응답을 기다린다',
+          story: '문 앞에 서서 손등을 들어 올렸다. 숨을 한 번 고르고 세 번 천천히 두드린 뒤 귀를 문에 가져다 댔다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.004 },
@@ -86,6 +89,7 @@ export default {
         {
           id: 'read-all',
           text: '기록을 처음부터 끝까지 읽는다',
+          story: '기록 보관함의 첫 권부터 책상에 쌓았다. 한 장씩 넘기며 필체가 같은 곳에서 손가락을 멈췄다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { sanity: 0.004, knowledge: 0.003 },
@@ -102,6 +106,7 @@ export default {
         {
           id: 'ask-predecessor',
           text: '전임 수석을 찾아가 직접 묻는다',
+          story: '전임 수석의 거처를 수소문해 찾아갔다. 문을 두드리기 전에 물어볼 말을 종이에 적어 두었다.',
           risk: 2,
           baseChance: 0.55,
           statWeights: { reputation: 0.005, knowledge: 0.003 },
@@ -118,6 +123,7 @@ export default {
         {
           id: 'burn-records',
           text: '기록을 모두 태우고 처음부터 시작한다',
+          story: '기록을 소각로 옆에 쌓았다. 첫 권을 불 속에 던져 넣는 손이 놀랄 만큼 침착했다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.005, reputation: 0.003 },
@@ -142,6 +148,7 @@ export default {
         {
           id: 'walk-away',
           text: '아무것도 하지 않고 문을 등지고 걸어 나간다',
+          story: '문을 등지고 서서 한 번도 돌아보지 않기로 마음먹었다. 첫 걸음을 떼자 발소리가 복도 끝까지 이어졌다.',
           risk: 1,
           baseChance: 0.8,
           statWeights: { sanity: 0.003 },
@@ -159,6 +166,7 @@ export default {
         {
           id: 'pass-key',
           text: '후임자를 지명하고 열쇠를 넘긴 뒤 떠난다',
+          story: '후임자의 이름을 적은 서류에 서명했다. 열쇠를 손바닥에 올려 건넬 순간을 한참 가늠했다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { reputation: 0.005, knowledge: 0.003 },
@@ -176,6 +184,7 @@ export default {
         {
           id: 'seal-door',
           text: '문을 영구 봉인하고 그 자리에 남는다',
+          story: '문틀 둘레에 봉인용 판을 하나씩 대고 못을 박았다. 망치 소리가 복도의 침묵을 짧게 끊었다.',
           risk: 3,
           baseChance: 0.42,
           statWeights: { sanity: 0.005, knowledge: 0.005 },
@@ -193,6 +202,7 @@ export default {
         {
           id: 'open-door',
           text: '바깥쪽 손잡이를 잡고 문을 연다',
+          story: '문 앞에서 바깥쪽 손잡이를 쥐었다. 열쇠 구멍이 없다는 것을 그제야 처음 알아차렸다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.005 },

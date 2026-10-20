@@ -32,6 +32,7 @@ export default {
         {
           id: 'timer-observe',
           text: '타이머를 걸고 정확히 7분씩 나눠서 관측한다',
+          story: '관측실에 타이머를 올리고 7분에 맞췄다. 알람이 울릴 때까지 별빛 아래 두 손을 무릎에 얹고 있었다.',
           risk: 1,
           baseChance: 0.72,
           statWeights: { sanity: 0.003, knowledge: 0.003 },
@@ -48,6 +49,7 @@ export default {
         {
           id: 'mirror-observe',
           text: '거울을 이용해 반사된 별을 간접적으로 관측한다',
+          story: '손거울을 각도에 맞게 세우고 지붕 틈의 별을 비춰 보았다. 거울 속의 별이 실제보다 조금 가깝게 보였다.',
           risk: 3,
           baseChance: 0.5,
           statWeights: { knowledge: 0.006 },
@@ -64,6 +66,7 @@ export default {
         {
           id: 'stare-long',
           text: '시간제한을 무시하고 별을 오래 응시한다',
+          story: '타이머를 주머니에 넣고 고개를 들었다. 눈을 깜박이는 간격이 점점 길어졌다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { sanity: 0.006, knowledge: 0.004 },
@@ -88,6 +91,7 @@ export default {
         {
           id: 'rotate-observers',
           text: '관측 인원을 매일 교체하고 한 사람이 별을 두 번 보지 않게 한다',
+          story: '관측 명단을 새로 짜고 이름 칸 옆에 날짜를 적어 넣었다. 한 사람도 같은 날 두 번 이름이 겹치지 않게 선을 그었다.',
           risk: 1,
           baseChance: 0.68,
           statWeights: { reputation: 0.004, knowledge: 0.003 },
@@ -104,6 +108,7 @@ export default {
         {
           id: 'blindfold-test',
           text: '눈가리개를 한 상태에서도 시선이 느껴지는지 실험한다',
+          story: '눈가리개를 두껍게 두르고 별이 있는 쪽을 향해 앉았다. 어둠 속에서 피부로 시선이 닿는 곳을 더듬었다.',
           risk: 3,
           baseChance: 0.48,
           statWeights: { sanity: 0.004, knowledge: 0.005 },
@@ -120,6 +125,7 @@ export default {
         {
           id: 'look-back',
           text: '별이 있는 쪽을 향해 시선을 되돌려 보낸다',
+          story: '고개를 들어 별을 정면으로 마주 보았다. 눈에 힘을 주고 시선을 되돌려 보내듯 가만히 있었다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { sanity: 0.006 },
@@ -144,6 +150,7 @@ export default {
         {
           id: 'refuse-naming',
           text: '이름 붙이기를 거부하고 공식 반대 의견서를 제출한다',
+          story: '반대 의견서의 첫 줄을 한참 고쳐 썼다. 서명란에 이름을 쓰기 전에 펜을 한 번 내려놓았다.',
           risk: 1,
           baseChance: 0.66,
           statWeights: { reputation: 0.005, knowledge: 0.003 },
@@ -160,6 +167,7 @@ export default {
         {
           id: 'false-name',
           text: '가짜 이름을 붙여 별이 어떻게 반응하는지 본다',
+          story: '그럴듯한 이름 하나를 종이에 적어 별을 향해 들어 올렸다. 소리 내어 읽기 전에 숨을 크게 들이마셨다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { knowledge: 0.006, sanity: 0.003 },
@@ -176,6 +184,7 @@ export default {
         {
           id: 'be-named',
           text: '별에게 자신의 이름을 대신 내어준다',
+          story: '지붕 틈 아래에 서서 두 손을 펴 들었다. 입술을 움직여 내 이름을 소리 없이 한 번 되뇌었다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.007, knowledge: 0.004 },
@@ -200,6 +209,7 @@ export default {
         {
           id: 'burn-page',
           text: '페이지를 읽지 않고 태워 버린다',
+          story: '페이지를 접힌 채로 재떨이 위에 올렸다. 라이터를 켜는 손이 읽고 싶은 마음과 싸웠다.',
           risk: 1,
           baseChance: 0.7,
           statWeights: { sanity: 0.003, reputation: 0.003 },
@@ -216,6 +226,7 @@ export default {
         {
           id: 'read-page',
           text: '페이지를 읽고 그 내용을 공식 기록으로 남긴다',
+          story: '페이지를 평평하게 펴서 책상에 올렸다. 첫 줄에 손가락을 대고 천천히 눈으로 따라갔다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { knowledge: 0.006, sanity: 0.004 },
@@ -232,6 +243,7 @@ export default {
         {
           id: 'write-reply',
           text: '그 페이지의 빈 곳에 답장을 적는다',
+          story: '페이지의 빈 곳에 펜을 가져다 댔다. 답장의 첫 단어를 고르며 한참 숨을 멈췄다.',
           risk: 5,
           baseChance: 0.22,
           statWeights: { sanity: 0.007, knowledge: 0.005 },

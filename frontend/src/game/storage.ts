@@ -8,7 +8,7 @@ import type { FeedItem } from './feed'
 
 const GAME_KEY = 'lifesim:game'
 const RECORDS_KEY = 'lifesim:records'
-const SAVE_VERSION = 6
+const SAVE_VERSION = 8
 const MAX_RECORDS = 10
 
 /** 콘텐츠(객체·이벤트 구성)가 바뀌면 이전 저장본을 이어 하지 못하게 하는 서명 */

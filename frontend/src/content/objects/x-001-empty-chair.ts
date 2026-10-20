@@ -34,6 +34,7 @@ export default {
         {
           id: 'turn-away',
           text: '의자를 벽 쪽으로 돌려놓고, 다른 방에서 일지를 쓴다',
+          story: '의자 다리가 바닥에 끌리며 휴게실에 낮은 소리가 길게 울렸다. 의자를 벽 쪽으로 밀어붙이고, 반대편 방의 책상에 일지를 펼쳤다.',
           risk: 1,
           baseChance: 0.82,
           statWeights: { sanity: 0.002 },
@@ -50,6 +51,7 @@ export default {
         {
           id: 'record-warmth',
           text: '의자 옆에 서서 앉은 자국의 온기를 기록한다',
+          story: '의자 옆에 서서 온도계를 앉은 자국에 가져다 댔다. 눈금이 천천히 오르는 동안 등받이의 낡은 나뭇결이 눈에 들어왔다.',
           risk: 2,
           baseChance: 0.62,
           statWeights: { knowledge: 0.005, sanity: 0.002 },
@@ -66,6 +68,7 @@ export default {
         {
           id: 'sit',
           text: '의자에 앉아 “그 사람”이 누구인지 확인한다',
+          story: '의자 앞에 한참 서 있었다. 숨을 한 번 고르고, 앉은 자국이 남은 자리에 조심스럽게 몸을 내렸다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { sanity: 0.005, knowledge: 0.003 },
@@ -90,6 +93,7 @@ export default {
         {
           id: 'report',
           text: '지워진 줄이 있다는 사실만 상급자에게 보고한다',
+          story: '매뉴얼을 들고 상급자의 사무실 앞에 섰다. 지워진 줄에 대해 어떻게 말할지 몇 번이나 고쳐 말해 보았다.',
           risk: 1,
           baseChance: 0.85,
           statWeights: { reputation: 0.002 },
@@ -106,6 +110,7 @@ export default {
         {
           id: 'restore',
           text: '연필로 문질러 지워진 문장을 복원한다',
+          story: '연필을 눕혀 지워진 줄 위를 가볍게 문질렀다. 흑연 가루가 쌓이는 자리에서 희미한 글자의 윤곽이 올라오기 시작했다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.005 },
@@ -122,6 +127,7 @@ export default {
         {
           id: 'look-under',
           text: '허가 없이 의자 밑을 들여다본다',
+          story: '복도에 아무도 없는 것을 확인하고 의자 앞에 무릎을 꿇었다. 손전등 불빛이 의자 다리 사이의 어둠으로 천천히 들어갔다.',
           risk: 3,
           baseChance: 0.42,
           statWeights: { sanity: 0.004, knowledge: 0.003 },

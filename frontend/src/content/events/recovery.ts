@@ -219,4 +219,174 @@ export default [
       },
     ],
   },
+  {
+    id: 'rec-roof',
+    kind: 'recovery',
+    title: '옥상 정원',
+    text: '본관 옥상에 아무도 돌보지 않는 화단이 있다. 점심시간에 올라가 보니 흙이 말라 있고, 난간 너머로 지상의 하늘이 보인다.',
+    years: 0.5,
+    cooldownYears: 6,
+    choices: [
+      {
+        id: 'water-plants',
+        text: '화단에 물을 준다',
+        risk: 1,
+        baseChance: 0.92,
+        success: {
+          text: '흙이 젖는 소리가 났다. 이름 모를 풀이 한 뼘 자라 있었다.',
+          effects: { sanity: 12 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '주전자가 비어 있었다. 화단은 이미 젖어 있었다.',
+          effects: { sanity: 4 },
+        },
+      },
+      {
+        id: 'look-sky',
+        text: '난간에 기대어 하늘을 본다',
+        risk: 1,
+        baseChance: 0.9,
+        success: {
+          text: '구름이 움직였다. 움직인다는 것이 그렇게 위로가 될 줄 몰랐다.',
+          effects: { sanity: 10, health: 2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '하늘이 낮게 느껴져 오래 쳐다보지 못했다.',
+          effects: { sanity: 3 },
+        },
+      },
+      {
+        id: 'count-windows',
+        text: '건물 창문의 수를 세어 본다',
+        risk: 3,
+        baseChance: 0.5,
+        statWeights: { knowledge: 0.004, sanity: 0.003 },
+        success: {
+          text: '지상 창문의 수가 지하 도면의 층 수와 맞았다. 맞는다는 사실이 이렇게 반가울 줄은 몰랐다.',
+          effects: { sanity: 8, knowledge: 6 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '세는 도중 창 하나가 먼저 꺼졌다.',
+          effects: { sanity: -5 },
+        },
+      },
+    ],
+  },
+  {
+    id: 'rec-radio',
+    kind: 'recovery',
+    title: '낡은 라디오',
+    text: '휴게실 선반의 낡은 라디오에서 모르는 노래가 흘러나온다. 전원 표시등은 꺼져 있다.',
+    years: 0.5,
+    cooldownYears: 7,
+    when: { stats: { sanity: { max: 65 } } },
+    choices: [
+      {
+        id: 'listen',
+        text: '끝까지 듣는다',
+        risk: 2,
+        baseChance: 0.75,
+        statWeights: { sanity: 0.003 },
+        success: {
+          text: '가사는 알 수 없었지만 후렴만은 어릴 적에 들은 것 같았다. 눈을 뜨자 방이 조금 밝아져 있었다.',
+          effects: { sanity: 11 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '노래가 끝나자 라디오는 꺼져 있었다. 전원 코드는 뽑혀 있었다.',
+          effects: { sanity: -3 },
+        },
+      },
+      {
+        id: 'tune',
+        text: '주파수를 돌려 본다',
+        risk: 3,
+        baseChance: 0.5,
+        statWeights: { knowledge: 0.004 },
+        success: {
+          text: '잡음 사이에서 숫자를 읽는 목소리가 들렸다. 받아 적은 숫자는 객체 번호와 일치했다.',
+          effects: { knowledge: 8, sanity: 3 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '주파수를 돌릴 때마다 내 이름이 한 번씩 섞여 들렸다.',
+          effects: { sanity: -8 },
+        },
+      },
+      {
+        id: 'unplug',
+        text: '코드를 뽑는다',
+        risk: 1,
+        baseChance: 0.88,
+        success: {
+          text: '방이 조용해졌다. 조용함이 오늘은 고마웠다.',
+          effects: { sanity: 6 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '코드는 이미 뽑혀 있었다. 노래는 계속되었다.',
+          effects: { sanity: -4 },
+        },
+      },
+    ],
+  },
+  {
+    id: 'rec-meal',
+    kind: 'recovery',
+    title: '식당 마감 뒤',
+    text: '구내식당이 마감한 뒤, 조리사가 남은 밥과 국을 한 상 차려 놓고 앉아 있다. 먹고 가라는 눈짓이다.',
+    years: 0.5,
+    cooldownYears: 6,
+    choices: [
+      {
+        id: 'eat-together',
+        text: '남은 밥을 함께 먹는다',
+        risk: 1,
+        baseChance: 0.9,
+        success: {
+          text: '밥이 따뜻했다. 오랜만에 맛이라는 것이 느껴졌다.',
+          effects: { sanity: 10, health: 3 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '밥은 따뜻한데 맛이 없었다. 먹는 내내 누가 보는 것 같았다.',
+          effects: { sanity: 2 },
+        },
+      },
+      {
+        id: 'take-away',
+        text: '도시락으로 싸서 숙소로 가져간다',
+        risk: 1,
+        baseChance: 0.85,
+        success: {
+          text: '숙소에서 조용히 먹었다. 혼자 먹는 밥도 나쁘지 않았다.',
+          effects: { sanity: 8 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '도시락 뚜껑을 열자 밥이 식어 있었다. 식은 지 오래된 것처럼.',
+          effects: { sanity: -2 },
+        },
+      },
+      {
+        id: 'ask-cook',
+        text: '조리사에게 이 건물에서 일한 이야기를 묻는다',
+        risk: 2,
+        baseChance: 0.65,
+        statWeights: { reputation: 0.003 },
+        success: {
+          text: '“나는 이 건물에서 밥만 해요. 그래서 오래 있을 수 있었죠.” 조리사가 웃으며 말했다.',
+          effects: { sanity: 7, knowledge: 3, reputation: 2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '조리사는 말없이 설거지를 시작했다.',
+          effects: { sanity: -2, reputation: -1 },
+        },
+      },
+    ],
+  },
 ] satisfies InterludeDef[]

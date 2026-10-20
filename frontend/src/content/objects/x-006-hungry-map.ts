@@ -32,6 +32,7 @@ export default {
         {
           id: 'measure',
           text: '줄자로 가장자리를 재어 매달 기록한다',
+          story: '지도를 평평한 책상에 펴고 가장자리마다 줄자를 댔다. 눈금을 읽어 날짜와 함께 기록부에 옮겼다.',
           risk: 1,
           baseChance: 0.78,
           statWeights: { knowledge: 0.003, reputation: 0.003 },
@@ -48,6 +49,7 @@ export default {
         {
           id: 'compare-old-maps',
           text: '과거 지도 사본과 대조해 사라진 지명을 찾는다',
+          story: '서고에서 과거 지도 사본을 한 아름 꺼내 왔다. 지명을 하나씩 손가락으로 짚어 가며 지금의 지도와 겹쳐 보았다.',
           risk: 2,
           baseChance: 0.6,
           statWeights: { knowledge: 0.006 },
@@ -64,6 +66,7 @@ export default {
         {
           id: 'draw-dot',
           text: '지도 한쪽에 점 하나를 찍어 반응을 본다',
+          story: '펜을 들고 지도의 빈 모서리에 한참 머물렀다. 숨을 멈추고 점 하나를 찍은 뒤 천천히 펜을 뗐다.',
           risk: 4,
           baseChance: 0.32,
           statWeights: { sanity: 0.004, knowledge: 0.004 },
@@ -88,6 +91,7 @@ export default {
         {
           id: 'record-reason',
           text: '동료의 이유를 기록하고 상급자 면담을 요청한다',
+          story: '동료가 털어놓는 이유를 하나도 놓치지 않고 받아 적었다. 기록을 정리한 뒤 상급자 면담을 요청하는 서류를 썼다.',
           risk: 1,
           baseChance: 0.8,
           statWeights: { reputation: 0.004 },
@@ -104,6 +108,7 @@ export default {
         {
           id: 'offer-substitute',
           text: '대신 종이에 지도 사본을 그리게 한다',
+          story: '동료에게 백지와 연필을 건넸다. 지도를 보지 않고 기억나는 대로 사본을 그려 보라고 했다.',
           risk: 2,
           baseChance: 0.58,
           statWeights: { knowledge: 0.004, reputation: 0.003 },
@@ -120,6 +125,7 @@ export default {
         {
           id: 'let-draw-small',
           text: '통제된 환경에서 작은 섬 하나를 그리게 한다',
+          story: '격리 책상 위에 작은 종이를 따로 펼쳤다. 동료가 펜을 쥐고 섬의 윤곽을 천천히 그리기 시작했다.',
           risk: 4,
           baseChance: 0.3,
           statWeights: { knowledge: 0.005, sanity: 0.003 },
@@ -145,6 +151,7 @@ export default {
         {
           id: 'seal-map',
           text: '지도 전체를 납 케이스로 봉인한다',
+          story: '지도를 접어 납으로 안을 댄 케이스에 넣었다. 뚜껑을 닫는 순간 안에서 종이가 펼쳐지는 소리가 났다.',
           risk: 2,
           baseChance: 0.65,
           statWeights: { knowledge: 0.003, reputation: 0.003 },
@@ -161,6 +168,7 @@ export default {
         {
           id: 'feed-fake',
           text: '허구의 장소를 그려 넣어 지도를 속인다',
+          story: '존재하지 않는 지명 하나를 정성스럽게 지어냈다. 지도의 빈 곳에 그 이름을 또박또박 써 넣었다.',
           risk: 3,
           baseChance: 0.45,
           statWeights: { knowledge: 0.006 },
@@ -177,6 +185,7 @@ export default {
         {
           id: 'write-own-name',
           text: '자기 이름을 지도의 한 지점에 적어 시험한다',
+          story: '지도의 한 지점을 골라 펜 끝을 가져다 댔다. 자기 이름의 첫 획을 긋는 손이 눈에 띄게 떨렸다.',
           risk: 5,
           baseChance: 0.2,
           statWeights: { sanity: 0.006, knowledge: 0.004 },

@@ -29,6 +29,9 @@ function validateChoice(choice: Choice, where: string, npcIds: ReadonlySet<strin
   if (!choice.text || !choice.success.text || !choice.failure.text) {
     fail(`${where}: 텍스트가 비어 있음`)
   }
+  if (choice.story !== undefined && !choice.story.trim()) {
+    fail(`${where}: story(선택에 따른 이야기 진행)가 비어 있음`)
+  }
   for (const outcome of [choice.success, choice.failure] as OutcomeExtras[]) {
     for (const npcId of Object.keys(outcome.relations ?? {})) {
       if (!npcIds.has(npcId)) {
