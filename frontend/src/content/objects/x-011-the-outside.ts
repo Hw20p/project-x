@@ -112,6 +112,7 @@ export default {
           statWeights: { reputation: 0.005, knowledge: 0.003 },
           success: {
             text: '전임은 문 쪽을 보지 않고 말했다. “열쇠를 쥔 사람은 문의 바깥에 있어야 해.” 은퇴한 지 오래된 사람이었다.',
+            relations: { harin: 8 },
             effects: { knowledge: 8, reputation: 8 },
           },
           failure: {

@@ -5,6 +5,8 @@ interface DecisionPopupProps {
   /** 팝업 맨 위의 작은 분류 문구 (스크린 리더용 이름이기도 하다) */
   label: string
   onClose: () => void
+  /** 닫기 버튼 문구. 기본은 줄거리를 다시 읽는다는 뜻의 "닫고 기록 보기" */
+  closeLabel?: string
   children: ReactNode
 }
 
@@ -12,7 +14,7 @@ interface DecisionPopupProps {
  * 객체 관리·막간 이벤트의 선택을 띄우는 팝업. 바깥을 누르거나 Esc로 닫을 수 있고,
  * 닫으면 아래의 줄거리 스트림을 다시 읽을 수 있다. 좁은 화면에서는 아래에서 올라오는 시트가 된다.
  */
-export function DecisionPopup({ label, onClose, children }: DecisionPopupProps) {
+export function DecisionPopup({ label, onClose, closeLabel = '닫고 기록 보기', children }: DecisionPopupProps) {
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -41,7 +43,7 @@ export function DecisionPopup({ label, onClose, children }: DecisionPopupProps) 
         <div className="mb-5 flex items-center justify-between gap-4">
           <span className="text-xs tracking-[0.2em] text-ash">{label}</span>
           <button type="button" onClick={onClose} className="text-xs text-ash hover:text-fog">
-            닫고 기록 보기 <span aria-hidden="true">✕</span>
+            {closeLabel} <span aria-hidden="true">✕</span>
           </button>
         </div>
         {children}

@@ -97,6 +97,7 @@ export default {
           statWeights: { knowledge: 0.003, reputation: 0.003 },
           success: {
             text: '녹음에는 합창의 한 파트가 깨끗이 담겼다. 선임은 분석이 끝나자 허밍을 멈췄다.',
+            relations: { harin: 6 },
             effects: { knowledge: 6, reputation: 6 },
           },
           failure: {
@@ -156,6 +157,7 @@ export default {
           statWeights: { reputation: 0.004, sanity: 0.002 },
           success: {
             text: '팀원은 새 이름에 대답했다. 합창은 그 이름을 알지 못해 멀어졌다.',
+            relations: { jian: 6 },
             effects: { reputation: 6, knowledge: 3 },
           },
           failure: {
@@ -173,6 +175,7 @@ export default {
           statWeights: { sanity: 0.005, knowledge: 0.003 },
           success: {
             text: '이름이 공동으로 흘러들었다. 합창은 한 박자 쉬고 이어졌다. 팀원은 눈을 깜빡이며 자기 이름을 되찾았다. 대신 당신의 이름 한 글자가 흐려졌다.',
+            relations: { jian: 8 },
             effects: { knowledge: 10, reputation: 9, sanity: -9 },
           },
           failure: {
@@ -190,6 +193,7 @@ export default {
           statWeights: { sanity: 0.006 },
           success: {
             text: '합창은 당신의 이름을 가져가고 팀원을 놓았다. 이튿날 모두가 당신을 처음 보는 사람처럼 대했다. 그러나 당신은 아직 자리에 앉아 일하고 있다.',
+            relations: { jian: 14 },
             effects: { knowledge: 14, reputation: 16, sanity: -14 },
             finish: true,
           },

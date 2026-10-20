@@ -48,10 +48,11 @@ export const AGE_CHANCE_PENALTY = [
 /**
  * 해마다 자연 회복되는 정신력 (일상 회복).
  * 시간이 먼저 흐르는 구조(2026-10-20 개편)에서 안전 우선 봇의 정신 붕괴 비율: +1 → 11.1%, +0 → 69.2% (목표 20~40%).
- * 두 값의 중간인 +0.5로 둔다 (스탯은 소수로 들고 있고 화면에서는 반올림해 보인다). 재측정 전의 값.
+ * 두 값의 중간인 +0.5로 뒀다가, 관계 점수를 올린 뒤(14~15차) 붕괴가 21.8%까지 내려가 최종 엔딩이 60%에 닿아서
+ * +0.3으로 낮춘다 (스탯은 소수로 들고 있고 화면에서는 반올림해 보인다). 재측정 전.
  * (예전 구조에서 이벤트 없이 시뮬레이션했을 때 안전 우선 봇의 정신 붕괴 비율: +0 → 88%, +1 → 80%, +2 → 23%, +3 → 0.4%.)
  */
-export const YEARLY_SANITY_RECOVERY = 0.5
+export const YEARLY_SANITY_RECOVERY = 0.3
 
 /**
  * 객체가 배정되는 간격. 객체 관리는 한순간에 일어나고, 객체가 끝난 뒤 시작 간격이 지날 때까지 서술이 한 해씩 흐른다.
@@ -69,6 +70,7 @@ export const OBJECT_SCHEDULE = {
 
 /** 시간이 흐르며 승급 점수가 저절로 쌓이는 규칙. 해마다 `점수 = clamp(base + (평판-50)/reputationDivisor + (지식-50)/knowledgeDivisor, min, max)`. */
 export const PASSIVE_PROMOTION = {
+  /** 1.7로 낮춰 봤으나(15차) 엔딩이 안 줄고 노화 사망만 늘어서 2로 되돌림 */
   basePerYear: 2,
   reputationDivisor: 20,
   knowledgeDivisor: 40,
@@ -79,7 +81,7 @@ export const PASSIVE_PROMOTION = {
 /** 최종 객체가 열리는 조건: 수석이 된 지 이 기간이 지나고, 3막 서술이 끝났거나(`act3-done`) 오래 수석으로 있었을 때 */
 export const FINALE = {
   /** 수석이 된 뒤 최소 이만큼(년)은 지나야 한다 */
-  minYearsAtRank5: 4,
+  minYearsAtRank5: 6,
   /** 3막 서술이 끝나지 않았어도, 수석으로 이만큼(년) 지내면 열린다 */
   maxYearsAtRank5: 12,
   /** 3막이 끝났음을 나타내는 플래그 */

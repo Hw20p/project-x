@@ -334,6 +334,9 @@ export function validateNpcs(npcs: readonly NpcDef[]): string[] {
       fail('NPC id 중복')
     }
     ids.add(npc.id)
+    if (!Number.isInteger(npc.ageGap)) {
+      fail('ageGap은 정수여야 함 (플레이어와의 나이 차이)')
+    }
     for (const bond of npc.bonds ?? []) {
       if (!bond.label) {
         fail('bond의 label이 비어 있음')

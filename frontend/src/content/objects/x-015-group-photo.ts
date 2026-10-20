@@ -97,6 +97,7 @@ export default {
           statWeights: { reputation: 0.004 },
           success: {
             text: '숫자가 적힌 쪽지가 돌아왔다. 쪽지의 숫자는 내가 기억하는 인원보다 하나 많았다.',
+            relations: { jian: 4 },
             effects: { reputation: 5, knowledge: 2 },
           },
           failure: {

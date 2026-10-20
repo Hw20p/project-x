@@ -97,11 +97,13 @@ export default {
           statWeights: { reputation: 0.004 },
           success: {
             text: '면담 뒤 동료는 펜에서 손을 뗐다. 기록은 규정대로 작성되었다.',
+            relations: { jian: 6 },
             effects: { reputation: 5 },
           },
           failure: {
             kind: 'setback',
             text: '동료는 면담을 거부했다. 그날 밤 지도의 한구석이 조금 푸르러졌다.',
+            relations: { jian: -3 },
             effects: { reputation: -4, sanity: -6 },
           },
         },
@@ -114,6 +116,7 @@ export default {
           statWeights: { knowledge: 0.004, reputation: 0.003 },
           success: {
             text: '사본 위에 바다가 그려졌다. 지도는 그것을 잠시 지켜보다 흥미를 잃었다.',
+            relations: { jian: 5 },
             effects: { knowledge: 7, reputation: 6 },
           },
           failure: {

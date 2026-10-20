@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { findBackground, gameContext } from '../content'
 import { DecisionPopup } from '../components/game/DecisionPopup'
+import { RelationsView } from '../components/game/RelationsView'
 import { Stream } from '../components/game/Stream'
 import { PendingCard, SpeedControl } from '../components/game/StreamBar'
 import { StatusPanel } from '../components/game/StatusPanel'
@@ -11,13 +12,15 @@ import { BriefingScreen } from '../components/game/screens/BriefingScreen'
 import { ChoosingScreen } from '../components/game/screens/ChoosingScreen'
 import { EndedScreen } from '../components/game/screens/EndedScreen'
 import { InterludeScreen } from '../components/game/screens/InterludeScreens'
+import { RELATION_MAX, RELATION_MIN } from '../engine/config'
 import { getChoiceOptions, getCurrentInterlude, getCurrentObject, getCurrentStage } from '../engine/game'
 import type { GameAction } from '../engine/game'
 import type { GameState } from '../engine/state'
+import { deriveRelations } from '../game/feed'
 import type { FeedItem, YearSnapshot } from '../game/feed'
 import { useGame } from '../game/useGame'
 import type { StartOptions } from '../game/useGame'
-import { readingDelay, useStream } from '../game/useStream'
+import { FIRST_LINE_DELAY_MS, readingDelay, useStream } from '../game/useStream'
 
 /**
  * 주소를 읽는다.
@@ -97,13 +100,13 @@ const YEAR_LINE_KINDS: readonly FeedItem['kind'][] = ['ambient', 'beat', 'system
  *   스냅샷(없으면 재생 전 기준 상태)을 보여 준다. 남아 있지 않으면 undefined (엔진 상태를 그대로).
  * - gauge: 시간의 흐름 게이지. 한 해 표시가 재생되는 순간부터 그 해의 줄을 다 읽을 때까지 끊기지 않고 천천히 찬다
  *   (한 해의 길이 = 그 해의 줄을 읽는 시간의 합). 흐르는 시간이 아닐 때(팝업에서 멈춘 때)는 가득 찬 채로 있다.
- *   한 해 표시가 한 번도 없으면 undefined.
+ *   판이 막 시작한 프롤로그(입사 첫날의 오프닝 서술)에도 한 해 표시가 없지만, 입사 첫해로 보고 오프닝 줄을 읽는 동안 찬다.
  */
 function describePlayback(
   feed: readonly FeedItem[],
   revealed: number,
   base: { snapshot: YearSnapshot; feedLength: number },
-): { view: YearSnapshot | undefined; gauge: { key: number; durationMs: number; full: boolean } | undefined } {
+): { view: YearSnapshot | undefined; gauge: { key: number; durationMs: number; full: boolean } } {
   let lastYear = -1
   for (let index = Math.min(revealed, feed.length) - 1; index >= 0; index--) {
     if (feed[index].kind === 'year') {
@@ -120,7 +123,7 @@ function describePlayback(
     view = flowing ? feed[lastYear].snapshot : base.snapshot
   }
 
-  let gauge: { key: number; durationMs: number; full: boolean } | undefined
+  let gauge: { key: number; durationMs: number; full: boolean }
   if (lastYear >= 0) {
     const age = feed[lastYear].age
     if (!flowing) {
@@ -132,6 +135,21 @@ function describePlayback(
         durationMs += readingDelay(feed[index])
       }
       gauge = { key: age, durationMs, full: false }
+    }
+  } else {
+    // 한 해 표시가 아직 없다: 판이 막 시작한 프롤로그면 오프닝 줄(맨 앞에 이어진 opening 줄들)을 읽는 동안 찬다.
+    // 오프닝 뒤의 첫 줄(객체 배정 안내)이 나오는 순간이 끝이다. 그 뒤나 이어 하기로 들어왔을 때는 가득 찬 채로 둔다.
+    const openingEnd = feed.findIndex((item) => item.kind !== 'opening')
+    const end = openingEnd === -1 ? feed.length : openingEnd
+    const key = feed[0]?.age ?? 0
+    if (end > 0 && revealed <= end) {
+      let durationMs = FIRST_LINE_DELAY_MS
+      for (let index = 0; index < end; index++) {
+        durationMs += readingDelay(feed[index])
+      }
+      gauge = { key, durationMs, full: false }
+    } else {
+      gauge = { key, durationMs: 0, full: true }
     }
   }
   return { view, gauge }
@@ -158,7 +176,10 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
     : null
   const [closedKey, setClosedKey] = useState<string | null>(null)
   const decisionReady = decisionKey !== null && stream.idle
-  const popupOpen = decisionReady && closedKey !== decisionKey
+  // 관계 화면을 보는 동안에는 결정 팝업이 겹쳐 뜨지 않는다 (닫으면 그때 열린다)
+  const [relationsOpen, setRelationsOpen] = useState(false)
+  const closeRelations = useCallback(() => setRelationsOpen(false), [])
+  const popupOpen = decisionReady && closedKey !== decisionKey && !relationsOpen
   const closePopup = useCallback(() => setClosedKey(decisionKey), [decisionKey])
   const openPopup = () => setClosedKey(null)
 
@@ -247,6 +268,17 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
     }
   }, [stream.idle, game, feed.length])
   const playback = describePlayback(feed, stream.revealed, baseRef.current)
+  // 관계는 읽은 줄까지만 반영한다 (아직 읽지 않은 결과로 관계가 바뀐 것을 미리 알려 주지 않는다)
+  const relations = deriveRelations(feed, stream.revealed, RELATION_MIN, RELATION_MAX)
+  // 관계 화면을 마지막으로 본 시점까지의 변화 기록 수. 그보다 기록이 늘면 버튼에 빨간 점이 붙는다 (이어 한 판은 쌓인 변화를 본 것으로 친다).
+  const [seenRelationLog, setSeenRelationLog] = useState(
+    () => deriveRelations(feed, initialRevealed, RELATION_MIN, RELATION_MAX).log.length,
+  )
+  useEffect(() => {
+    if (relationsOpen) {
+      setSeenRelationLog(relations.log.length)
+    }
+  }, [relationsOpen, relations.log.length])
 
   const confirmRestart = () => {
     if (window.confirm('지금까지의 삶을 버리고 처음부터 다시 시작할까요?')) {
@@ -269,14 +301,15 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
         <StatusPanel
           state={game}
           view={playback.view}
-          gauge={
-            playback.gauge && {
-              key: playback.gauge.key,
-              full: playback.gauge.full,
-              durationMs: playback.gauge.durationMs / stream.speed,
-              paused: stream.paused,
-            }
-          }
+          gauge={{
+            key: playback.gauge.key,
+            full: playback.gauge.full,
+            durationMs: playback.gauge.durationMs / stream.speed,
+            paused: stream.paused,
+          }}
+          hasRelations={Object.keys(relations.values).length > 0}
+          relationsChanged={relations.log.length > seenRelationLog}
+          onOpenRelations={() => setRelationsOpen(true)}
           controls={
             <SpeedControl
               speed={stream.speed}
@@ -311,7 +344,13 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
         <div ref={bottomRef} className="h-24" aria-hidden="true" />
       </main>
 
-      {decisionReady && !popupOpen && pendingLabel && <PendingCard title={pendingTitle} label={pendingLabel} action={pendingAction} onOpen={openPopup} />}
+      {decisionReady && !popupOpen && !relationsOpen && pendingLabel && <PendingCard title={pendingTitle} label={pendingLabel} action={pendingAction} onOpen={openPopup} />}
+
+      {relationsOpen && (
+        <DecisionPopup label="인간관계" closeLabel="닫기" onClose={closeRelations}>
+          <RelationsView relations={relations} playerAge={playback.view?.age ?? game.player.age} />
+        </DecisionPopup>
+      )}
 
       {popupOpen && popupBody && (
         <DecisionPopup label={popupLabel} onClose={closePopup}>

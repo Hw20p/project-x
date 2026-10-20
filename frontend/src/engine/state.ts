@@ -68,6 +68,8 @@ export interface ChoiceResult {
   success: boolean
   text: string
   effects?: StatDelta
+  /** 이 선택으로 바뀐 NPC 관계 (npcId → 변화량). 화면의 결과 줄에 "관계 +N"으로 보인다. */
+  relations?: Record<string, number>
   /** 실패했을 때의 종류 */
   failureKind?: FailureKind
   /** 이 선택으로 객체 관리가 끝나는지 (일찍 끝내기 성공, 좌천, 마지막 단계) */

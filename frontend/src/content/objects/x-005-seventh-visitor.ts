@@ -37,6 +37,7 @@ export default {
           statWeights: { reputation: 0.004 },
           success: {
             text: '교체된 상담자가 다음 주 방문자를 맞았다. 방문자는 의자에 앉아 오래 문을 바라보았다. 누군가를 기다리듯이.',
+            relations: { taeseong: 4 },
             effects: { reputation: 5 },
           },
           failure: {

@@ -97,6 +97,7 @@ export default {
           statWeights: { reputation: 0.004, sanity: 0.003 },
           success: {
             text: '이름표의 주인은 이미 출장 중이었다. 상급자는 그에게 돌아오지 말라는 연락을 보냈다.',
+            relations: { taeseong: 6 },
             effects: { reputation: 6 },
           },
           failure: {

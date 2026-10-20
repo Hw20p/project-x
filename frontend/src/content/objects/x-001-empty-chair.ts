@@ -99,11 +99,13 @@ export default {
           statWeights: { reputation: 0.002 },
           success: {
             text: '상급자는 말없이 고개를 끄덕였다. “그 줄은 지워진 채로 두는 게 맞아.”',
+            relations: { taeseong: 6 },
             effects: { reputation: 4 },
           },
           failure: {
             kind: 'setback',
             text: '보고서가 반려되었다. “이미 알고 있는 것을 왜 적었나.”',
+            relations: { taeseong: -3 },
             effects: { reputation: -4 },
           },
         },

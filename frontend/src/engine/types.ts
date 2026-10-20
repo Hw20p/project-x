@@ -180,6 +180,8 @@ export interface NpcDef {
   id: string
   name: string
   role: string
+  /** 나이 차이: 이 인물의 나이 = 플레이어 나이 + ageGap (동기는 0, 선배는 +). 해가 지나면 같이 늘어난다. */
+  ageGap: number
   summary: string
   bonds?: NpcBond[]
 }

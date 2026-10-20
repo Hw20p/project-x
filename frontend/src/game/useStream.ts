@@ -5,8 +5,8 @@ export const SPEEDS = [1, 2, 4] as const
 export type Speed = (typeof SPEEDS)[number]
 
 const SPEED_KEY = 'lifesim:speed'
-/** 첫 줄이 나오기까지의 짧은 숨 고르기 */
-const FIRST_LINE_DELAY_MS = 350
+/** 첫 줄이 나오기까지의 짧은 숨 고르기 (프롤로그의 시간 게이지 길이를 잴 때도 쓴다) */
+export const FIRST_LINE_DELAY_MS = 350
 const BASE_DELAY_MS = 700
 const PER_CHAR_MS = 28
 const MAX_READ_CHARS = 70

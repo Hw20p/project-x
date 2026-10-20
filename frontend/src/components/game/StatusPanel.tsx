@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react'
-import { npcs } from '../../content'
 import { PROMOTION_REQUIREMENTS, RANK_LABELS } from '../../engine/config'
 import { STAT_LABELS } from '../../engine/report'
-import { findActiveBonds } from '../../engine/rules'
 import type { GameState } from '../../engine/state'
 import { STAT_KEYS } from '../../engine/types'
 import type { StatKey } from '../../engine/types'
@@ -50,16 +48,20 @@ interface StatusPanelProps {
    * `full`이면 가득 찬 채로 멈춰 있다 (팝업 앞에서 시간이 멈춘 때). `paused`이면 찬 만큼에서 멈춘다.
    */
   gauge?: { key: number; durationMs: number; full: boolean; paused: boolean }
+  /** 이름을 알게 된 사람이 있는지. 있으면 "관계" 버튼이 나온다. */
+  hasRelations?: boolean
+  /** 아직 관계 화면에서 확인하지 않은 변화가 있는지. 버튼에 빨간 점이 붙는다. */
+  relationsChanged?: boolean
+  onOpenRelations?: () => void
 }
 
 /** 화면 위쪽에 항상 보이는 상태: 나이·직급·승급 진행, 시간의 흐름 게이지, 네 가지 스탯, 인간관계 */
-export function StatusPanel({ state, controls, view, gauge }: StatusPanelProps) {
+export function StatusPanel({ state, controls, view, gauge, hasRelations = false, relationsChanged = false, onOpenRelations }: StatusPanelProps) {
   const age = view?.age ?? state.player.age
   const stats = view?.stats ?? state.player.stats
   const rank = view?.rank ?? state.player.career.rank
   const points = view?.points ?? state.player.career.promotionPoints
   const requirement = rank === 5 ? null : PROMOTION_REQUIREMENTS[rank]
-  const met = npcs.filter((npc) => state.relations[npc.id] !== undefined)
 
   return (
     <header className="border-b border-edge bg-ink/70 px-4 py-3 backdrop-blur">
@@ -69,7 +71,21 @@ export function StatusPanel({ state, controls, view, gauge }: StatusPanelProps) 
             {RANK_LABELS[rank]} <span className="text-fog">· {rank}급</span>
             <span className="ml-3 tabular-nums text-fog">{formatAge(age)}</span>
           </span>
-          {controls}
+          <span className="flex items-center gap-3">
+            {hasRelations && onOpenRelations && (
+              <button
+                type="button"
+                onClick={onOpenRelations}
+                className="relative rounded border border-glow/70 px-2 py-0.5 text-xs text-glow hover:bg-glow/10"
+              >
+                관계
+                {relationsChanged && (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-loss" role="img" aria-label="새 변화" />
+                )}
+              </button>
+            )}
+            {controls}
+          </span>
         </div>
 
         {gauge && (
@@ -104,29 +120,6 @@ export function StatusPanel({ state, controls, view, gauge }: StatusPanelProps) 
           </div>
         ) : (
           <p className="mt-2 text-right text-xs text-ash">최고 직급</p>
-        )}
-
-        {met.length > 0 && (
-          <details className="mt-1 text-xs text-fog">
-            <summary className="cursor-pointer select-none text-ash hover:text-fog">인간관계</summary>
-            <ul className="mt-1 grid gap-0.5">
-              {met.map((npc) => {
-                const relation = state.relations[npc.id] ?? 0
-                const labels = findActiveBonds(npc, relation).map((bond) => bond.label)
-                return (
-                  <li key={npc.id} className="flex justify-between gap-3">
-                    <span>
-                      {npc.name} <span className="text-ash">({npc.role})</span>
-                    </span>
-                    <span className="tabular-nums">
-                      {labels.length > 0 && <span className="mr-2 text-ash">{labels.join(', ')}</span>}
-                      <span className={relation > 0 ? 'text-gain' : relation < 0 ? 'text-loss' : 'text-fog'}>{relation}</span>
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </details>
         )}
       </div>
     </header>

@@ -96,11 +96,13 @@ export default {
           statWeights: { sanity: 0.003, reputation: 0.002 },
           success: {
             text: '등 뒤에서 물소리가 끊겼다 이어지기를 반복했다. 점검은 끝났다. 동료는 끝내 아무 말도 하지 않았다.',
+            relations: { jian: 8 },
             effects: { reputation: 5 },
           },
           failure: {
             kind: 'setback',
             text: '점검이 끝나기 전, 등 뒤에서 누군가 젖은 손을 어깨에 얹은 것 같았다.',
+            relations: { jian: -4 },
             effects: { sanity: -11, health: -4 },
           },
         },

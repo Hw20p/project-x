@@ -60,6 +60,32 @@ export interface YearSnapshot {
   points: number
 }
 
+/** 관계 화면이 보여 주는, 지금까지 읽은 줄거리 기준의 NPC 관계 */
+export interface RelationsView {
+  /** NPC id → 관계 값. 아직 만난 적 없는 NPC는 키가 없다. */
+  values: Record<string, number>
+  /** 관계가 바뀐 기록 (오래된 순) */
+  log: { npcId: string; age: number; change: number }[]
+}
+
+/**
+ * 읽은 줄(앞쪽 `revealed`개)까지의 관계를 줄거리에서 다시 모은다. 엔진 상태의 관계는 아직 읽지 않은 결과까지 반영돼 있어서,
+ * 그대로 보여 주면 결과를 읽기 전에 관계가 바뀐 것을 먼저 알게 된다. 관계는 선택 결과로만 바뀌므로 결과 줄을 모으면 같은 값이 된다.
+ */
+export function deriveRelations(feed: readonly FeedItem[], revealed: number, min: number, max: number): RelationsView {
+  const values: Record<string, number> = {}
+  const log: RelationsView['log'] = []
+  for (const item of feed.slice(0, Math.max(0, revealed))) {
+    for (const [npcId, change] of Object.entries(item.relations ?? {})) {
+      values[npcId] = Math.max(min, Math.min(max, (values[npcId] ?? 0) + change))
+      if (change !== 0) {
+        log.push({ npcId, age: item.age, change })
+      }
+    }
+  }
+  return { values, log }
+}
+
 export type FeedDraft = Omit<FeedItem, 'id'>
 
 /** 새 항목들을 스트림 뒤에 붙인다. id는 쌓인 순서로 매긴다. */
@@ -168,7 +194,13 @@ export function describeTransition(
         notes.push('이 객체의 관리가 끝난다.')
       }
     }
-    drafts.push(...resultDrafts(age, result.text, result.success ? 'good' : 'bad', { delta, notes }))
+    drafts.push(
+      ...resultDrafts(age, result.text, result.success ? 'good' : 'bad', {
+        delta,
+        relations: result.relations,
+        notes,
+      }),
+    )
   } else if (interludeChoseJustNow && next.lastInterludeResult) {
     const result = next.lastInterludeResult
     const notes = [`${result.success ? '성공' : '실패'} · 확률 ${Math.round(result.chance * 100)}%`]

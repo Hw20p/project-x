@@ -113,11 +113,13 @@ export default {
           statWeights: { reputation: 0.005 },
           success: {
             text: '상급자는 오래 침묵하다 말했다. “그 자리엔 항상 한 명이 있었어. 이름만 바뀌지.”',
+            relations: { harin: 6 },
             effects: { knowledge: 7, reputation: 3, sanity: -4 },
           },
           failure: {
             kind: 'setback',
             text: '“신입이 알 필요 없는 일이다.” 상급자의 눈이 인형과 닮아 있었다.',
+            relations: { harin: -3 },
             effects: { reputation: -5, sanity: -6 },
           },
         },

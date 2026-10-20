@@ -266,6 +266,7 @@ function choose(ctx: GameContext, state: GameState, choiceId: string): GameState
     success,
     text: outcome.text,
     effects: outcome.effects,
+    relations: outcome.relations,
     failureKind,
     endsObject,
   }

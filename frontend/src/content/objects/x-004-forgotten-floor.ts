@@ -113,6 +113,7 @@ export default {
           statWeights: { sanity: 0.003, knowledge: 0.004 },
           success: {
             text: '답을 하던 직원이 문득 울었다. 무엇 때문인지는 그도 몰랐다. 그래도 질문이 공백의 가장자리를 단단하게 했다.',
+            relations: { jian: 5 },
             effects: { knowledge: 8, reputation: 4, sanity: -3 },
           },
           failure: {

@@ -9,6 +9,7 @@ export const npcs: NpcDef[] = [
     id: 'jian',
     name: '서지안',
     role: '입사 동기',
+    ageGap: 0,
     summary: '같은 날 입사한 동기. 말수는 적지만 야근하는 날이면 꼭 옆자리에 있다.',
     bonds: [
       { label: '든든한 동료', minRelation: 10, maxRelation: 29, yearly: { sanity: 1 } },
@@ -21,6 +22,7 @@ export const npcs: NpcDef[] = [
     id: 'taeseong',
     name: '오태성',
     role: '팀장',
+    ageGap: 15,
     summary: '관리팀 팀장. 규정을 지키는 사람이고, 규정이 지키지 못하는 것에 대해서는 말을 아낀다.',
     bonds: [
       { label: '신임을 얻음', minRelation: 10, maxRelation: 29, yearly: { reputation: 1 } },
@@ -33,6 +35,7 @@ export const npcs: NpcDef[] = [
     id: 'harin',
     name: '문하린',
     role: '선임 연구원',
+    ageGap: 8,
     summary: '객체 관찰 기록을 맡은 선임. 매뉴얼의 지워진 줄이 누구 손에서 나왔는지 아는 듯하다.',
     bonds: [
       { label: '가르침을 받음', minRelation: 10, maxRelation: 29, yearly: { knowledge: 1 } },
