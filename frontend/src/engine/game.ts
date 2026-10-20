@@ -12,6 +12,7 @@
 // 같은 시드와 같은 선택 기록이면 항상 같은 결과가 나온다 (`replayGame`으로 검증 가능).
 import { pickNextObject } from './assignment'
 import { ENTRY_AGE, MAX_AGE } from './config'
+import { openingEntries, pickFlowLines } from './flow'
 import { isInterludeDue, pickInterlude } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
@@ -40,14 +41,18 @@ import type {
   GameState,
   InterludeProgress,
   InterludeResult,
+  LifeLogEntry,
   ObjectProgress,
   ObjectReport,
 } from './state'
 import type {
+  BackgroundDef,
   Choice,
   ContainmentObject,
+  FlowDef,
   InterludeDef,
   NpcDef,
+  OpeningDef,
   PlayerState,
   StatDelta,
   Stage,
@@ -61,11 +66,19 @@ export interface GameContext {
   interludes?: readonly InterludeDef[]
   /** NPC. 관계 값에 따른 매년 효과(`bonds`) 계산에 쓴다. */
   npcs?: readonly NpcDef[]
+  /** 입사 배경. `GameOptions.backgroundId`가 가리킨다. */
+  backgrounds?: readonly BackgroundDef[]
+  /** 흐르는 서술(일상·이야기 비트). 없으면 서술 없이 진행된다. */
+  flows?: readonly FlowDef[]
+  /** 입사 배경별 오프닝 장면 */
+  openings?: readonly OpeningDef[]
 }
 
 export interface GameOptions {
   seed: number
-  /** 입사 시점의 스탯. 인생 구간이 구현되면 그 결과를 넘긴다. 없으면 임시 기본값. */
+  /** 입사 배경 id (`ctx.backgrounds`에 있어야 함). 그 배경의 스탯으로 시작한다. */
+  backgroundId?: string
+  /** 입사 시점의 스탯을 직접 지정한다. 배경보다 우선하고, 둘 다 없으면 `DEFAULT_STATS`. 시뮬레이션에서 쓴다. */
   stats?: Stats
   /** 입사 나이. 기본은 `ENTRY_AGE`. */
   age?: number
@@ -140,13 +153,22 @@ export function getChoiceOptions(ctx: GameContext, state: GameState): ChoiceOpti
 // ───────────────────────── 시작 ─────────────────────────
 
 export function createGame(ctx: GameContext, options: GameOptions): GameState {
+  const background = options.backgroundId
+    ? (ctx.backgrounds ?? []).find((candidate) => candidate.id === options.backgroundId)
+    : undefined
+  if (options.backgroundId && !background) {
+    throw new Error(`알 수 없는 입사 배경: ${options.backgroundId}`)
+  }
+  // 스탯을 직접 넘기면 그게 우선이고, 아니면 배경의 스탯, 둘 다 없으면 기본값
+  const startStats = options.stats ?? background?.stats
   const player: PlayerState = {
     age: options.age ?? ENTRY_AGE,
-    stats: options.stats ? { ...options.stats } : createInitialStats(),
+    stats: startStats ? { ...startStats } : createInitialStats(),
     career: createCareer(),
   }
   const initial: GameState = {
     seed: options.seed,
+    backgroundId: background?.id ?? null,
     rngState: options.seed >>> 0,
     phase: 'ended',
     player,
@@ -164,9 +186,12 @@ export function createGame(ctx: GameContext, options: GameOptions): GameState {
     lastInterludeResult: null,
     interludeLog: [],
     lastInterludeAge: player.age,
+    lifeLog: [],
     endingScene: null,
   }
-  return assignNext(ctx, initial)
+  const started = assignNext(ctx, initial)
+  // 배경을 고른 직후의 오프닝 장면. 첫 화면 위에 "흐름" 블록으로 보인다.
+  return started.phase === 'ended' ? started : appendFlow(started, openingEntries(ctx, started.backgroundId, player.age))
 }
 
 // ───────────────────────── 전이 ─────────────────────────
@@ -296,6 +321,7 @@ function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
   if (time.ending) {
     return finish(next, { ...time.ending, objectId: object.id })
   }
+  const crossed = crossedAges(state.player.age, time.player.age)
   if (!lastResult.endsObject) {
     const resumed: GameState = {
       ...next,
@@ -303,9 +329,9 @@ function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
       progress: { ...updatedProgress, stageIndex: progress.stageIndex + 1 },
     }
     // 긴 객체는 단계 사이에도 막간 이벤트가 낄 수 있다.
-    return startInterlude(ctx, resumed, 'choosing') ?? resumed
+    return withFlow(ctx, startInterlude(ctx, resumed, 'choosing') ?? resumed, crossed)
   }
-  return finalizeObject(next, object, updatedProgress, lastResult)
+  return withFlow(ctx, finalizeObject(next, object, updatedProgress, lastResult), crossed)
 }
 
 /** 객체 관리 결과를 경력에 반영하고 보고서를 만든다. */
@@ -363,7 +389,9 @@ function continueFromReport(ctx: GameContext, state: GameState): GameState {
   if (state.pendingEnding) {
     return finish(state, state.pendingEnding)
   }
-  return startInterlude(ctx, state, 'assign') ?? assignNext(ctx, state)
+  // 보고서 화면에 보여 준 서술은 비우고, 다음 화면에서는 새로 생긴 비트만 붙인다 (이 전환에는 시간이 흐르지 않는다).
+  const base: GameState = { ...state, events: [] }
+  return withFlow(ctx, startInterlude(ctx, base, 'assign') ?? assignNext(ctx, base), [])
 }
 
 // ───────────────────────── 막간 이벤트 ─────────────────────────
@@ -388,7 +416,6 @@ function startInterlude(ctx: GameContext, state: GameState, resume: InterludePro
     phase: 'interlude',
     interlude: { eventId: def.id, resume },
     lastInterludeResult: null,
-    events: [],
   }
 }
 
@@ -464,13 +491,37 @@ function continueFromInterlude(ctx: GameContext, state: GameState): GameState {
   if (time.ending) {
     return finish(next, { ...time.ending, objectId: state.progress?.objectId })
   }
+  const crossed = crossedAges(state.player.age, time.player.age)
   if (interlude.resume === 'assign') {
-    return assignNext(ctx, next)
+    return withFlow(ctx, assignNext(ctx, next), crossed)
   }
-  return { ...next, phase: 'choosing' }
+  return withFlow(ctx, { ...next, phase: 'choosing' }, crossed)
 }
 
 // ───────────────────────── 내부 도우미 ─────────────────────────
+
+/** 흘러간 서술을 삶의 기록에 쌓고, 이번 전이의 이벤트(`events`)에도 실어 화면이 보여 줄 수 있게 한다. */
+function appendFlow(state: GameState, entries: readonly LifeLogEntry[]): GameState {
+  if (entries.length === 0) {
+    return state
+  }
+  return {
+    ...state,
+    lifeLog: [...state.lifeLog, ...entries],
+    events: [...state.events, ...entries.map((entry) => ({ type: 'flow' as const, entry }))],
+  }
+}
+
+/**
+ * 시간이 흐른 전환(또는 보고서를 본 뒤)의 결과 상태에 서술을 붙인다. 판이 끝난 상태에는 붙이지 않는다.
+ * @param crossed 이번 전환에서 새로 도달한 정수 나이들
+ */
+function withFlow(ctx: GameContext, state: GameState, crossed: readonly number[]): GameState {
+  if (state.phase === 'ended') {
+    return state
+  }
+  return appendFlow(state, pickFlowLines(ctx, state, crossed))
+}
 
 function assignNext(ctx: GameContext, state: GameState): GameState {
   const rng = createRng(state.rngState)
@@ -478,7 +529,7 @@ function assignNext(ctx: GameContext, state: GameState): GameState {
     state.history.filter((report) => report.outcome === 'cleared').map((report) => report.objectId),
   )
   const assignment = pickNextObject(rng, ctx.objects, state.player.career.rank, state.managedCounts, clearedIds)
-  const withRng: GameState = { ...state, rngState: rng.getState(), events: [] }
+  const withRng: GameState = { ...state, rngState: rng.getState() }
   if (!assignment) {
     return finish(withRng, { kind: 'retired', age: state.player.age })
   }

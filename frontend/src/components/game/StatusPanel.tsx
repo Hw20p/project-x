@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { npcs } from '../../content'
 import { PROMOTION_REQUIREMENTS, RANK_LABELS } from '../../engine/config'
 import { STAT_LABELS } from '../../engine/report'
@@ -35,7 +36,7 @@ function Bar({ label, value, color, max = 100 }: { label: string; value: number;
 }
 
 /** 화면 위쪽에 항상 보이는 상태: 나이·직급·승급 진행, 네 가지 스탯, 인간관계 */
-export function StatusPanel({ state }: { state: GameState }) {
+export function StatusPanel({ state, controls }: { state: GameState; controls?: ReactNode }) {
   const { age, stats, career } = state.player
   const requirement = career.rank === 5 ? null : PROMOTION_REQUIREMENTS[career.rank]
   const met = npcs.filter((npc) => state.relations[npc.id] !== undefined)
@@ -43,11 +44,12 @@ export function StatusPanel({ state }: { state: GameState }) {
   return (
     <header className="border-b border-edge bg-ink/70 px-4 py-3 backdrop-blur">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-2 flex items-baseline justify-between text-sm">
+        <div className="mb-2 flex items-center justify-between gap-3 text-sm">
           <span className="text-bone">
             {RANK_LABELS[career.rank]} <span className="text-fog">· {career.rank}급</span>
+            <span className="ml-3 tabular-nums text-fog">{formatAge(age)}</span>
           </span>
-          <span className="tabular-nums text-fog">{formatAge(age)}</span>
+          {controls}
         </div>
 
         <div className="grid gap-1.5">
@@ -64,12 +66,12 @@ export function StatusPanel({ state }: { state: GameState }) {
               max={requirement.points}
               color="var(--color-glow)"
             />
-            <p className="text-right text-[11px] text-ash">
+            <p className="text-right text-xs text-ash">
               점수 {career.promotionPoints}/{requirement.points} · 평판 {Math.round(stats.reputation)}/{requirement.reputation}
             </p>
           </div>
         ) : (
-          <p className="mt-2 text-right text-[11px] text-ash">최고 직급</p>
+          <p className="mt-2 text-right text-xs text-ash">최고 직급</p>
         )}
 
         {met.length > 0 && (

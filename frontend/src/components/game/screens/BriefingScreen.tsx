@@ -2,7 +2,8 @@ import { RANK_LABELS } from '../../../engine/config'
 import { getObjectYears } from '../../../engine/rules'
 import type { ContainmentObject } from '../../../engine/types'
 import { formatYears } from '../../../game/format'
-import { ContinueButton, Eyebrow, SectionLabel } from '../Controls'
+import { ContinueButton, Eyebrow } from '../Controls'
+import { ObjectNotes } from '../ObjectNotes'
 
 interface BriefingScreenProps {
   object: ContainmentObject
@@ -20,8 +21,8 @@ export function BriefingScreen({ object, reassigned, knowledgeBonus, onBegin }: 
         <Eyebrow>
           {object.code} · {RANK_LABELS[object.tier]} 등급 객체{object.finale ? ' · 최종' : ''}
         </Eyebrow>
-        <h2 className="text-3xl tracking-wide text-bone">{object.name}</h2>
-        <p className="text-fog">{object.summary}</p>
+        <h2 className="font-serif-kr text-3xl tracking-wide text-bone">{object.name}</h2>
+        <p className="narration text-fog">{object.summary}</p>
       </div>
 
       {reassigned && (
@@ -31,25 +32,7 @@ export function BriefingScreen({ object, reassigned, knowledgeBonus, onBegin }: 
         </p>
       )}
 
-      <div>
-        <SectionLabel>관찰 기록</SectionLabel>
-        <ul className="grid gap-2 border-l border-edge pl-4 leading-relaxed text-bone/90">
-          {object.observation.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <SectionLabel>관리 매뉴얼</SectionLabel>
-        <ol className="grid list-decimal gap-2 pl-8 leading-relaxed marker:text-ash">
-          {object.manual.map((line) => (
-            <li key={line} className={line.startsWith('(') ? 'italic text-ash' : 'text-bone/90'}>
-              {line}
-            </li>
-          ))}
-        </ol>
-      </div>
+      <ObjectNotes object={object} />
 
       <p className="text-sm text-ash">
         예상 관리 기간 {formatYears(getObjectYears(object))} · {object.stages.length}단계

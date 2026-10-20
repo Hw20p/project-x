@@ -6,7 +6,7 @@ import { INTERLUDE, STAT_MIN } from './config'
 import type { Rng } from './rng'
 import { clamp } from './rules'
 import type { GameState } from './state'
-import type { InterludeCondition, InterludeDef, StatKey } from './types'
+import type { InterludeCondition, InterludeDef, Rank, StatKey } from './types'
 
 /** 마지막 막간 이벤트 이후 충분한 시간이 지났는지 */
 export function isInterludeDue(state: GameState): boolean {
@@ -17,13 +17,34 @@ function inRange(value: number, range: { min?: number; max?: number }): boolean 
   return (range.min === undefined || value >= range.min) && (range.max === undefined || value <= range.max)
 }
 
+/** 조건 판정에 더하는 상황: 지금 관리 중인 객체, 그리고 나이를 현재 나이가 아닌 값으로 볼 때 */
+export interface ConditionContext {
+  objectId?: string
+  objectTier?: Rank
+  /** 해가 여러 번 바뀐 전환에서 "그 해"의 서술을 고를 때 그 나이로 판정한다 */
+  age?: number
+}
+
 /** 조건을 모두 만족하는지 */
-export function meetsCondition(condition: InterludeCondition | undefined, state: GameState): boolean {
+export function meetsCondition(
+  condition: InterludeCondition | undefined,
+  state: GameState,
+  context: ConditionContext = {},
+): boolean {
   if (!condition) {
     return true
   }
   const { rank } = state.player.career
-  const age = Math.floor(state.player.age)
+  const age = Math.floor(context.age ?? state.player.age)
+  if (condition.backgrounds && (state.backgroundId === null || !condition.backgrounds.includes(state.backgroundId))) {
+    return false
+  }
+  if (condition.objects && (context.objectId === undefined || !condition.objects.includes(context.objectId))) {
+    return false
+  }
+  if (condition.objectTiers && (context.objectTier === undefined || !condition.objectTiers.includes(context.objectTier))) {
+    return false
+  }
   if (condition.minRank !== undefined && rank < condition.minRank) {
     return false
   }

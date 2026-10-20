@@ -1,7 +1,7 @@
 // 밸런스 수치는 전부 여기 모은다. 게임을 돌려 보며 이 파일만 만져서 조정하는 것을 목표로 함.
 import type { Rank, Stats } from './types'
 
-/** 입사 나이. 이 나이까지는 인생 선택지 구간(스탯 결정)이고, 이후 객체 관리가 시작됨. */
+/** 입사 나이. 게임은 입사 첫날(이 나이)에서 시작한다. */
 export const ENTRY_AGE = 22
 /** 이 나이가 되면 자연스럽게 삶이 끝남 */
 export const MAX_AGE = 100
@@ -67,7 +67,7 @@ export const INTERLUDE = {
 export const RELATION_MIN = -100
 export const RELATION_MAX = 100
 
-/** 임시 초기 스탯. 인생 선택지 구간이 구현되면 그 결과로 대체됨. */
+/** 입사 시점의 스탯. 지금은 모든 판이 같은 값에서 시작한다. */
 export const DEFAULT_STATS: Stats = {
   sanity: 50,
   health: 50,

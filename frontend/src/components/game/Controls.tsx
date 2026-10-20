@@ -1,11 +1,19 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 
-/** 다음으로 넘어가는 버튼. 화면이 바뀌면 자동으로 포커스가 가서 Enter·Space로 넘길 수 있다. */
+/**
+ * 다음으로 넘어가는 버튼. 화면이 바뀌면 자동으로 포커스가 가서 Enter·Space로 넘길 수 있다.
+ * 팝업처럼 스크롤되는 영역 안에서 포커스 때문에 맨 아래로 끌려가지 않도록 스크롤은 막는다.
+ */
 export function ContinueButton({ label = '계속', onClick }: { label?: string; onClick: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    ref.current?.focus({ preventScroll: true })
+  }, [])
   return (
     <button
+      ref={ref}
       type="button"
-      autoFocus
       onClick={onClick}
       className="mt-2 rounded border border-glow/50 px-6 py-2.5 text-glow transition-colors hover:bg-glow/10"
     >

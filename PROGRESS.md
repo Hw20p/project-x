@@ -1,20 +1,22 @@
 # Lifesim 진행 상황
 
-0살에 태어나 제단X(임시)에 입사해 격리 객체를 관리하며 직급을 올려 가는 코스믹 호러 내러티브 시뮬레이션. 게임 규칙의 상세는 [DESIGN.md](DESIGN.md).
+제단X(임시)에 입사한 첫날부터 격리 객체를 관리하며 직급을 올려 가는 코스믹 호러 내러티브 시뮬레이션. 게임 규칙의 상세는 [DESIGN.md](DESIGN.md).
 
 **코드 스타일**: 주석은 한글로 작성 (project-01과 동일). `<html lang>`은 `ko`.
 
 ## 현재 상태
 
 - 프론트 단독 구성. Vite + React + Tailwind + Router, 홈 화면은 placeholder.
-- **엔진 코어 작성 완료 (미실행)**: 타입, 밸런스 설정, 확률/승급/좌천/노화 규칙, 객체 배정·재배정(`assignment.ts`), 시드 난수, 콘텐츠 검증기. [frontend/src/engine/](frontend/src/engine/)
+- **엔진 코어 작성 완료**: 타입, 밸런스 설정, 확률/승급/좌천/노화 규칙, 객체 배정·재배정(`assignment.ts`), 시드 난수, 콘텐츠 검증기. [frontend/src/engine/](frontend/src/engine/)
 - **객체 11개 작성 완료 (등급당 2개 + 최종 객체 X-011)** 및 엔딩 5종([endings.ts](frontend/src/content/endings.ts)): [frontend/src/content/objects/](frontend/src/content/objects/). 로드 시 자동 수집·검증.
-- **상태 머신 작성 완료 (미실행)**: [state.ts](frontend/src/engine/state.ts), [game.ts](frontend/src/engine/game.ts). 객체 배정 → 단계 진행 → 판정 → 시간 경과/노화 → 종료 조건, 시드+선택 기록 리플레이(`replayGame`). 흐름은 [DESIGN.md](DESIGN.md)의 "진행 흐름".
-- **자동 플레이 봇 작성 완료 (미실행)**: [simulate.ts](frontend/src/engine/simulate.ts)(기본 전략 4종: 안전 우선·중간 위험·모험·무작위, + 엔딩 선호 봇: 최종 객체 전까지 안전 우선으로 가다가 지정한 엔딩이 걸린 선택지를 고름. 수천 판 집계, 최종 객체 도달 비율과 엔딩별 "도달 대비" 비율 포함)와 개발 서버 전용 페이지 `/dev/sim`([SimulationPage.tsx](frontend/src/pages/SimulationPage.tsx)). 승급 도달 비율·시점, 종료 종류·사망 원인, 나이 분포, 객체별 성공/사망률을 보여 줌. 결과는 설정값과 함께 마크다운으로 정리해 복사하거나 `.md`로 저장할 수 있음([report.ts](frontend/src/engine/report.ts)).
-- **막간 이벤트 시스템 작성 완료 (미실행)**: 회복·성장·관계 이벤트 16개, NPC 3명, 플래그·관계 값. [interlude.ts](frontend/src/engine/interlude.ts), [content/events/](frontend/src/content/events/), [npcs.ts](frontend/src/content/npcs.ts).
-- **게임 화면 작성 완료 (미실행)**: 홈(`/`)과 플레이(`/play`), 단계별 화면 7종(briefing·choosing·outcome·report·interlude·interludeOutcome·ended), 항상 보이는 상태 패널, 자동 저장·이어하기, 지난 기록. 코스믹 호러 톤의 텍스트 중심 디자인. [GamePage.tsx](frontend/src/pages/GamePage.tsx), [components/game/](frontend/src/components/game/), [game/](frontend/src/game/). 상세는 [DESIGN.md](DESIGN.md)의 "화면".
-- **아직 없는 것**: 인생 구간(0~22세) 콘텐츠(지금은 임시 기본 스탯으로 시작), 소리·연출 같은 분위기 요소, 모바일 실기기 점검.
-- 빌드·타입체크·실행은 아직 한 번도 안 돌려 봄. 처음 돌릴 때 타입 오류나 데이터 검증 오류가 나올 수 있음.
+- **상태 머신 작성 완료**: [state.ts](frontend/src/engine/state.ts), [game.ts](frontend/src/engine/game.ts). 객체 배정 → 단계 진행 → 판정 → 시간 경과/노화 → 종료 조건, 시드+선택 기록 리플레이(`replayGame`). 흐름은 [DESIGN.md](DESIGN.md)의 "진행 흐름".
+- **자동 플레이 봇 작성 완료**: [simulate.ts](frontend/src/engine/simulate.ts)(기본 전략 4종: 안전 우선·중간 위험·모험·무작위, + 엔딩 선호 봇: 최종 객체 전까지 안전 우선으로 가다가 지정한 엔딩이 걸린 선택지를 고름. 수천 판 집계, 최종 객체 도달 비율과 엔딩별 "도달 대비" 비율 포함)와 개발 서버 전용 페이지 `/dev/sim`([SimulationPage.tsx](frontend/src/pages/SimulationPage.tsx)). 승급 도달 비율·시점, 종료 종류·사망 원인, 나이 분포, 객체별 성공/사망률을 보여 줌. 결과는 설정값과 함께 마크다운으로 정리해 복사하거나 `.md`로 저장할 수 있음([report.ts](frontend/src/engine/report.ts)).
+- **막간 이벤트 시스템 작성 완료**: 회복·성장·관계 이벤트 16개, NPC 3명, 플래그·관계 값. [interlude.ts](frontend/src/engine/interlude.ts), [content/events/](frontend/src/content/events/), [npcs.ts](frontend/src/content/npcs.ts).
+- **게임 화면 작성 완료** (아래 줄거리 스트림 개편 전의 단계별 화면 구성을 기반으로 함): 홈(`/`)과 플레이(`/play`), 항상 보이는 상태 패널, 자동 저장·이어하기, 지난 기록. 코스믹 호러 톤의 텍스트 중심 디자인. [GamePage.tsx](frontend/src/pages/GamePage.tsx), [components/game/](frontend/src/components/game/), [game/](frontend/src/game/). 상세는 [DESIGN.md](DESIGN.md)의 "화면".
+- **흐르는 서술 작성 완료**: [flow.ts](frontend/src/engine/flow.ts), [content/flows/](frontend/src/content/flows/), [openings.ts](frontend/src/content/openings.ts). 큰 줄거리 3막은 확정했고, 비트 문장의 톤은 직접 플레이해 보며 다듬는다.
+- **줄거리 스트림 + 팝업 화면 작성 완료 (미실행, 빌드 전)**: 결과·보고서·흐르는 서술은 한 줄씩 떠오르는 스트림(줄마다 나이 표시), 선택은 팝업. 속도 1×/2×/4×. [GamePage.tsx](frontend/src/pages/GamePage.tsx), [Stream.tsx](frontend/src/components/game/Stream.tsx), [DecisionPopup.tsx](frontend/src/components/game/DecisionPopup.tsx), [StreamBar.tsx](frontend/src/components/game/StreamBar.tsx), [feed.ts](frontend/src/game/feed.ts), [useStream.ts](frontend/src/game/useStream.ts). 저장 형식이 바뀌어(v4) 이전 저장본은 이어 하지 않는다.
+- **아직 없는 것**: 소리·장면 전환 같은 분위기 요소, 모바일 실기기 점검. 남은 설계 검토 항목은 [DESIGN.md](DESIGN.md)의 "아직 정하지 않은 것".
+- **검증·배포 상태**: 빌드(`npm run build`, 타입체크 포함) 통과, 시뮬레이션은 7차까지 실행해 밸런스 조정함. 서버(`test.maplespec.kr`)에 배포했고 `main`에 push하면 GitHub Actions로 자동 배포되는 것까지 확인함([README.md](README.md)의 "배포"). 게임 화면을 직접 플레이한 피드백(읽기 속도, 글 길이, 선택지 배치, 모바일 화면)은 아직 정리 전.
 
 ## 결정 사항
 
@@ -23,7 +25,13 @@
 - **엔진은 순수 TS 모듈로 분리.** 시드 + 선택 기록으로 결과가 재현되게 해서, 나중에 랭킹을 붙일 때 서버가 같은 엔진으로 다시 돌려 검증할 수 있게 한다.
 - **통계성 데이터는 런타임에 외부에서 가져오지 않음.** 필요하면 한 번 받아 가공한 정적 JSON으로 번들한다.
 - **백엔드는 필요해질 때 추가.** AI 결말 분석을 넣게 되면 API 키 보호용 얇은 프록시만 둔다 (DB·로그인 없이, IP별 호출 제한·입력 길이 제한 포함). AI 응답은 제한된 JSON으로만 받아 엔진이 범위를 검증해 적용한다.
-- **게임 방향 (2026-10-19 확정)**: 0세부터 시작, 인생 선택지로 스탯 결정 → 입사 → 객체 관리. 분위기는 코스믹 호러, 회사명은 “제단X” 임시. 객체는 오리지널(SCP 위키 콘텐츠·로보토미 IP 사용 안 함). 선택지에 스탯 기반 성공 확률 표시, 하이리스크 하이리턴(성공 시 관리를 일찍 끝냄), 즉사/좌천 존재. 객체 도감은 보류. NPC·큰 줄거리는 나중에 추가하되 객체처럼 데이터로 추가되는 구조.
+- **인생 구간 삭제 (2026-10-20)**: 플레이 피드백으로 0~22세 인생 구간을 두지 않기로 함. 입사 첫날(22세)에서 모든 판이 같은 초기 스탯으로 시작한다. 이유는 [DESIGN.md](DESIGN.md)의 "한 판의 흐름".
+- **흐르는 서술 추가 (2026-10-20)**: 시작하자마자 선택지만 이어져 스토리가 없다는 피드백으로, 선택 없이 흘러가는 서술을 더했다. 시간이 흐르는 전환마다 상태(스탯·직급·나이·관계·플래그·배경·관리 중인 객체)에 맞는 서술이 최대 3줄, 다음 화면 위의 "흐름" 블록으로 붙는다. 이야기 비트로 큰 줄거리(3막, 같은 날 확정)를 심었고, 배경별 오프닝 3종, 종료 화면의 "흘러간 시간" 타임라인이 있다. 서술 선택은 판정 난수와 분리돼 있어 밸런스에 영향이 없다. 일상 서술 66개, 비트 12개, 오프닝 3개. 상세는 [DESIGN.md](DESIGN.md)의 "흐르는 서술".
+- **줄거리 스트림 + 팝업 (2026-10-20)**: 80억분의 1처럼 이야기가 한 줄씩 흘러가고 선택은 팝업으로 하는 방식으로 개편. 결과·보고서는 스트림에(팝업 아님), 팝업은 자동으로 열리고 언제든 닫고 열 수 있음, 즉시 완성 없이 속도 1×/2×/4×만, 스트림은 계속 쌓이고 줄마다 나이 표시. 엔진 단계와 판정은 그대로라 밸런스는 영향 없음. 상세는 [DESIGN.md](DESIGN.md)의 "화면 (UI)".
+- **한 판의 길이 조정은 하지 않음 (2026-10-20)**: 재배정 브리핑 접기, 이벤트 간격, 승급 기준, 단계 수는 현재 상태를 유지한다.
+- **초기 스탯은 입사 배경 선택 (2026-10-20)**: 새 판 첫 화면에서 연구원·현장직·사무직 출신 3종 중 하나를 고르고, 배경은 입사 시점의 스탯만 정한다(합계 170 동일, 시작 플래그 연결은 나중에). 시드 주소는 `?seed=…&bg=…`. 배경별 밸런스는 아직 측정하지 않았다. 상세는 [DESIGN.md](DESIGN.md)의 "입사 배경".
+- **가독성 개선 (2026-10-20)**: 플레이 피드백("텍스트 가독성이 안 좋다")으로 분위기는 유지하고 글꼴을 서술(Noto Serif KR 명조)/UI(고딕)로 나누고, 색 대비를 올리고, 한국어 단어 단위 줄바꿈과 서술의 문장 단위 문단 나누기를 적용. 처음에는 글자 크기와 UI도 키웠으나 "너무 커서 분위기와 어울리지 않는다"는 피드백으로 글자 크기(기준 16px)·선택지 박스·상태 패널은 처음 디자인 값으로 되돌림. 상세는 [DESIGN.md](DESIGN.md)의 "화면".
+- **게임 방향 (2026-10-19 확정, 인생 구간 부분은 위에서 변경)**: 처음에는 0세부터 시작해 인생 선택지로 스탯을 정한 뒤 입사하는 구조였음. 분위기는 코스믹 호러, 회사명은 “제단X” 임시. 객체는 오리지널(SCP 위키 콘텐츠·로보토미 IP 사용 안 함). 선택지에 스탯 기반 성공 확률 표시, 하이리스크 하이리턴(성공 시 관리를 일찍 끝냄), 즉사/좌천 존재. 객체 도감은 보류. NPC·큰 줄거리는 나중에 추가하되 객체처럼 데이터로 추가되는 구조.
 - **객체 재배정 (확정)**: 현재 직급의 새 객체를 소진하면 이미 관리한 하위 등급 객체를 재배정(수습은 수습 객체). 재배정 시 그 객체를 관리하는 동안만 지식 보너스 +10(이후 +5씩, 상한 +20)을 확률 계산에 적용하고, 성공 시 승급 점수는 절반. 정체 엔딩은 두지 않고 노화에 맡김. 수치는 임시. 상세는 [DESIGN.md](DESIGN.md)의 "객체 배정과 재배정".
 - **시간은 0.5년 단위.** 객체 단계의 `years`는 0.5 단위, 나이는 소수로 들고 있다가 표시할 때 내림.
 - **콘텐츠는 TS 파일(`satisfies ContainmentObject`)로 작성.** JSON 대신 타입 검사를 공짜로 받기 위함. 검증기가 로드 시 추가 검사.
@@ -240,7 +248,7 @@
 
 1. 밸런스는 6차 시뮬레이션에서 안전 우선 기준 목표 범위에 들어옴. 새 콘텐츠(객체·이벤트)나 수치를 바꾸면 `/dev/sim`으로 같은 조건에서 다시 확인
 2. 게임 화면을 직접 플레이해 보고 불편한 점 정리 (읽기 속도, 글 길이, 선택지 배치, 모바일 화면)
-3. 인생 구간(0~22세) 선택지 콘텐츠와 초기 스탯 결정
-4. 분위기 요소(글자가 나타나는 연출, 소리 등)와 접근성 점검
+3. 가독성 개선 결과를 직접 보고 추가로 고칠 곳 정리 (글꼴 로딩, 모바일 폭, 선택지 크기)
+4. 분위기 요소(소리, 장면 전환 연출 등)와 접근성 점검
 
 [DESIGN.md](DESIGN.md)의 “아직 정하지 않은 것”에 남은 결정 사항이 있다.

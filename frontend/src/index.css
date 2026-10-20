@@ -1,25 +1,28 @@
 @import "tailwindcss";
 
-/* 코스믹 호러 톤의 텍스트 중심 디자인: 차가운 검정 바탕, 바랜 뼈색 글자, 절제된 강조색. */
+/* 코스믹 호러 톤의 텍스트 중심 디자인: 차가운 검정 바탕, 바랜 뼈색 글자, 절제된 강조색.
+   글자 크기는 작고 단정하게 두고, 읽기 편하도록 글자색 대비(본문 7:1 이상, 보조 글자 4.5:1 이상)로 보완한다. */
 @theme {
   --color-void: #07070a;
   --color-ink: #0e0f14;
-  --color-panel: #12141b;
-  --color-edge: #262a36;
-  --color-bone: #d9d3c4;
-  --color-fog: #8d897c;
-  --color-ash: #55524a;
-  --color-blood: #b3473f;
-  --color-gain: #8fb08a;
-  --color-loss: #c4574e;
-  --color-glow: #9fb4d6;
+  --color-panel: #14161e;
+  --color-edge: #2c303d;
+  --color-bone: #ebe5d6;
+  --color-fog: #aaa699;
+  --color-ash: #8b8779;
+  --color-blood: #c0524a;
+  --color-gain: #9cc596;
+  --color-loss: #d2655c;
+  --color-glow: #a9bfdf;
 
   --color-sanity: #8a93de;
   --color-health: #bd5a50;
   --color-reputation: #c8a45c;
   --color-knowledge: #5fa59b;
 
-  --font-serif-kr: "Nanum Myeongjo", "Noto Serif KR", "Batang", "Apple SD Gothic Neo", serif;
+  /* 서술(이야기)은 명조 계열, 버튼·수치 같은 UI는 고딕 계열로 나눈다. 작은 글자는 고딕이 훨씬 또렷하다. */
+  --font-serif-kr: "Noto Serif KR", "Nanum Myeongjo", "Batang", serif;
+  --font-sans-kr: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
 }
 
 /* 페이지 높이가 바뀌어 스크롤바가 나타났다 사라질 때 화면이 좌우로 흔들리지 않게 폭을 고정함. */
@@ -31,8 +34,11 @@ html {
 body {
   min-height: 100vh;
   color: var(--color-bone);
-  font-family: var(--font-serif-kr);
-  line-height: 1.8;
+  font-family: var(--font-sans-kr);
+  line-height: 1.75;
+  /* 한국어가 단어 중간에서 줄바뀌지 않게 하고, 너무 긴 단어만 강제로 자른다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   background:
     radial-gradient(ellipse at 50% -10%, rgb(60 70 100 / 0.22), transparent 60%),
     radial-gradient(ellipse at 50% 120%, rgb(90 30 30 / 0.12), transparent 55%),
@@ -40,7 +46,7 @@ body {
 }
 
 ::selection {
-  background: rgb(159 180 214 / 0.3);
+  background: rgb(169 191 223 / 0.3);
 }
 
 button:focus-visible,
@@ -65,24 +71,35 @@ summary:focus-visible {
   animation: fade-in-up 0.5s ease-out both;
 }
 
-/* 문단이 하나씩 떠오르는 느낌: 자식에 순서대로 지연을 준다. */
-.reveal > * {
-  animation: fade-in-up 0.6s ease-out both;
-}
-.reveal > *:nth-child(2) {
-  animation-delay: 0.12s;
-}
-.reveal > *:nth-child(3) {
-  animation-delay: 0.24s;
-}
-.reveal > *:nth-child(4) {
-  animation-delay: 0.36s;
-}
-.reveal > *:nth-child(5) {
-  animation-delay: 0.48s;
-}
-.reveal > *:nth-child(n + 6) {
-  animation-delay: 0.6s;
+/* components 레이어에 두어서, 같은 요소에 붙인 Tailwind 유틸리티(색·크기)가 이 기본값을 덮어쓸 수 있게 한다. */
+@layer components {
+  /* 서술 텍스트: 명조, 기본 크기에 넉넉한 줄 간격 */
+  .narration {
+    font-family: var(--font-serif-kr);
+    font-size: 1rem;
+    line-height: 1.95;
+    color: var(--color-bone);
+  }
+
+  /* 문단이 하나씩 떠오르는 느낌: 자식에 순서대로 지연을 준다. */
+  .reveal > * {
+    animation: fade-in-up 0.6s ease-out both;
+  }
+  .reveal > *:nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  .reveal > *:nth-child(3) {
+    animation-delay: 0.24s;
+  }
+  .reveal > *:nth-child(4) {
+    animation-delay: 0.36s;
+  }
+  .reveal > *:nth-child(5) {
+    animation-delay: 0.48s;
+  }
+  .reveal > *:nth-child(n + 6) {
+    animation-delay: 0.6s;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,10 +4,11 @@ import { gameContext } from '../content'
 import { findInterlude, findObject } from '../engine/game'
 import type { DeathCause, EndingKind, GameState } from '../engine/state'
 import type { Rank } from '../engine/types'
+import type { FeedItem } from './feed'
 
 const GAME_KEY = 'lifesim:game'
 const RECORDS_KEY = 'lifesim:records'
-const SAVE_VERSION = 1
+const SAVE_VERSION = 4
 const MAX_RECORDS = 10
 
 /** 콘텐츠(객체·이벤트 구성)가 바뀌면 이전 저장본을 이어 하지 못하게 하는 서명 */
@@ -23,11 +24,17 @@ function contentSignature(): string {
   return hash.toString(36)
 }
 
-export function saveGame(state: GameState): void {
+/** 이어 할 수 있는 저장본: 엔진 상태와 지금까지 쌓인 줄거리 스트림 */
+export interface SavedGame {
+  state: GameState
+  feed: FeedItem[]
+}
+
+export function saveGame(state: GameState, feed: readonly FeedItem[]): void {
   try {
     localStorage.setItem(
       GAME_KEY,
-      JSON.stringify({ version: SAVE_VERSION, signature: contentSignature(), state }),
+      JSON.stringify({ version: SAVE_VERSION, signature: contentSignature(), state, feed }),
     )
   } catch {
     // 저장은 편의 기능이라 실패해도 무시한다.
@@ -43,14 +50,24 @@ export function clearGame(): void {
 }
 
 /** 이어 할 수 있는 저장본. 없거나 현재 콘텐츠와 안 맞으면 null. */
-export function loadGame(): GameState | null {
+export function loadGame(): SavedGame | null {
   try {
     const raw = localStorage.getItem(GAME_KEY)
     if (!raw) {
       return null
     }
-    const saved = JSON.parse(raw) as { version?: number; signature?: string; state?: GameState }
-    if (saved.version !== SAVE_VERSION || saved.signature !== contentSignature() || !saved.state) {
+    const saved = JSON.parse(raw) as {
+      version?: number
+      signature?: string
+      state?: GameState
+      feed?: FeedItem[]
+    }
+    if (
+      saved.version !== SAVE_VERSION ||
+      saved.signature !== contentSignature() ||
+      !saved.state ||
+      !Array.isArray(saved.feed)
+    ) {
       return null
     }
     const state = saved.state
@@ -64,7 +81,7 @@ export function loadGame(): GameState | null {
     if (state.interlude) {
       findInterlude(gameContext, state.interlude.eventId)
     }
-    return state
+    return { state, feed: saved.feed }
   } catch {
     return null
   }
@@ -73,6 +90,8 @@ export function loadGame(): GameState | null {
 /** 끝난 판의 요약. 홈 화면의 "지난 기록"에 쓴다. */
 export interface GameRecord {
   seed: number
+  /** 고른 입사 배경 id */
+  backgroundId?: string
   savedAt: number
   endingKind: EndingKind
   endingId?: string
@@ -91,6 +110,7 @@ export function buildRecord(state: GameState): GameRecord | null {
   }
   return {
     seed: state.seed,
+    backgroundId: state.backgroundId ?? undefined,
     savedAt: Date.now(),
     endingKind: ending.kind,
     endingId: ending.endingId,

@@ -55,6 +55,19 @@ export interface FailureOutcome extends OutcomeExtras {
   effects?: StatDelta
 }
 
+/**
+ * 입사 배경. 새 판을 시작할 때 고르는 첫 선택으로, 입사 시점의 스탯을 정한다.
+ * 배경 사이의 스탯 합계는 모두 같게 둔다 (검증기가 강제) — "무엇을 포기하느냐"의 선택이 되도록.
+ */
+export interface BackgroundDef {
+  id: string
+  name: string
+  /** 입사 서류에 적힌 한두 문장 */
+  summary: string
+  /** 입사 시점의 스탯 */
+  stats: Stats
+}
+
 // ───────────────────────── 막간 이벤트 · NPC ─────────────────────────
 
 /**
@@ -80,6 +93,48 @@ export interface InterludeCondition {
   notFlags?: string[]
   /** NPC id → 관계 값 범위 */
   relations?: Record<string, { min?: number; max?: number }>
+  /** 이 중 하나의 입사 배경일 때 (배경 id 목록) */
+  backgrounds?: string[]
+  /** 지금 관리 중인 객체가 이 중 하나일 때 (객체 id 목록). 관리 중이 아니면 만족하지 않는다. */
+  objects?: string[]
+  /** 지금 관리 중인 객체의 등급이 이 중 하나일 때. 관리 중이 아니면 만족하지 않는다. */
+  objectTiers?: Rank[]
+}
+
+// ───────────────────────── 흐르는 서술 ─────────────────────────
+
+/**
+ * 흐르는 서술의 종류
+ * - ambient: 일상 서술. 시간이 흐를 때 상태에 맞는 문장이 하나씩 보인다 (반복 가능, 최근에 나온 건 피함)
+ * - beat   : 이야기 비트. 조건이 맞으면 한 번만 나온다 (큰 줄거리·복선)
+ */
+export type FlowKind = 'ambient' | 'beat'
+
+/**
+ * 선택 없이 흘러가는 서술 조각. 시간이 흐르는 전환마다 조건에 맞는 것이 골라져 다음 화면 위에 붙는다.
+ * 등장 조건은 막간 이벤트와 같은 구조(`InterludeCondition`)를 쓴다.
+ */
+export interface FlowDef {
+  id: string
+  kind: FlowKind
+  /**
+   * 문장. 배열이면 그중 하나를 무작위로 고른다 (같은 조건의 변주).
+   * 문장 안에서 `{age}`(나이), `{rank}`(직급명), `{object}`(관리 중인 객체 이름), `{background}`(입사 배경 이름)를 쓸 수 있다.
+   */
+  text: string | string[]
+  /** 등장 조건. 이야기 비트에는 반드시 있어야 한다 (없으면 첫 전환에 바로 나옴). */
+  when?: InterludeCondition
+  /** 일상 서술의 기본 가중치. 기본 1. 조건이 많을수록 더 자주 나오게 하는 보정이 따로 붙는다. */
+  weight?: number
+  /** 이야기 비트가 한 전환에 여러 개 걸릴 때의 우선순위. 클수록 먼저. 기본 0. */
+  priority?: number
+}
+
+/** 입사 배경별 오프닝 장면. 배경을 고른 직후 첫 화면 위에 줄 단위로 보인다. */
+export interface OpeningDef {
+  id: string
+  backgroundId: string
+  lines: string[]
 }
 
 /**

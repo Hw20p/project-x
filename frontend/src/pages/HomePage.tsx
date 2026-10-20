@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { findBackground } from '../content'
 import { describeEnding } from '../content/epilogues'
 import { RANK_LABELS } from '../engine/config'
 import { formatAge } from '../game/format'
@@ -24,10 +25,10 @@ export function HomePage() {
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-10 px-6 py-16">
       <div className="reveal grid gap-4">
         <p className="text-xs tracking-[0.3em] text-fog">LIFESIM · 가칭</p>
-        <h1 className="text-4xl leading-tight tracking-wide text-bone">
+        <h1 className="font-serif-kr text-4xl leading-tight tracking-wide text-bone">
           당신은 오늘 입사했다.
         </h1>
-        <p className="leading-loose text-fog">
+        <p className="narration text-fog">
           관리할 것은 이 세상에 없는 것들이다. 설명은 짧고, 매뉴얼은 불완전하다. 선택마다 성공 확률이 보이지만, 확률은
           결과를 약속하지 않는다.
         </p>
@@ -58,6 +59,7 @@ export function HomePage() {
               <li key={record.seed} className="flex justify-between gap-4 border-b border-edge/60 py-1.5">
                 <span className="text-bone">{recordTitle(record)}</span>
                 <span className="tabular-nums text-fog">
+                  {record.backgroundId && `${findBackground(record.backgroundId)?.name ?? ''} · `}
                   {formatAge(record.age)} · {RANK_LABELS[record.rank]} · 객체 {record.cleared}/{record.managed}
                 </span>
               </li>

@@ -1,6 +1,16 @@
 // 콘텐츠를 손으로 작성하다 생기는 실수를 잡는 검증기. content/index.ts가 로드 시점에 호출한다.
+import { FLOW_PLACEHOLDERS } from './flow'
 import { STAT_KEYS } from './types'
-import type { Choice, ContainmentObject, InterludeDef, NpcDef, OutcomeExtras } from './types'
+import type {
+  BackgroundDef,
+  Choice,
+  ContainmentObject,
+  FlowDef,
+  InterludeDef,
+  NpcDef,
+  OpeningDef,
+  OutcomeExtras,
+} from './types'
 
 const KINDS = ['recovery', 'growth', 'relationship']
 
@@ -137,6 +147,133 @@ export function validateObjects(
     }
     ids.add(object.id)
     codes.add(object.code)
+  }
+  return errors
+}
+
+/** 서술·오프닝 검증이 참조하는 다른 콘텐츠 */
+export interface FlowRefs {
+  backgroundIds: ReadonlySet<string>
+  npcIds: ReadonlySet<string>
+  objects: readonly ContainmentObject[]
+  interludes: readonly InterludeDef[]
+}
+
+/**
+ * 흐르는 서술과 오프닝 검증: id 중복, 텍스트·자리표시자, 이야기 비트의 등장 조건,
+ * 조건이 가리키는 플래그·NPC·배경·객체가 실제로 있는지, 모든 입사 배경에 오프닝이 있는지.
+ */
+export function validateFlows(flows: readonly FlowDef[], openings: readonly OpeningDef[], refs: FlowRefs): string[] {
+  const errors: string[] = []
+  const settableFlags = collectSetFlags(refs.objects, refs.interludes)
+  const objectIds = new Set(refs.objects.map((object) => object.id))
+  const ids = new Set<string>()
+
+  for (const def of flows) {
+    const fail = (message: string) => errors.push(`[서술 ${def.id}] ${message}`)
+    if (!def.id) {
+      fail('id가 비어 있음')
+    }
+    if (ids.has(def.id)) {
+      fail('서술 id 중복')
+    }
+    ids.add(def.id)
+    if (def.kind !== 'ambient' && def.kind !== 'beat') {
+      fail(`kind가 올바르지 않음: ${def.kind}`)
+    }
+    const variants = typeof def.text === 'string' ? [def.text] : def.text
+    if (variants.length === 0 || variants.some((text) => !text.trim())) {
+      fail('텍스트가 비어 있음')
+    }
+    for (const text of variants) {
+      for (const match of text.matchAll(/\{(\w+)\}/g)) {
+        if (!(FLOW_PLACEHOLDERS as readonly string[]).includes(match[1])) {
+          fail(`알 수 없는 자리표시자 {${match[1]}} (쓸 수 있는 것: ${FLOW_PLACEHOLDERS.join(', ')})`)
+        }
+      }
+    }
+    if (def.weight !== undefined && def.weight <= 0) {
+      fail('weight는 0보다 커야 함')
+    }
+
+    const when = def.when
+    if (def.kind === 'beat' && !Object.values(when ?? {}).some((value) => value !== undefined)) {
+      fail('이야기 비트에는 등장 조건(when)이 있어야 함 (없으면 첫 전환에 바로 나옴)')
+    }
+    for (const flag of [...(when?.flags ?? []), ...(when?.notFlags ?? [])]) {
+      if (!settableFlags.has(flag)) {
+        fail(`등장 조건의 플래그 "${flag}"를 켜는 선택지가 어디에도 없음 (오타 확인)`)
+      }
+    }
+    for (const npcId of Object.keys(when?.relations ?? {})) {
+      if (!refs.npcIds.has(npcId)) {
+        fail(`등장 조건의 NPC id가 정의되지 않음: ${npcId}`)
+      }
+    }
+    for (const backgroundId of when?.backgrounds ?? []) {
+      if (!refs.backgroundIds.has(backgroundId)) {
+        fail(`등장 조건의 입사 배경 id가 정의되지 않음: ${backgroundId}`)
+      }
+    }
+    for (const objectId of when?.objects ?? []) {
+      if (!objectIds.has(objectId)) {
+        fail(`등장 조건의 객체 id가 정의되지 않음: ${objectId}`)
+      }
+    }
+    for (const key of Object.keys(when?.stats ?? {})) {
+      if (!(STAT_KEYS as readonly string[]).includes(key)) {
+        fail(`등장 조건의 스탯 키가 올바르지 않음: ${key}`)
+      }
+    }
+  }
+
+  const coveredBackgrounds = new Set<string>()
+  for (const opening of openings) {
+    const fail = (message: string) => errors.push(`[오프닝 ${opening.id}] ${message}`)
+    if (ids.has(opening.id)) {
+      fail('id가 서술 id와 겹침')
+    }
+    ids.add(opening.id)
+    if (!refs.backgroundIds.has(opening.backgroundId)) {
+      fail(`정의되지 않은 입사 배경: ${opening.backgroundId}`)
+    }
+    if (opening.lines.length === 0 || opening.lines.some((line) => !line.trim())) {
+      fail('lines가 비어 있음')
+    }
+    coveredBackgrounds.add(opening.backgroundId)
+  }
+  for (const backgroundId of refs.backgroundIds) {
+    if (!coveredBackgrounds.has(backgroundId)) {
+      errors.push(`[오프닝] 입사 배경 "${backgroundId}"의 오프닝이 없음`)
+    }
+  }
+  return errors
+}
+
+/** 입사 배경 검증: id 중복, 스탯 범위, 그리고 스탯 합계가 서로 같은지 (밸런스 원칙) */
+export function validateBackgrounds(backgrounds: readonly BackgroundDef[]): string[] {
+  const errors: string[] = []
+  const ids = new Set<string>()
+  const totals = backgrounds.map((background) => STAT_KEYS.reduce((sum, key) => sum + background.stats[key], 0))
+
+  for (const [index, background] of backgrounds.entries()) {
+    const fail = (message: string) => errors.push(`[배경 ${background.id}] ${message}`)
+    if (!background.id || !background.name || !background.summary) {
+      fail('id/name/summary가 비어 있음')
+    }
+    if (ids.has(background.id)) {
+      fail('배경 id 중복')
+    }
+    ids.add(background.id)
+    for (const key of STAT_KEYS) {
+      const value = background.stats[key]
+      if (value < 0 || value > 100) {
+        fail(`${key}가 0~100 범위를 벗어남 (${value})`)
+      }
+    }
+    if (totals[index] !== totals[0]) {
+      fail(`스탯 합계(${totals[index]})가 첫 배경(${totals[0]})과 다름 — 배경끼리 합계는 같아야 함`)
+    }
   }
   return errors
 }

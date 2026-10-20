@@ -1,7 +1,7 @@
 // 개발용 밸런스 확인 페이지 (/dev/sim, 개발 서버에서만 열림). 봇이 수천 판을 자동으로 돌려 집계한다.
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { endings, endingTitles, gameContext, objects } from '../content'
+import { backgrounds, endings, endingTitles, gameContext, objects } from '../content'
 import { DEFAULT_STATS, RANK_LABELS } from '../engine/config'
 import {
   DEATH_CAUSE_LABELS,
@@ -244,6 +244,12 @@ export function SimulationPage() {
     }, 30)
   }
 
+  // 입사 배경을 고르면 아래 시작 스탯 입력칸이 그 배경의 값으로 채워진다 (직접 고쳐서 시험할 수도 있다)
+  const handleBackgroundChange = (backgroundId: string) => {
+    const background = backgrounds.find((candidate) => candidate.id === backgroundId)
+    setStats({ ...(background?.stats ?? DEFAULT_STATS) })
+  }
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(reportText)
@@ -320,6 +326,22 @@ export function SimulationPage() {
                 </option>
               ))}
             </optgroup>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm sm:col-span-2">
+          <span className="font-semibold">입사 배경 (고르면 아래 스탯이 채워진다)</span>
+          <select
+            defaultValue=""
+            onChange={(e) => handleBackgroundChange(e.target.value)}
+            className="rounded border border-gray-300 px-2 py-1"
+          >
+            <option value="">기본 스탯 (정신력 50, 체력 50, 평판 20, 지식 50)</option>
+            {backgrounds.map((background) => (
+              <option key={background.id} value={background.id}>
+                {background.name} (정신력 {background.stats.sanity}, 체력 {background.stats.health}, 평판{' '}
+                {background.stats.reputation}, 지식 {background.stats.knowledge})
+              </option>
+            ))}
           </select>
         </label>
         <fieldset className="grid gap-2 sm:col-span-2">

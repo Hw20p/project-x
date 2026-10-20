@@ -91,8 +91,16 @@ export interface ObjectReport {
   ageAtEnd: number
 }
 
-/** 마지막 전이 중에 일어난 일. 매 전이마다 새로 채워진다. */
-export type GameEvent = { type: 'illness'; age: number }
+/** 삶의 기록 한 줄: 흘러간 서술. 종료 화면의 타임라인에 쓰이고, 한 번만 나오는 비트·오프닝은 id로 중복을 막는다. */
+export interface LifeLogEntry {
+  id: string
+  age: number
+  kind: 'opening' | 'ambient' | 'beat'
+  text: string
+}
+
+/** 마지막 전이 중에 일어난 일. 매 전이마다 새로 채워진다. flow는 이번 전이에서 새로 흘러간 서술이다. */
+export type GameEvent = { type: 'illness'; age: number } | { type: 'flow'; entry: LifeLogEntry }
 
 /** 진행 중인 막간 이벤트. `resume`은 이벤트가 끝난 뒤 돌아갈 곳. */
 export interface InterludeProgress {
@@ -129,6 +137,8 @@ export type ChoiceLogEntry =
 export interface GameState {
   /** 최초 시드 (리플레이 때 필요) */
   seed: number
+  /** 고른 입사 배경 id. 배경 없이 시작한 판(시뮬레이션 등)은 null. 리플레이 때 시드와 함께 필요하다. */
+  backgroundId: string | null
   /** 난수 내부 상태. 매 전이마다 이어서 쓴다. */
   rngState: number
   phase: Phase
@@ -158,6 +168,8 @@ export interface GameState {
   interludeLog: InterludeRecord[]
   /** 마지막 막간 이벤트를 겪은 나이. 다음 이벤트까지의 간격 계산에 쓴다. 시작 나이로 초기화. */
   lastInterludeAge: number
+  /** 지금까지 흘러간 서술 (오래된 순). 오프닝과 일상·비트 서술이 모두 들어간다. */
+  lifeLog: LifeLogEntry[]
   /**
    * 판이 끝난 원인이 된 선택의 결과 서술 (즉사·붕괴·최종 엔딩 등). 종료 화면에서 그 장면을 보여 주는 용도.
    * 노화·병·해고처럼 선택이 원인이 아닌 종료에서는 null.

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { findBackground } from '../../../content'
 import { describeEnding } from '../../../content/epilogues'
 import { RANK_LABELS } from '../../../engine/config'
 import type { GameState, ObjectReport } from '../../../engine/state'
 import { formatAge, formatYears } from '../../../game/format'
 import { Eyebrow, SectionLabel } from '../Controls'
+import { Narration } from '../Narration'
 
 const OUTCOME_LABELS: Record<ObjectReport['outcome'], string> = {
   cleared: '성공',
@@ -27,7 +29,8 @@ export function EndedScreen({ state, onRestart }: EndedScreenProps) {
   const epilogue = describeEnding(ending)
   const cleared = state.history.filter((report) => report.outcome === 'cleared').length
   const interludeCount = state.interludeLog.length
-  const seedUrl = `${window.location.origin}/play?seed=${state.seed}`
+  const background = state.backgroundId ? findBackground(state.backgroundId) : undefined
+  const seedUrl = `${window.location.origin}/play?seed=${state.seed}${state.backgroundId ? `&bg=${state.backgroundId}` : ''}`
 
   const copySeedUrl = async () => {
     try {
@@ -41,19 +44,21 @@ export function EndedScreen({ state, onRestart }: EndedScreenProps) {
 
   return (
     <section className="reveal grid gap-8">
-      {state.endingScene && (
-        <p className="whitespace-pre-line border-l-2 border-edge pl-4 leading-loose text-bone/80">{state.endingScene}</p>
-      )}
-
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         <Eyebrow>끝 · {formatAge(ending.age)}</Eyebrow>
-        <h2 className="text-4xl tracking-widest text-bone">{epilogue.title}</h2>
-        <p className="whitespace-pre-line leading-loose text-bone/90">{epilogue.text}</p>
+        <h2 className="font-serif-kr text-4xl tracking-widest text-bone">{epilogue.title}</h2>
+        <Narration text={epilogue.text} />
       </div>
 
       <div>
         <SectionLabel>이번 삶의 기록</SectionLabel>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 border-l border-edge pl-4 text-sm">
+          {background && (
+            <>
+              <dt className="text-fog">입사 배경</dt>
+              <dd>{background.name}</dd>
+            </>
+          )}
           <dt className="text-fog">마지막 직급</dt>
           <dd>{RANK_LABELS[state.player.career.rank]}</dd>
           <dt className="text-fog">관리한 객체</dt>
@@ -89,7 +94,6 @@ export function EndedScreen({ state, onRestart }: EndedScreenProps) {
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          autoFocus
           onClick={onRestart}
           className="rounded border border-glow/50 px-6 py-2.5 text-glow transition-colors hover:bg-glow/10"
         >
@@ -106,7 +110,7 @@ export function EndedScreen({ state, onRestart }: EndedScreenProps) {
           처음으로
         </Link>
       </div>
-      <p className="break-all text-xs text-ash">같은 주소로 들어가면 같은 시드의 삶을 다시 시작할 수 있다 (선택이 같으면 결과도 같다).</p>
+      <p className="break-all text-xs text-ash">같은 주소로 들어가면 같은 시드와 입사 배경으로 다시 시작할 수 있다 (선택이 같으면 결과도 같다).</p>
     </section>
   )
 }

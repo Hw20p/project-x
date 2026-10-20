@@ -1,6 +1,6 @@
 # Lifesim (가칭)
 
-0살에 태어나 제단X(임시)에 입사해 격리 객체를 관리하며 직급을 올려 가는 코스믹 호러 내러티브 시뮬레이션. 연도가 지나며 스탯이 쌓이고 선택에 따라 결말이 갈린다. [80억 분의 1](https://1in8b.life/ko/)의 형식과 로보토미·SCP의 분위기에서 영감을 받았다.
+제단X(임시)에 입사한 첫날부터 격리 객체를 관리하며 직급을 올려 가는 코스믹 호러 내러티브 시뮬레이션. 연도가 지나며 스탯이 쌓이고 선택에 따라 결말이 갈린다. [80억 분의 1](https://1in8b.life/ko/)의 형식과 로보토미·SCP의 분위기에서 영감을 받았다.
 
 게임 규칙은 [DESIGN.md](DESIGN.md), 진행 상황과 결정 사항은 [PROGRESS.md](PROGRESS.md)에 있다.
 
@@ -39,6 +39,7 @@ frontend/src/
     rules.ts     확률 계산, 선택 판정, 승급/좌천, 노화 — 순수 함수
     assignment.ts  다음 객체 고르기 (새 객체 우선, 소진 시 하위 등급 재배정)
     interlude.ts   막간 이벤트를 언제·어떤 것으로 끼울지 (조건·쿨다운·가중치)
+    flow.ts        흐르는 서술(일상·이야기 비트·오프닝)을 상태에 맞게 고르기 (판정용 난수와 분리)
     state.ts     게임 진행 상태 타입 (직렬화 가능)
     game.ts      상태 머신 — createGame / reduce(begin·choose·continue) / replayGame
     simulate.ts  자동 플레이 봇과 집계 (밸런스 확인용)
@@ -48,12 +49,15 @@ frontend/src/
   content/   게임 콘텐츠
     objects/     격리 객체 데이터 (파일 하나 = 객체 하나, 자동 수집). X-011은 최종 객체(finale)
     events/      막간 이벤트 (회복·성장·관계). 파일 하나에 이벤트 여러 개, 자동 수집
+    flows/       흐르는 서술 (일상 서술·이야기 비트). 파일 하나에 여러 개, 자동 수집
+    openings.ts  입사 배경별 오프닝 장면
     npcs.ts      직장 내 관계 이벤트의 NPC (서지안·오태성·문하린)
+    backgrounds.ts 입사 배경 3종 (시작 스탯, 합계 동일)
     endings.ts   최종 객체의 선택으로 도달하는 엔딩 정의 (제목·본문)
     epilogues.ts 그 밖의 종료(즉사·붕괴·노화·해고 등)의 에필로그와, 종료 종류별 에필로그를 고르는 함수
     index.ts     객체 수집 + 로드 시 검증
-  game/      엔진과 React를 잇는 부분 (useGame 훅, localStorage 저장, 표시용 포맷 함수)
-  components/game/   게임 화면 부품 (상태 패널, 선택지 목록, 효과 표시) 과 screens/ (단계별 화면)
+  game/      엔진과 React를 잇는 부분 (useGame 훅, 줄거리 스트림 항목 feed.ts, 한 줄씩 보여 주는 useStream 훅, localStorage 저장, 표시용 포맷 함수)
+  components/game/   게임 화면 부품 (상태 패널, 줄거리 스트림, 선택 팝업, 속도 버튼·다시 펼치기 카드, 선택지 목록, 효과 표시) 과 screens/ (팝업 안의 객체 브리핑·선택·막간, 배경 선택, 종료 화면)
   pages/     페이지 (HomePage, GamePage, 개발 서버에서만 열리는 SimulationPage /dev/sim)
 ```
 
@@ -93,7 +97,10 @@ frontend/src/
 
 - `/play` — 저장된 판을 이어 하고, 없으면 새 판을 시작한다
 - `/play?new=1` — 저장본을 버리고 새 판
-- `/play?seed=123` — 그 시드로 새 판 (같은 시드 + 같은 선택이면 같은 결과)
+- `/play?seed=123` — 그 시드로 새 판 (입사 배경은 고른다)
+- `/play?seed=123&bg=researcher` — 그 시드와 입사 배경으로 바로 시작 (같은 시드 + 같은 배경 + 같은 선택이면 같은 결과)
+
+새 판은 먼저 입사 배경(연구원·현장직·사무직 출신)을 고르는 화면에서 시작한다. 배경 id는 `researcher`, `field`, `office`다.
 
 진행 중인 판은 브라우저(`localStorage`)에 자동 저장되고, 끝난 판은 홈 화면의 "지난 기록"(최근 10개)에 남는다. 선택지는 숫자 키(1, 2, 3...)로도 고를 수 있고, "계속" 버튼은 Enter·Space로 넘긴다.
 
