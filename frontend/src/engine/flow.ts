@@ -1,6 +1,6 @@
-// 흐르는 서술을 고르는 규칙. 시간이 흐르는 전환마다 상태에 맞는 서술이 최대 `MAX_FLOW_LINES`줄 골라진다.
-//   1) 이야기 비트: 조건이 맞고 아직 안 나온 것 (한 번만). 우선순위가 높은 것부터, 한 전환에 최대 `MAX_BEATS`개
-//   2) 일상 서술: 해가 바뀐 만큼, 남은 줄 수 안에서. 현재 나이를 달고 나온다. 조건이 많이 맞을수록 더 자주 나온다.
+// 흐르는 서술을 고르는 규칙. 시간이 한 해 흐를 때마다 그 해의 나이와 상태에 맞는 서술이 골라진다 (`pickYearLines`).
+//   1) 이야기 비트: 조건이 맞고 아직 안 나온 것 (한 번만). 우선순위가 높은 것부터, 한 해에 최대 `MAX_BEATS_PER_YEAR`개
+//   2) 일상 서술: 한 해에 `AMBIENT_PER_YEAR` 범위의 줄 수. 조건이 많이 맞을수록 더 자주 나온다.
 //
 // 서술을 고르는 난수는 게임 판정용 난수와 완전히 분리한다: 시드와 시점(나이, 쌓인 기록 수)에서 매번 새로 파생한다.
 // 그래서 서술을 추가하거나 바꿔도 확률 판정과 시뮬레이션 결과는 달라지지 않고, 같은 시드·같은 선택이면 같은 서술이 나온다.
@@ -12,12 +12,14 @@ import type { Rng } from './rng'
 import type { GameState, LifeLogEntry } from './state'
 import type { BackgroundDef, ContainmentObject, FlowDef, InterludeCondition, OpeningDef } from './types'
 
-/** 한 번에 보여 줄 최대 줄 수 (이야기 비트 + 일상 서술). 서술 구간이 한 번에 이야기를 이을 수 있게 넉넉히 둔다. */
-export const MAX_FLOW_LINES = 4
-/** 그중 이야기 비트의 최대 개수 */
-const MAX_BEATS = 2
-/** 최근에 나온 일상 서술 몇 개를 다시 뽑지 않을지 */
-const RECENT_AMBIENT_WINDOW = 8
+/** 한 해에 나오는 일상 서술의 줄 수 범위 (80억분의 1처럼 한 해에 여러 줄). 한 판의 플레이 시간을 정하는 값이다. */
+export const AMBIENT_PER_YEAR = { min: 1, max: 2 } as const
+/** 한 해에 나올 수 있는 이야기 비트의 최대 개수. 사슬이 한꺼번에 쏟아지지 않고 해마다 하나씩 풀리게 한다. */
+const MAX_BEATS_PER_YEAR = 1
+/** 객체를 끝낸 뒤 이 기간(년) 안에만 "방금 끝낸 객체"가 서술의 객체 조건 기준이 된다 */
+const RECENT_OBJECT_YEARS = 2
+/** 최근에 나온 일상 서술 몇 개를 다시 뽑지 않을지. 한 해에 여러 줄이 나오므로 넉넉히 둔다. */
+const RECENT_AMBIENT_WINDOW = 30
 /** 조건이 하나 붙을 때마다 일상 서술의 가중치에 더해지는 배율 (조건이 많을수록 "지금 상태"에 맞는 문장) */
 const SPECIFICITY_BONUS = 1.5
 
@@ -87,34 +89,59 @@ export function openingEntries(source: FlowSource, backgroundId: string | null, 
 }
 
 /**
- * 이번 전환에서 보여 줄 서술을 고른다.
- * @param crossedAges 마지막 서술 이후 새로 도달한 정수 나이들. 그 개수만큼(최대 줄 수 안에서) 일상 서술이 붙고, 비어 있으면 비트만 나올 수 있다.
- *   서술에 달리는 나이는 이 해들이 아니라 현재 나이다.
+ * 한 해가 흘렀을 때 그 해에 보여 줄 서술을 고른다. `state`는 그 해로 나이·스탯·직급이 이미 갱신된 상태여야 한다.
+ * 일상 서술이 먼저, 이야기 비트가 그 뒤에 온다 (비트가 그 해의 마지막 줄이 되도록).
  */
-export function pickFlowLines(source: FlowSource, state: GameState, crossedAges: readonly number[]): LifeLogEntry[] {
+export function pickYearLines(source: FlowSource, state: GameState): LifeLogEntry[] {
   const defs = source.flows ?? []
   if (defs.length === 0) {
     return []
   }
 
-  // 관리 중인 객체. 관리가 끝난 직후(진행 정보가 비어 있을 때)에는 방금 끝낸 객체를 기준으로 삼는다.
-  const objectId = state.progress?.objectId ?? state.history[state.history.length - 1]?.objectId
+  const age = state.player.age
+  // 서술의 객체 조건 기준: 관리 중인 객체, 없으면 최근에 끝낸 객체 (끝낸 지 RECENT_OBJECT_YEARS년 안일 때만)
+  const lastReport = state.history[state.history.length - 1]
+  const recentReport = lastReport && age - lastReport.ageAtEnd <= RECENT_OBJECT_YEARS ? lastReport : undefined
+  const objectId = state.progress?.objectId ?? recentReport?.objectId
   const object = objectId ? source.objects.find((candidate) => candidate.id === objectId) : undefined
   const conditionBase: ConditionContext = { objectId: object?.id, objectTier: object?.tier }
   const backgroundName = (source.backgrounds ?? []).find((candidate) => candidate.id === state.backgroundId)?.name ?? ''
-  const currentAge = Math.floor(state.player.age)
-  const varsFor = (age: number): Record<string, string> => ({
+  const vars: Record<string, string> = {
     age: String(age),
     rank: RANK_LABELS[state.player.career.rank],
     object: object?.name ?? '객체',
     background: backgroundName,
-  })
+  }
 
-  const rng = createRng(deriveSeed(state.seed, Math.floor(state.player.age * 2), state.lifeLog.length))
+  const rng = createRng(deriveSeed(state.seed, age, state.lifeLog.length))
   const shownIds = new Set(state.lifeLog.map((entry) => entry.id))
   const entries: LifeLogEntry[] = []
 
-  // 1) 이야기 비트
+  // 1) 일상 서술: 그 해의 상태에 맞는 문장을 한 해에 AMBIENT_PER_YEAR 범위의 줄 수만큼
+  const recent = new Set(
+    state.lifeLog
+      .filter((entry) => entry.kind === 'ambient')
+      .slice(-RECENT_AMBIENT_WINDOW)
+      .map((entry) => entry.id),
+  )
+  const ambientCount = rng.int(AMBIENT_PER_YEAR.min, AMBIENT_PER_YEAR.max)
+  for (let line = 0; line < ambientCount; line++) {
+    const candidates = defs.filter(
+      (def) =>
+        def.kind === 'ambient' &&
+        !recent.has(def.id) &&
+        isUnlocked(def, state) &&
+        meetsCondition(def.when, state, conditionBase),
+    )
+    if (candidates.length === 0) {
+      break
+    }
+    const def = rng.pickWeighted(candidates, (candidate) => (candidate.weight ?? 1) * (1 + SPECIFICITY_BONUS * specificity(candidate.when)))
+    recent.add(def.id)
+    entries.push({ id: def.id, age, kind: 'ambient', text: fillTemplate(pickVariant(rng, def.text), vars) })
+  }
+
+  // 2) 이야기 비트: 조건이 맞고 아직 안 나온 것 (우선순위가 높은 것부터)
   const beats = defs
     .filter(
       (def) =>
@@ -124,41 +151,10 @@ export function pickFlowLines(source: FlowSource, state: GameState, crossedAges:
         meetsCondition(def.when, state, conditionBase),
     )
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
-    .slice(0, MAX_BEATS)
+    .slice(0, MAX_BEATS_PER_YEAR)
   for (const beat of beats) {
-    entries.push({
-      id: beat.id,
-      age: currentAge,
-      kind: 'beat',
-      text: fillTemplate(pickVariant(rng, beat.text), varsFor(currentAge)),
-    })
+    entries.push({ id: beat.id, age, kind: 'beat', text: fillTemplate(pickVariant(rng, beat.text), vars) })
   }
 
-  // 2) 일상 서술: 해가 바뀐 해마다 한 줄씩, 남은 줄 수 안에서 가장 최근 해부터.
-  //    객체 관리의 시간은 보고서 뒤 서술 구간에서 흐르므로, 이 해들은 보고서의 나이보다 항상 뒤라서 나이가 거꾸로 가지 않는다.
-  const ages = MAX_FLOW_LINES - entries.length > 0 ? crossedAges.slice(-(MAX_FLOW_LINES - entries.length)) : []
-  const recent = new Set(
-    state.lifeLog
-      .filter((entry) => entry.kind === 'ambient')
-      .slice(-RECENT_AMBIENT_WINDOW)
-      .map((entry) => entry.id),
-  )
-  for (const age of ages) {
-    const candidates = defs.filter(
-      (def) =>
-        def.kind === 'ambient' &&
-        !recent.has(def.id) &&
-        isUnlocked(def, state) &&
-        meetsCondition(def.when, state, { ...conditionBase, age }),
-    )
-    if (candidates.length === 0) {
-      continue
-    }
-    const def = rng.pickWeighted(candidates, (candidate) => (candidate.weight ?? 1) * (1 + SPECIFICITY_BONUS * specificity(candidate.when)))
-    recent.add(def.id)
-    entries.push({ id: def.id, age, kind: 'ambient', text: fillTemplate(pickVariant(rng, def.text), varsFor(age)) })
-  }
-
-  // 시간 순으로 정렬하되, 같은 나이에서는 일상 서술 뒤에 이야기 비트가 오게 한다
-  return entries.sort((a, b) => a.age - b.age || (a.kind === 'beat' ? 1 : 0) - (b.kind === 'beat' ? 1 : 0))
+  return entries
 }

@@ -1,7 +1,4 @@
-import { RANK_LABELS } from '../../../engine/config'
-import { getObjectYears } from '../../../engine/rules'
 import type { ContainmentObject } from '../../../engine/types'
-import { formatYears } from '../../../game/format'
 import { ContinueButton, Eyebrow } from '../Controls'
 import { ObjectNotes } from '../ObjectNotes'
 
@@ -19,7 +16,7 @@ export function BriefingScreen({ object, reassigned, knowledgeBonus, onBegin }: 
     <section className="reveal grid gap-6">
       <div className="grid gap-2">
         <Eyebrow>
-          {object.code} · {RANK_LABELS[object.tier]} 등급 객체{object.finale ? ' · 최종' : ''}
+          {object.code} · 위험 등급 {object.tier}{object.finale ? ' · 최종' : ''}
         </Eyebrow>
         <h2 className="font-serif-kr text-3xl tracking-wide text-bone">{object.name}</h2>
         <p className="narration text-fog">{object.summary}</p>
@@ -33,10 +30,6 @@ export function BriefingScreen({ object, reassigned, knowledgeBonus, onBegin }: 
       )}
 
       <ObjectNotes object={object} />
-
-      <p className="text-sm text-ash">
-        예상 관리 기간 {formatYears(getObjectYears(object))} · {object.stages.length}단계
-      </p>
 
       <ContinueButton label="관리를 시작한다" onClick={onBegin} />
     </section>

@@ -28,7 +28,7 @@ export default {
     {
       id: 's1',
       title: '새벽의 휴게실',
-      years: 0.5,
+      years: 1,
       text: '야간 근무 중 휴게실 불이 저절로 켜졌다. 의자가 조금 뒤로 밀려 나와 있고, 앉은 자국에서 김이 오른다. 일지를 쓰려면 의자 쪽 책상을 써야 한다.',
       choices: [
         {
@@ -87,7 +87,7 @@ export default {
     {
       id: 's2',
       title: '지워진 문장',
-      years: 0.5,
+      years: 1,
       text: '매뉴얼의 마지막 줄은 누군가 지워 놓았다. 지우개 자국은 아직 선명하다.',
       choices: [
         {

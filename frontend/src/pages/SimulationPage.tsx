@@ -53,6 +53,10 @@ function SummaryCard({ summary }: { summary: SimulationSummary }) {
           </dd>
         </div>
         <div>
+          <dt className="inline font-semibold">판당 선택 횟수: </dt>
+          <dd className="inline">{summary.avgChoices.toFixed(1)}번</dd>
+        </div>
+        <div>
           <dt className="inline font-semibold">판당 막간 이벤트: </dt>
           <dd className="inline">
             {summary.avgInterludes.toFixed(1)}회 (회복 {summary.interludesByKind.recovery.toFixed(1)} · 성장{' '}

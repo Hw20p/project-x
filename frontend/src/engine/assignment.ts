@@ -1,6 +1,7 @@
 // 다음에 관리할 객체를 고르는 규칙.
+//   0) 수석(5급)이고 최종 객체가 열렸으면(수석이 된 뒤 시간·줄거리 조건이 참) 최종 객체(finale)
 //   1) 현재 직급의 아직 관리하지 않은 일반 객체가 있으면 그중 하나 (새 객체)
-//   2) 수석(5급)이면: 성공하지 못한 5급 일반 객체를 다시 맡고, 5급 일반 객체를 모두 성공했으면 최종 객체(finale)
+//   2) 수석(5급)이면: 성공하지 못한 5급 일반 객체를 다시 맡는다
 //   3) 그 밖에는 이미 관리한 하위 등급 객체를 재배정 (수습은 하위 등급이 없으므로 수습 객체를 재배정)
 import type { Rng } from './rng'
 import { calcReassignKnowledgeBonus } from './rules'
@@ -38,9 +39,25 @@ export function pickNextObject(
   rank: Rank,
   managedCounts: Readonly<Record<string, number>>,
   clearedIds: ReadonlySet<string>,
+  /** 최종 객체가 열렸는지 (수석이 된 뒤 시간·줄거리 조건이 찼을 때). 열렸으면 일반 객체보다 최종 객체가 먼저다. */
+  finaleOpen = false,
 ): Assignment | null {
-  // 최종 객체는 아래 수석 규칙으로만 배정되므로 일반 배정 후보에서 뺀다.
+  // 최종 객체는 열렸을 때만 배정되므로 일반 배정 후보에서 뺀다.
   const regular = objects.filter((object) => !object.finale)
+
+  // 최종 객체가 열렸다면 그 객체를 맡는다. 이전에 실패했다면 재도전(지식 보너스 적용).
+  if (rank === 5 && finaleOpen) {
+    const finales = objects.filter((object) => object.finale && !clearedIds.has(object.id))
+    if (finales.length > 0) {
+      const object = rng.pickWeighted(finales, () => 1)
+      const times = managedCounts[object.id] ?? 0
+      return {
+        object,
+        reassigned: times > 0,
+        knowledgeBonus: times > 0 ? calcReassignKnowledgeBonus(times) : 0,
+      }
+    }
+  }
 
   const fresh = regular.filter((object) => object.tier === rank && !managedCounts[object.id])
   if (fresh.length > 0) {
@@ -52,17 +69,6 @@ export function pickNextObject(
     const retry = regular.filter((object) => object.tier === 5 && !clearedIds.has(object.id))
     if (retry.length > 0) {
       return reassignment(rng, retry, managedCounts, () => 1)
-    }
-    // 5급 일반 객체를 모두 성공했다 → 최종 객체. 이전에 실패했다면 재도전(지식 보너스 적용).
-    const finales = objects.filter((object) => object.finale && !clearedIds.has(object.id))
-    if (finales.length > 0) {
-      const object = rng.pickWeighted(finales, () => 1)
-      const times = managedCounts[object.id] ?? 0
-      return {
-        object,
-        reassigned: times > 0,
-        knowledgeBonus: times > 0 ? calcReassignKnowledgeBonus(times) : 0,
-      }
     }
   }
 

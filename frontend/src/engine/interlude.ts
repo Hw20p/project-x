@@ -1,25 +1,14 @@
-// 막간 이벤트를 언제, 어떤 것으로 끼울지 정하는 규칙.
-//   - 마지막 막간 이벤트 이후 `INTERLUDE.minIntervalYears`가 지나면 다음 기회에 이벤트가 낀다 (`isInterludeDue`)
-//   - 조건(`when`)·쿨다운·한 번만 나오는 이벤트를 걸러낸 뒤, 가중치로 하나를 고른다 (`pickInterlude`)
-//   - 정신력이 낮을수록 회복 이벤트가 더 자주 나온다
+// 막간 이벤트가 언제, 어떤 것으로 나올지 정하는 규칙 (2026-10-20 개편: 시간 간격이 아니라 조건으로 나온다).
+// 객체와 객체 사이의 "관리하지 않는 해"를 한 해씩 흘려 보내다가, 해마다 이 규칙으로 막간 이벤트가 나올지 판단한다 (`pickYearlyInterlude`).
+//   - 조건 이벤트: 플래그·관계·스탯 같은 특정 조건이 걸린 이벤트와 한 번만 나오는 이야기 이벤트. 조건이 맞으면
+//     마지막 막간 이벤트 이후 `INTERLUDE.minIntervalYears`만 지나면 나온다 (정신력이 낮을 때 회복 이벤트, 관계가 쌓였을 때 관계 이벤트 등).
+//   - 일상 이벤트: 그런 조건이 없는 이벤트. 마지막 막간 이벤트 이후 `freeIntervalYears`가 지난 뒤 해마다 `freeChancePerYear` 확률로 나온다.
+//   - 조건·쿨다운·한 번만 나오는 이벤트를 걸러낸 뒤 가중치로 하나를 고른다. 정신력이 낮을수록 회복 이벤트가 더 자주 나온다.
 import { INTERLUDE, STAT_MIN } from './config'
 import type { Rng } from './rng'
 import { clamp } from './rules'
 import type { GameState } from './state'
 import type { InterludeCondition, InterludeDef, Rank, StatKey } from './types'
-
-/**
- * 막간 이벤트의 간격·쿨다운을 재는 나이. 객체 관리에 드는 시간은 보고서 뒤에 한꺼번에 흐르므로,
- * 관리 도중에는 지금까지 쓴 시간(`progress.yearsSpent`)을 더해서 센다 (긴 객체의 단계 사이에도 이벤트가 낄 수 있게).
- */
-export function effectiveAge(state: GameState): number {
-  return state.player.age + (state.progress?.yearsSpent ?? 0)
-}
-
-/** 마지막 막간 이벤트 이후 충분한 시간이 지났는지 */
-export function isInterludeDue(state: GameState): boolean {
-  return effectiveAge(state) - state.lastInterludeAge >= INTERLUDE.minIntervalYears
-}
 
 function inRange(value: number, range: { min?: number; max?: number }): boolean {
   return (range.min === undefined || value >= range.min) && (range.max === undefined || value <= range.max)
@@ -93,7 +82,7 @@ export function isEligible(def: InterludeDef, state: GameState): boolean {
   }
   const last = past[past.length - 1]
   const cooldown = def.cooldownYears ?? INTERLUDE.defaultCooldownYears
-  if (last && effectiveAge(state) - last.age < cooldown) {
+  if (last && state.player.age - last.age < cooldown) {
     return false
   }
   return meetsCondition(def.when, state)
@@ -109,12 +98,38 @@ function needMultiplier(def: InterludeDef, state: GameState): number {
 }
 
 /**
- * 지금 나올 수 있는 이벤트 중 하나를 가중치로 고른다. 나올 수 있는 이벤트가 없으면 null이고, 이때는 난수를 쓰지 않는다.
+ * 특정 조건이 걸린 이벤트인지. 한 번만 나오는 이야기 이벤트이거나, 플래그·관계·스탯·입사 배경 조건이 걸려 있으면 "조건 이벤트"다.
+ * 직급·나이 조건만 있거나 조건이 없으면 일상 이벤트다.
  */
-export function pickInterlude(rng: Rng, defs: readonly InterludeDef[], state: GameState): InterludeDef | null {
-  const candidates = defs.filter((def) => isEligible(def, state))
-  if (candidates.length === 0) {
+export function isSpecificEvent(def: InterludeDef): boolean {
+  const when = def.when
+  return Boolean(
+    def.once ||
+      (when &&
+        (when.flags || when.notFlags || when.relations || when.stats || when.backgrounds || when.objects || when.objectTiers)),
+  )
+}
+
+/**
+ * 한 해가 흐른 뒤, 지금 막간 이벤트가 나올지 판단해서 나올 이벤트를 돌려준다. 안 나오면 null.
+ * 조건 이벤트가 나올 수 있으면 그중 하나(가중치)가 나오고, 아니면 일상 이벤트가 확률로 나온다.
+ * 나올 후보가 없거나 간격이 안 찼을 때는 난수를 쓰지 않는다.
+ */
+export function pickYearlyInterlude(rng: Rng, defs: readonly InterludeDef[], state: GameState): InterludeDef | null {
+  const since = state.player.age - state.lastInterludeAge
+  if (since < INTERLUDE.minIntervalYears) {
     return null
   }
-  return rng.pickWeighted(candidates, (def) => (def.weight ?? 1) * needMultiplier(def, state))
+  const eligible = defs.filter((def) => isEligible(def, state))
+  const weight = (def: InterludeDef) => (def.weight ?? 1) * needMultiplier(def, state)
+
+  const specific = eligible.filter(isSpecificEvent)
+  if (specific.length > 0) {
+    return rng.pickWeighted(specific, weight)
+  }
+  const free = eligible.filter((def) => !isSpecificEvent(def))
+  if (free.length === 0 || since < INTERLUDE.freeIntervalYears || !rng.chance(INTERLUDE.freeChancePerYear)) {
+    return null
+  }
+  return rng.pickWeighted(free, weight)
 }

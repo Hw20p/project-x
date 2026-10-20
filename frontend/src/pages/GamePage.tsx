@@ -14,10 +14,10 @@ import { InterludeScreen } from '../components/game/screens/InterludeScreens'
 import { getChoiceOptions, getCurrentInterlude, getCurrentObject, getCurrentStage } from '../engine/game'
 import type { GameAction } from '../engine/game'
 import type { GameState } from '../engine/state'
-import type { FeedItem } from '../game/feed'
+import type { FeedItem, YearSnapshot } from '../game/feed'
 import { useGame } from '../game/useGame'
 import type { StartOptions } from '../game/useGame'
-import { useStream } from '../game/useStream'
+import { readingDelay, useStream } from '../game/useStream'
 
 /**
  * 주소를 읽는다.
@@ -82,6 +82,60 @@ const FLOWING_PHASES: readonly GameState['phase'][] = ['outcome', 'report', 'int
 
 /** 새 줄이 나올 때 읽던 곳이 바닥 근처이면 따라 내려간다 (위로 올려 읽는 중이면 그대로 둔다) */
 const FOLLOW_DISTANCE_PX = 420
+
+function snapshotOf(game: GameState): YearSnapshot {
+  const { age, stats, career } = game.player
+  return { age, stats, rank: career.rank, points: career.promotionPoints }
+}
+
+/** 한 해에 속하는 줄의 종류: 한 해 표시 뒤에 이어지는 서술·알림. 선택 결과·보고서·객체 배정 같은 것은 그 해가 아니다. */
+const YEAR_LINE_KINDS: readonly FeedItem['kind'][] = ['ambient', 'beat', 'system']
+
+/**
+ * 줄거리 재생 상황에서 상태 패널과 게이지가 보여 줄 것을 정한다.
+ * - view: 아직 재생하지 않은 "한 해 표시"가 남아 있으면(엔진 상태가 재생보다 앞서 있으면), 마지막으로 재생한 해의
+ *   스냅샷(없으면 재생 전 기준 상태)을 보여 준다. 남아 있지 않으면 undefined (엔진 상태를 그대로).
+ * - gauge: 시간의 흐름 게이지. 한 해 표시가 재생되는 순간부터 그 해의 줄을 다 읽을 때까지 끊기지 않고 천천히 찬다
+ *   (한 해의 길이 = 그 해의 줄을 읽는 시간의 합). 흐르는 시간이 아닐 때(팝업에서 멈춘 때)는 가득 찬 채로 있다.
+ *   한 해 표시가 한 번도 없으면 undefined.
+ */
+function describePlayback(
+  feed: readonly FeedItem[],
+  revealed: number,
+  base: { snapshot: YearSnapshot; feedLength: number },
+): { view: YearSnapshot | undefined; gauge: { key: number; durationMs: number; full: boolean } | undefined } {
+  let lastYear = -1
+  for (let index = Math.min(revealed, feed.length) - 1; index >= 0; index--) {
+    if (feed[index].kind === 'year') {
+      lastYear = index
+      break
+    }
+  }
+  const yearAfterRevealed = feed.findIndex((item, index) => index >= revealed && item.kind === 'year')
+  // 기준 상태를 잡은 뒤에 생긴 한 해 표시만 "지금 흐르는 시간"의 것이다 (그보다 앞의 것은 이미 지난 일)
+  const flowing = lastYear >= base.feedLength
+
+  let view: YearSnapshot | undefined
+  if (yearAfterRevealed !== -1) {
+    view = flowing ? feed[lastYear].snapshot : base.snapshot
+  }
+
+  let gauge: { key: number; durationMs: number; full: boolean } | undefined
+  if (lastYear >= 0) {
+    const age = feed[lastYear].age
+    if (!flowing) {
+      gauge = { key: age, durationMs: 0, full: true }
+    } else {
+      // 이 해에 속하는 줄(다음 한 해 표시 전까지의 서술·알림)을 읽는 시간의 합이 게이지가 차는 시간이다
+      let durationMs = readingDelay(feed[lastYear])
+      for (let index = lastYear + 1; index < feed.length && YEAR_LINE_KINDS.includes(feed[index].kind); index++) {
+        durationMs += readingDelay(feed[index])
+      }
+      gauge = { key: age, durationMs, full: false }
+    }
+  }
+  return { view, gauge }
+}
 
 /**
  * 진행 중인 판의 화면. 줄거리는 스트림에 한 줄씩 쌓이고, 선택이 필요한 순간(객체 배정·단계 선택·막간 이벤트)에만
@@ -181,6 +235,19 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
     }
   }, [stream.revealed, game.phase])
 
+  // ── 시간의 흐름: 줄거리가 한 해씩 재생되는 동안 상태 패널의 나이·스탯·직급이 같이 올라가고, 게이지가 그 해만큼 찬다.
+  // 재생이 멈춰 있을 때(모두 읽었을 때)의 상태를 기억해 두었다가, 새로 흐르는 시간이 시작되기 전까지의 기준으로 쓴다.
+  const baseRef = useRef<{ snapshot: YearSnapshot; feedLength: number }>({
+    snapshot: snapshotOf(game),
+    feedLength: 0,
+  })
+  useEffect(() => {
+    if (stream.idle) {
+      baseRef.current = { snapshot: snapshotOf(game), feedLength: feed.length }
+    }
+  }, [stream.idle, game, feed.length])
+  const playback = describePlayback(feed, stream.revealed, baseRef.current)
+
   const confirmRestart = () => {
     if (window.confirm('지금까지의 삶을 버리고 처음부터 다시 시작할까요?')) {
       restart()
@@ -199,7 +266,26 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="sticky top-0 z-20">
-        <StatusPanel state={game} controls={<SpeedControl speed={stream.speed} onChange={stream.setSpeed} />} />
+        <StatusPanel
+          state={game}
+          view={playback.view}
+          gauge={
+            playback.gauge && {
+              key: playback.gauge.key,
+              full: playback.gauge.full,
+              durationMs: playback.gauge.durationMs / stream.speed,
+              paused: stream.paused,
+            }
+          }
+          controls={
+            <SpeedControl
+              speed={stream.speed}
+              onChange={stream.setSpeed}
+              paused={stream.paused}
+              onTogglePause={stream.togglePause}
+            />
+          }
+        />
       </div>
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-5 pt-8">

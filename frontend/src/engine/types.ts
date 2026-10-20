@@ -157,8 +157,6 @@ export interface InterludeDef {
   text: string
   /** 이 이벤트의 주인공 NPC (표시용·검증용) */
   npcId?: string
-  /** 이 이벤트에 드는 시간(년). 0.5 단위, 기본 0. */
-  years?: number
   /** 등장 가중치. 기본 1. */
   weight?: number
   /** true면 한 판에 한 번만 나온다 (이야기 이벤트) */
@@ -206,7 +204,10 @@ export interface Choice {
 export interface Stage {
   id: string
   title: string
-  /** 이 단계에 걸리는 시간(년). 0.5 단위. */
+  /**
+   * 이 단계가 이야기상 차지하는 시간(년). 1 이상의 정수. 객체 관리 중에는 시간이 흐르지 않고, 단계의 years는 객체에 쓴 시간으로
+   * 쌓여서 다음 객체까지의 간격에 반영된다 (그 시간은 객체가 끝난 뒤 한 해씩 흐른다). 화면에는 보이지 않는다.
+   */
   years: number
   text: string
   choices: Choice[]
@@ -238,8 +239,8 @@ export interface ContainmentObject {
   /** 실패(setback)가 이 횟수 이하면 관리 성공으로 인정. 기본 0. */
   failureTolerance?: number
   /**
-   * 최종 객체 여부. 5급(수석)이 5급 일반 객체를 모두 성공하면 배정되고, 이 객체의 마지막 선택(또는 일찍 끝내는 선택)이
-   * 성공하면 `endingId`에 해당하는 엔딩으로 판이 끝난다. 반드시 tier 5여야 한다.
+   * 최종 객체 여부. 수석이 된 뒤 시간과 줄거리(3막 서술이 끝나거나 오래 수석으로 지냄)가 차면 배정되고(`FINALE`),
+   * 이 객체의 마지막 선택(또는 일찍 끝내는 선택)이 성공하면 `endingId`에 해당하는 엔딩으로 판이 끝난다. 반드시 tier 5여야 한다.
    */
   finale?: boolean
   stages: Stage[]
@@ -247,7 +248,9 @@ export interface ContainmentObject {
 
 export interface Career {
   rank: Rank
-  /** 현재 직급에서 쌓은 승급 점수 */
+  /** 지금 직급이 된 나이. 수석이 된 지 얼마나 됐는지(최종 객체 개방 조건)를 잴 때 쓴다. */
+  rankSince: number
+  /** 현재 직급에서 쌓은 승급 점수 (시간이 흐르며 저절로 쌓이고, 객체 성과가 가감한다) */
   promotionPoints: number
   /** 연속 관리 성공 횟수 */
   streak: number

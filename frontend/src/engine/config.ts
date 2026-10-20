@@ -47,16 +47,52 @@ export const AGE_CHANCE_PENALTY = [
 
 /**
  * 해마다 자연 회복되는 정신력 (일상 회복).
- * 정신력 회복은 막간 이벤트(recovery)가 맡으므로 자연 회복은 없다(0). 막간 이벤트 도입 후에도 +1이면 안전 우선 봇의
- * 정신 붕괴가 5.5%까지 떨어져서(목표 20~40%) 0으로 낮췄다. 재측정 전의 값.
- * 이벤트 없이 시뮬레이션했을 때 안전 우선 봇의 정신 붕괴 비율: +0 → 88%, +1 → 80%, +2 → 23%, +3 → 0.4%.
+ * 시간이 먼저 흐르는 구조(2026-10-20 개편)에서는 객체·막간 이벤트가 줄어 회복 기회가 줄어서 +1로 둔다. 재측정 전의 초기 값.
+ * (예전 구조에서 이벤트 없이 시뮬레이션했을 때 안전 우선 봇의 정신 붕괴 비율: +0 → 88%, +1 → 80%, +2 → 23%, +3 → 0.4%.)
  */
-export const YEARLY_SANITY_RECOVERY = 0
+export const YEARLY_SANITY_RECOVERY = 1
 
-/** 막간 이벤트(객체 관리 사이사이에 끼는 회복·성장·관계 이벤트) 설정 */
+/**
+ * 객체가 배정되는 간격. 객체 관리는 한순간에 일어나고, 객체가 끝난 뒤 시작 간격이 지날 때까지 서술이 한 해씩 흐른다.
+ * 객체에 쓴 시간(단계 `years`의 합)이 간격보다 길었으면 그 시간이 다 흐른 뒤 최소 간격(`minGapAfterObject`) 뒤에 나온다.
+ * 재측정 전의 초기 값: 5년이면 한 판에 객체 9~10건, 선택 약 20번.
+ */
+export const OBJECT_SCHEDULE = {
+  /** 객체를 시작한 뒤 다음 객체를 시작하기까지의 평균 간격(년) */
+  intervalYears: 5,
+  /** 간격의 흔들림: ±이 값(년) 안에서 정한다 */
+  jitterYears: 1,
+  /** 객체가 끝난 뒤 다음 객체까지 최소한 비워 두는 해 */
+  minGapAfterObject: 1,
+} as const
+
+/** 시간이 흐르며 승급 점수가 저절로 쌓이는 규칙. 해마다 `점수 = clamp(base + (평판-50)/reputationDivisor + (지식-50)/knowledgeDivisor, min, max)`. */
+export const PASSIVE_PROMOTION = {
+  basePerYear: 3,
+  reputationDivisor: 20,
+  knowledgeDivisor: 40,
+  minPerYear: 0.5,
+  maxPerYear: 6,
+} as const
+
+/** 최종 객체가 열리는 조건: 수석이 된 지 이 기간이 지나고, 3막 서술이 끝났거나(`act3-done`) 오래 수석으로 있었을 때 */
+export const FINALE = {
+  /** 수석이 된 뒤 최소 이만큼(년)은 지나야 한다 */
+  minYearsAtRank5: 4,
+  /** 3막 서술이 끝나지 않았어도, 수석으로 이만큼(년) 지내면 열린다 */
+  maxYearsAtRank5: 12,
+  /** 3막이 끝났음을 나타내는 플래그 */
+  storyFlag: 'act3-done',
+} as const
+
+/** 막간 이벤트 설정 (2026-10-20 개편: 시간 간격이 아니라 조건으로 나온다) */
 export const INTERLUDE = {
-  /** 마지막 막간 이벤트 이후 이만큼(년) 지나면, 다음 기회(객체가 끝났을 때, 긴 객체의 단계 사이)에 이벤트가 낀다 */
-  minIntervalYears: 2,
+  /** 막간 이벤트가 끝난 뒤 다음 막간 이벤트까지 최소로 비우는 해. 조건 이벤트·일상 이벤트 모두에 적용 */
+  minIntervalYears: 3,
+  /** 조건이 없는 일상 이벤트(직급·나이 조건만 있는 이벤트 포함)가 나오려면 마지막 이벤트 이후 이만큼(년) 지나야 한다 */
+  freeIntervalYears: 5,
+  /** 위 간격이 지난 뒤, 해마다 일상 이벤트가 나올 확률 */
+  freeChancePerYear: 0.35,
   /** 같은 이벤트가 다시 나오기까지의 기본 쿨다운(년) */
   defaultCooldownYears: 6,
   /** 정신력이 낮을수록 회복 이벤트의 가중치가 커진다: 정신력 50 이상이면 ×1, 0이면 ×(1 + 이 값) */
@@ -92,6 +128,8 @@ export const PROMOTION = {
   streakBonusMaxSteps: 5,
   /** 실패(setback) 없이 끝냈을 때 가산점 */
   flawlessBonus: 5,
+  /** 객체 관리 실패(허용치 초과) 때 깎이는 점수 (0 아래로는 안 내려간다). 점수가 시간에 따라 자동으로 쌓이므로 성과가 가감한다. */
+  failurePenalty: 4,
 } as const
 
 /**

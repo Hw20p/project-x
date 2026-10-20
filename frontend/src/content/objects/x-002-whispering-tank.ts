@@ -25,7 +25,7 @@ export default {
     {
       id: 's1',
       title: '물소리',
-      years: 0.5,
+      years: 1,
       text: '계측실에 혼자 남았다. 빈 수조에서 낮은 물소리와 함께 당신의 이름이 들린다. 어제보다 목소리가 가깝다.',
       choices: [
         {
@@ -84,7 +84,7 @@ export default {
     {
       id: 's2',
       title: '수위 점검',
-      years: 0.5,
+      years: 1,
       text: '수위 점검일. 두 명이 해야 하는데 동료가 수조를 등지는 것을 거부한다. “난 이미 한 번 돌아봤어요.”',
       choices: [
         {

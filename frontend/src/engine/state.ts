@@ -1,5 +1,5 @@
 // 게임 진행 상태 타입. 전부 JSON으로 직렬화할 수 있는 값만 담는다 (localStorage 저장, 리플레이 검증용).
-import type { FailureKind, PlayerState, Rank, StatDelta } from './types'
+import type { FailureKind, PlayerState, Rank, StatDelta, Stats } from './types'
 
 /**
  * 진행 단계
@@ -54,6 +54,8 @@ export interface ObjectProgress {
   failures: number
   /** 이 객체 관리에 쓴 시간(년) */
   yearsSpent: number
+  /** 이 객체를 배정받은 나이. 다음 객체의 시작 간격을 잴 때 쓴다. */
+  startAge: number
 }
 
 /** 방금 한 선택의 결과 — `outcome` 단계에서 화면에 보여 줄 내용 */
@@ -99,14 +101,22 @@ export interface LifeLogEntry {
   text: string
 }
 
-/** 마지막 전이 중에 일어난 일. 매 전이마다 새로 채워진다. flow는 이번 전이에서 새로 흘러간 서술이다. */
-export type GameEvent = { type: 'illness'; age: number } | { type: 'flow'; entry: LifeLogEntry }
+/**
+ * 마지막 전이 중에 일어난 일 (일어난 순서대로). 매 전이마다 새로 채워진다.
+ * - year     : 한 해가 흘러 나이를 먹음. 그 해가 끝난 시점의 상태 스냅샷을 담아서, 화면이 서술을 재생하며 나이·스탯을 맞춰 갈 수 있게 한다.
+ * - flow     : 그 해에 흘러간 서술
+ * - illness  : 그 해에 병에 걸림
+ * - promotion: 시간이 흐르며 점수가 차서 자동으로 승급함
+ */
+export type GameEvent =
+  | { type: 'year'; age: number; stats: Stats; rank: Rank; points: number }
+  | { type: 'flow'; entry: LifeLogEntry }
+  | { type: 'illness'; age: number }
+  | { type: 'promotion'; age: number; from: Rank; to: Rank }
 
-/** 진행 중인 막간 이벤트. `resume`은 이벤트가 끝난 뒤 돌아갈 곳. */
+/** 진행 중인 막간 이벤트 */
 export interface InterludeProgress {
   eventId: string
-  /** choosing=관리 중이던 객체의 다음 단계, assign=다음 객체 배정 */
-  resume: 'choosing' | 'assign'
 }
 
 /** 막간 이벤트의 선택 결과 — `interludeOutcome` 단계에서 화면에 보여 줄 내용 */
@@ -169,10 +179,10 @@ export interface GameState {
   /** 마지막 막간 이벤트를 겪은 나이. 다음 이벤트까지의 간격 계산에 쓴다. 시작 나이로 초기화. */
   lastInterludeAge: number
   /**
-   * 일상 서술을 마지막으로 고른 시점의 나이. 객체 관리 도중에는 서술을 붙이지 않고(관리 서술 사이에 끼지 않게),
-   * 관리가 끝난 뒤(보고서를 본 뒤)와 막간 이벤트가 끝난 뒤에 이 나이 이후로 흐른 해만큼 한꺼번에 붙인다.
+   * 다음 객체가 배정될 나이. 객체가 끝날 때(보고서를 만들 때) 정해지고, 시간이 이 나이까지 흐르면 다음 객체가 나온다.
+   * 객체 관리 중에는 의미가 없다.
    */
-  flowAge: number
+  nextObjectAge: number
   /** 지금까지 흘러간 서술 (오래된 순). 오프닝과 일상·비트 서술이 모두 들어간다. */
   lifeLog: LifeLogEntry[]
   /**

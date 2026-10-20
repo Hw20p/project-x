@@ -1,10 +1,28 @@
 import { SPEEDS } from '../../game/useStream'
 import type { Speed } from '../../game/useStream'
 
-/** 줄거리가 흐르는 속도 (1×·2×·4×). 상태 패널 위쪽에 붙는다. */
-export function SpeedControl({ speed, onChange }: { speed: Speed; onChange: (speed: Speed) => void }) {
+interface SpeedControlProps {
+  speed: Speed
+  onChange: (speed: Speed) => void
+  paused: boolean
+  onTogglePause: () => void
+}
+
+/** 줄거리가 흐르는 속도 (1×·2×·4×)와 일시정지. 상태 패널 위쪽에 붙는다. */
+export function SpeedControl({ speed, onChange, paused, onTogglePause }: SpeedControlProps) {
   return (
     <div className="flex shrink-0 items-center gap-1" role="group" aria-label="흐르는 속도">
+      <button
+        type="button"
+        onClick={onTogglePause}
+        aria-pressed={paused}
+        aria-label={paused ? '다시 흐르게 하기' : '일시정지'}
+        className={`mr-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
+          paused ? 'border-glow/60 text-glow' : 'border-edge text-ash hover:border-fog hover:text-fog'
+        }`}
+      >
+        {paused ? '▶' : 'Ⅱ'}
+      </button>
       {SPEEDS.map((value) => (
         <button
           key={value}

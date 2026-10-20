@@ -95,6 +95,23 @@ summary:focus-visible {
   animation: fade-in-up 0.5s ease-out both;
 }
 
+/* 시간의 흐름 게이지: 한 해가 시작될 때 비어 있다가 그 해의 길이만큼 끊기지 않고 차오른다 */
+@keyframes year-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.year-gauge-fill {
+  transform-origin: left center;
+  animation-name: year-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
 /* components 레이어에 두어서, 같은 요소에 붙인 Tailwind 유틸리티(색·크기)가 이 기본값을 덮어쓸 수 있게 한다. */
 @layer components {
   /* 서술 텍스트: 명조, 기본 크기에 넉넉한 줄 간격 */
@@ -129,6 +146,10 @@ summary:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .reveal > * {
+    animation: none;
+  }
+  /* 게이지는 움직임 없이 가득 찬 채로 둔다 */
+  .year-gauge-fill {
     animation: none;
   }
 }

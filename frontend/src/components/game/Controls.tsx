@@ -22,7 +22,7 @@ export function ContinueButton({ label = '계속', onClick }: { label?: string; 
   )
 }
 
-/** 화면 위쪽의 작은 분류 문구 (예: "X-001 · 수습 등급") */
+/** 화면 위쪽의 작은 분류 문구 (예: "X-001 · 위험 등급 1") */
 export function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs tracking-[0.2em] text-fog">{children}</p>
 }

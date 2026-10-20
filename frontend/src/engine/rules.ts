@@ -6,6 +6,7 @@ import {
   CHANCE_MIN,
   DEFAULT_STATS,
   GAIN_FLOOR,
+  PASSIVE_PROMOTION,
   PROMOTION,
   PROMOTION_REQUIREMENTS,
   REASSIGNMENT,
@@ -39,8 +40,9 @@ export function createInitialStats(): Stats {
   return { ...DEFAULT_STATS }
 }
 
-export function createCareer(): Career {
-  return { rank: 1, promotionPoints: 0, streak: 0, totalSuccesses: 0, totalFailures: 0 }
+/** @param entryAge 입사 나이 (수습이 된 나이) */
+export function createCareer(entryAge: number): Career {
+  return { rank: 1, rankSince: entryAge, promotionPoints: 0, streak: 0, totalSuccesses: 0, totalFailures: 0 }
 }
 
 /** 스탯 변화를 적용하고 0~100으로 자름. 변화가 없으면 같은 객체를 돌려줌. */
@@ -194,11 +196,6 @@ export function calcBondEffects(npcs: readonly NpcDef[], relations: Readonly<Rec
   return total
 }
 
-/** 객체 전체 소요 시간(년). 높은 위험을 택해 일찍 끝내면 이보다 짧아짐. */
-export function getObjectYears(object: ContainmentObject): number {
-  return object.stages.reduce((sum, stage) => sum + stage.years, 0)
-}
-
 /** 실패(setback) 횟수가 허용치 이하면 관리 성공 */
 export function isObjectCleared(object: ContainmentObject, failures: number): boolean {
   return failures <= (object.failureTolerance ?? 0)
@@ -218,7 +215,12 @@ export function recordObjectResult(
   reassigned = false,
 ): Career {
   if (!cleared) {
-    return { ...career, streak: 0, totalFailures: career.totalFailures + 1 }
+    return {
+      ...career,
+      streak: 0,
+      promotionPoints: Math.max(0, career.promotionPoints - PROMOTION.failurePenalty),
+      totalFailures: career.totalFailures + 1,
+    }
   }
   const streak = career.streak + 1
   const basePoints = calcSuccessPoints(streak, flawless)
@@ -240,19 +242,30 @@ export function canPromote(career: Career, stats: Stats): boolean {
   return career.promotionPoints >= requirement.points && stats.reputation >= requirement.reputation
 }
 
-export function promote(career: Career): Career {
-  return { ...career, rank: Math.min(5, career.rank + 1) as Rank, promotionPoints: 0 }
+/** 승급. age는 승급한 나이. */
+export function promote(career: Career, age: number): Career {
+  return { ...career, rank: Math.min(5, career.rank + 1) as Rank, rankSince: age, promotionPoints: 0 }
 }
 
-/** 좌천. 이미 수습이면 해고(dismissed)되어 그 판이 끝남. */
-export function demote(career: Career): { career: Career; dismissed: boolean } {
+/** 좌천. 이미 수습이면 해고(dismissed)되어 그 판이 끝남. age는 좌천된 나이. */
+export function demote(career: Career, age: number): { career: Career; dismissed: boolean } {
   if (career.rank === 1) {
     return { career, dismissed: true }
   }
   return {
-    career: { ...career, rank: (career.rank - 1) as Rank, promotionPoints: 0, streak: 0 },
+    career: { ...career, rank: (career.rank - 1) as Rank, rankSince: age, promotionPoints: 0, streak: 0 },
     dismissed: false,
   }
+}
+
+/** 시간이 한 해 흐를 때 저절로 쌓이는 승급 점수. 평판과 지식이 높을수록 많이 쌓인다. */
+export function passivePromotionPoints(stats: Stats): number {
+  const { basePerYear, reputationDivisor, knowledgeDivisor, minPerYear, maxPerYear } = PASSIVE_PROMOTION
+  const points =
+    basePerYear +
+    (stats.reputation - STAT_BASELINE) / reputationDivisor +
+    (stats.knowledge - STAT_BASELINE) / knowledgeDivisor
+  return clamp(points, minPerYear, maxPerYear)
 }
 
 export function agingHealthLoss(age: number): number {

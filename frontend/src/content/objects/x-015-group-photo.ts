@@ -145,7 +145,7 @@ export default {
     {
       id: 's3',
       title: '빈 자리',
-      years: 1.5,
+      years: 2,
       text: '사진 앞줄 오른쪽 끝에 한 칸이 비어 있다. 그 칸의 크기가 내 어깨와 정확히 같다는 것을 알아차렸다.',
       choices: [
         {

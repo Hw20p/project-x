@@ -116,6 +116,8 @@ export interface NpcStat {
 export interface SimulationSummary {
   strategy: BotStrategy
   games: number
+  /** 판당 평균 선택 횟수 (객체 단계 선택 + 막간 이벤트 선택). 선택 피로를 재는 값 */
+  avgChoices: number
   /** 판당 평균 막간 이벤트 횟수 */
   avgInterludes: number
   /** 종류별 판당 평균 막간 이벤트 횟수 */
@@ -264,6 +266,7 @@ export function simulate(
   const interludeKinds = new Map((ctx.interludes ?? []).map((def) => [def.id, def] as const))
   const interludesByKind: Record<InterludeKind, number> = { recovery: 0, growth: 0, relationship: 0 }
   let totalInterludes = 0
+  let totalChoices = 0
   const npcMet = new Map<string, { met: number; relationSum: number }>()
 
   const objectStats = new Map<string, ObjectStat>()
@@ -308,6 +311,7 @@ export function simulate(
       finaleReached += 1
     }
     finalRank[state.player.career.rank] += 1
+    totalChoices += state.choiceLog.length
 
     for (const record of state.interludeLog) {
       totalInterludes += 1
@@ -420,6 +424,7 @@ export function simulate(
   return {
     strategy,
     games,
+    avgChoices: perGame(totalChoices),
     avgInterludes: perGame(totalInterludes),
     interludesByKind: {
       recovery: perGame(interludesByKind.recovery),

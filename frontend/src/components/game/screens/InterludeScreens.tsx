@@ -1,7 +1,6 @@
 import { npcs } from '../../../content'
 import type { ChoiceOption } from '../../../engine/game'
 import type { InterludeDef, InterludeKind } from '../../../engine/types'
-import { formatYears } from '../../../game/format'
 import { ChoiceList } from '../ChoiceList'
 import { Eyebrow } from '../Controls'
 import { Narration } from '../Narration'
@@ -35,10 +34,6 @@ export function InterludeScreen({ def, options, onChoose }: InterludeScreenProps
       <Narration text={def.text} />
 
       <ChoiceList options={options} onChoose={onChoose} />
-
-      {def.years !== undefined && def.years > 0 && (
-        <p className="text-xs text-ash">이 일에는 {formatYears(def.years)}이 걸린다</p>
-      )}
     </section>
   )
 }

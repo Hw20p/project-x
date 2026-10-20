@@ -5,12 +5,12 @@ import { RANK_LABELS } from '../engine/config'
 import { findInterlude, findObject } from '../engine/game'
 import type { GameContext } from '../engine/game'
 import type { GameState } from '../engine/state'
-import type { Rank, StatDelta } from '../engine/types'
-import { formatYears } from './format'
+import type { Rank, StatDelta, Stats } from '../engine/types'
 import { toParagraphs } from './text'
 
 /**
  * 항목 종류
+ * - year   : 한 해가 흘렀다는 표시 (본문 없음, 게이지·상태 패널 동기화용 스냅샷을 담는다)
  * - opening/ambient/beat: 엔진이 만든 흐르는 서술
  * - choice : 플레이어가 고른 선택지 (기록용)
  * - result : 선택의 결과 서술 (실제로 바뀐 스탯·관계, 안내 문구 포함)
@@ -21,6 +21,7 @@ import { toParagraphs } from './text'
  * - system : 막간 이벤트 시작, 병 같은 알림
  */
 export type FeedKind =
+  | 'year'
   | 'opening'
   | 'ambient'
   | 'beat'
@@ -47,6 +48,16 @@ export interface FeedItem {
   relations?: Record<string, number>
   /** 보조 안내 문구 (확률, 승급·좌천 등) */
   notes?: string[]
+  /** year: 그 해가 끝난 시점의 나이·스탯·직급·승급 점수. 상태 패널이 재생에 맞춰 보여 준다. */
+  snapshot?: YearSnapshot
+}
+
+/** 한 해가 끝난 시점의 플레이어 상태 (화면 재생용) */
+export interface YearSnapshot {
+  age: number
+  stats: Stats
+  rank: Rank
+  points: number
 }
 
 export type FeedDraft = Omit<FeedItem, 'id'>
@@ -115,10 +126,30 @@ export function describeTransition(
 
   // 2) 이번 전이에서 흘러간 서술과 병
   for (const event of next.events) {
-    if (event.type === 'flow') {
-      drafts.push({ age: event.entry.age, kind: event.entry.kind, text: event.entry.text })
-    } else {
-      drafts.push({ age: event.age, kind: 'system', text: '몸에 병이 들었다.', tone: 'bad' })
+    switch (event.type) {
+      case 'year':
+        // 한 해가 흘렀다는 표시. 화면이 이걸 지날 때 나이·스탯·게이지를 그 해로 맞춘다.
+        drafts.push({
+          age: event.age,
+          kind: 'year',
+          text: '',
+          snapshot: { age: event.age, stats: event.stats, rank: event.rank, points: event.points },
+        })
+        break
+      case 'flow':
+        drafts.push({ age: event.entry.age, kind: event.entry.kind, text: event.entry.text })
+        break
+      case 'illness':
+        drafts.push({ age: event.age, kind: 'system', text: '몸에 병이 들었다.', tone: 'bad' })
+        break
+      case 'promotion':
+        drafts.push({
+          age: event.age,
+          kind: 'system',
+          text: `승급 — ${RANK_LABELS[event.from]}에서 ${RANK_LABELS[event.to]}이(가) 되었다.`,
+          tone: 'good',
+        })
+        break
     }
   }
 
@@ -152,10 +183,7 @@ export function describeTransition(
     const report = next.history[next.history.length - 1]
     if (report) {
       const label = report.outcome === 'cleared' ? '관리 성공' : report.outcome === 'failed' ? '관리 실패' : '규정 위반'
-      const notes = [
-        `소요 ${formatYears(report.yearsSpent)}`,
-        `실패한 단계 ${report.failures}회${report.flawless ? ' · 무결점' : ''}`,
-      ]
+      const notes = [`실패한 단계 ${report.failures}회${report.flawless ? ' · 무결점' : ''}`]
       if (report.reassigned) {
         notes.push('재배정 (승급 점수 절반)')
       }

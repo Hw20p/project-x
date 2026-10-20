@@ -10,6 +10,8 @@ const FIRST_LINE_DELAY_MS = 350
 const BASE_DELAY_MS = 700
 const PER_CHAR_MS = 28
 const MAX_READ_CHARS = 70
+/** 한 해가 흘렀다는 표시(게이지가 한 칸 차는 순간) 뒤의 짧은 간격 */
+const YEAR_TICK_DELAY_MS = 450
 
 function loadSpeed(): Speed {
   try {
@@ -28,13 +30,16 @@ function saveSpeed(speed: Speed): void {
   }
 }
 
-/** 선택지를 누른 뒤 내가 고른 문장이 기록에 붙기까지의 짧은 텀 (바로 붙으면 오히려 정신없다) */
-const CHOICE_APPEAR_DELAY_MS = 300
 /** 내가 고른 선택지 줄 다음에 결과가 나오기까지의 짧은 간격 (내가 고른 문장이라 읽을 시간이 필요 없다) */
 const CHOICE_ECHO_DELAY_MS = 450
+/** 선택지를 누른 뒤 내가 고른 문장이 기록에 붙기까지의 짧은 텀 (바로 붙으면 오히려 정신없다) */
+const CHOICE_APPEAR_DELAY_MS = 300
 
-/** 한 줄을 읽는 데 주는 시간. 긴 문장일수록 오래 머문다. */
-function readingDelay(item: FeedItem): number {
+/** 한 줄을 읽는 데 주는 시간(속도 1배 기준 ms). 긴 문장일수록 오래 머문다. 시간의 흐름 게이지가 한 해의 길이를 잴 때도 쓴다. */
+export function readingDelay(item: FeedItem): number {
+  if (item.kind === 'year') {
+    return YEAR_TICK_DELAY_MS
+  }
   if (item.kind === 'choice') {
     return CHOICE_ECHO_DELAY_MS
   }
@@ -44,7 +49,7 @@ function readingDelay(item: FeedItem): number {
 
 /**
  * 줄거리 스트림을 한 줄씩 보여 주는 타이머.
- * 건너뛰기는 없고, 속도만 1·2·4배로 바꿀 수 있다 (80억분의 1과 같은 방식).
+ * 건너뛰기는 없고, 속도만 1·2·4배로 바꾸거나 일시정지할 수 있다 (80억분의 1과 같은 방식).
  * @param initialRevealed 처음부터 보여 줄 줄 수 (저장본을 이어 할 때 쌓인 줄거리를 바로 보여 주기 위함)
  */
 export function useStream(feed: readonly FeedItem[], initialRevealed: number) {
@@ -52,14 +57,16 @@ export function useStream(feed: readonly FeedItem[], initialRevealed: number) {
   // 마지막 줄을 읽을 시간까지 지나 "다 읽었다"고 본 줄 수
   const [settled, setSettled] = useState(initialRevealed)
   const [speed, setSpeedState] = useState<Speed>(loadSpeed)
+  const [paused, setPaused] = useState(false)
 
   const setSpeed = useCallback((next: Speed) => {
     setSpeedState(next)
     saveSpeed(next)
   }, [])
+  const togglePause = useCallback(() => setPaused((value) => !value), [])
 
   useEffect(() => {
-    if (revealed >= feed.length) {
+    if (paused || revealed >= feed.length) {
       return
     }
     // 선택지를 고른 직후의 줄(내가 고른 문장)은 앞 줄을 읽던 시간을 기다리지 않고 짧은 텀만 두고 보여 준다.
@@ -72,16 +79,16 @@ export function useStream(feed: readonly FeedItem[], initialRevealed: number) {
           : readingDelay(feed[revealed - 1])
     const timer = window.setTimeout(() => setRevealed((count) => count + 1), delay / speed)
     return () => window.clearTimeout(timer)
-  }, [revealed, feed, speed])
+  }, [revealed, feed, speed, paused])
 
   useEffect(() => {
-    if (revealed < feed.length || settled >= feed.length) {
+    if (paused || revealed < feed.length || settled >= feed.length) {
       return
     }
     const timer = window.setTimeout(() => setSettled(feed.length), readingDelay(feed[feed.length - 1]) / speed)
     return () => window.clearTimeout(timer)
-  }, [revealed, settled, feed, speed])
+  }, [revealed, settled, feed, speed, paused])
 
   // idle: 모든 줄이 나왔고 마지막 줄을 읽을 시간도 지났다. 팝업을 열거나 다음 단계로 넘어가도 되는 때.
-  return { revealed, idle: revealed >= feed.length && settled >= feed.length, speed, setSpeed }
+  return { revealed, idle: revealed >= feed.length && settled >= feed.length, speed, setSpeed, paused, togglePause }
 }

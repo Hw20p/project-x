@@ -7,7 +7,6 @@ export default [
     kind: 'recovery',
     title: '휴가',
     text: '연차가 쌓이다 못해 인사팀에서 직접 연락이 왔다. 일주일이라도 다녀오라는 것이다.',
-    years: 0.5,
     cooldownYears: 8,
     choices: [
       {
@@ -224,7 +223,6 @@ export default [
     kind: 'recovery',
     title: '옥상 정원',
     text: '본관 옥상에 아무도 돌보지 않는 화단이 있다. 점심시간에 올라가 보니 흙이 말라 있고, 난간 너머로 지상의 하늘이 보인다.',
-    years: 0.5,
     cooldownYears: 6,
     choices: [
       {
@@ -280,7 +278,6 @@ export default [
     kind: 'recovery',
     title: '낡은 라디오',
     text: '휴게실 선반의 낡은 라디오에서 모르는 노래가 흘러나온다. 전원 표시등은 꺼져 있다.',
-    years: 0.5,
     cooldownYears: 7,
     when: { stats: { sanity: { max: 65 } } },
     choices: [
@@ -338,7 +335,6 @@ export default [
     kind: 'recovery',
     title: '식당 마감 뒤',
     text: '구내식당이 마감한 뒤, 조리사가 남은 밥과 국을 한 상 차려 놓고 앉아 있다. 먹고 가라는 눈짓이다.',
-    years: 0.5,
     cooldownYears: 6,
     choices: [
       {

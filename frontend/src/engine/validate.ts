@@ -14,8 +14,9 @@ import type {
 
 const KINDS = ['recovery', 'growth', 'relationship']
 
-function isHalfYear(years: number): boolean {
-  return years >= 0 && Number.isInteger(years * 2)
+/** 시간은 한 해 단위로 흐른다: 1 이상의 정수 */
+function isWholeYears(years: number): boolean {
+  return Number.isInteger(years) && years >= 1
 }
 
 /** 선택지 공통 검사 (확률, 위험도, 텍스트, 관계 대상 NPC) */
@@ -115,8 +116,8 @@ export function validateObject(
     }
     stageIds.add(stage.id)
 
-    if (!isHalfYear(stage.years)) {
-      fail(`${stage.id}: years는 0 이상의 0.5 단위여야 함 (${stage.years})`)
+    if (!isWholeYears(stage.years)) {
+      fail(`${stage.id}: years는 1 이상의 정수여야 함 (${stage.years})`)
     }
     totalYears += stage.years
 
@@ -373,9 +374,6 @@ export function validateInterludes(
     ids.add(def.id)
     if (!KINDS.includes(def.kind)) {
       fail(`kind가 올바르지 않음: ${def.kind}`)
-    }
-    if (def.years !== undefined && !isHalfYear(def.years)) {
-      fail(`years는 0 이상의 0.5 단위여야 함 (${def.years})`)
     }
     if (def.weight !== undefined && def.weight <= 0) {
       fail('weight는 0보다 커야 함')

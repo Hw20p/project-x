@@ -7,7 +7,6 @@ export default [
     kind: 'growth',
     title: '사내 교육 과정',
     text: '관리 교육 과정 모집 공고가 붙었다. 반년 동안 매주 이틀을 내야 한다.',
-    years: 0.5,
     cooldownYears: 5,
     choices: [
       {
@@ -49,7 +48,6 @@ export default [
     kind: 'growth',
     title: '기밀 자료 열람',
     text: '자료실에서 열람 등급이 올라갔다는 안내가 왔다. 서고의 가장 안쪽 서가가 이제 열린다.',
-    years: 0.5,
     when: { minRank: 2 },
     cooldownYears: 6,
     choices: [
@@ -91,7 +89,6 @@ export default [
     kind: 'growth',
     title: '체력 단련',
     text: '건강검진 결과표의 체력 항목에 노란 표시가 붙었다. 사내 체육관 이용권도 함께 왔다.',
-    years: 0.5,
     cooldownYears: 5,
     choices: [
       {
@@ -174,7 +171,6 @@ export default [
     kind: 'growth',
     title: '외부 시찰 참관',
     text: '다른 시설의 시찰단이 방문한다. 안내를 맡은 선임이 한 명 빠져, 참관 자리가 당신에게 돌아왔다.',
-    years: 0.5,
     cooldownYears: 7,
     when: { minRank: 3 },
     choices: [
@@ -233,7 +229,6 @@ export default [
     kind: 'growth',
     title: '후임 지도',
     text: '새로 들어온 후임이 당신 옆자리에 배정되었다. 첫 객체 관리를 앞두고 무엇이든 물어볼 사람이 필요한 눈빛이다.',
-    years: 0.5,
     cooldownYears: 6,
     when: { minRank: 2 },
     choices: [

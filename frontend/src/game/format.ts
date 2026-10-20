@@ -1,20 +1,9 @@
 import { STAT_KEYS } from '../engine/types'
 import type { Risk, StatDelta, Stats } from '../engine/types'
 
-/** 0.5년 단위로 흐르는 나이를 "29세", "29.5세"로 */
+/** 시간은 한 해 단위로 흐르므로 나이는 정수다: "29세" */
 export function formatAge(age: number): string {
-  const whole = Math.floor(age)
-  return age - whole >= 0.5 ? `${whole}.5세` : `${whole}세`
-}
-
-/** "반년", "1년", "2년 반" */
-export function formatYears(years: number): string {
-  const whole = Math.floor(years)
-  const half = years - whole >= 0.5
-  if (whole === 0) {
-    return half ? '반년' : '없음'
-  }
-  return half ? `${whole}년 반` : `${whole}년`
+  return `${Math.floor(age)}세`
 }
 
 export const RISK_LABELS: Record<Risk, string> = {

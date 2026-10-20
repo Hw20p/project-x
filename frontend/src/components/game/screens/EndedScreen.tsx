@@ -4,7 +4,7 @@ import { findBackground } from '../../../content'
 import { describeEnding } from '../../../content/epilogues'
 import { RANK_LABELS } from '../../../engine/config'
 import type { GameState, ObjectReport } from '../../../engine/state'
-import { formatAge, formatYears } from '../../../game/format'
+import { formatAge } from '../../../game/format'
 import { Eyebrow, SectionLabel } from '../Controls'
 import { Narration } from '../Narration'
 
@@ -83,7 +83,7 @@ export function EndedScreen({ state, onRestart }: EndedScreenProps) {
                   {report.reassigned && <span className="text-ash"> · 재배정</span>}
                 </span>
                 <span className={report.outcome === 'cleared' ? 'text-gain' : 'text-loss'}>
-                  {OUTCOME_LABELS[report.outcome]} · {formatYears(report.yearsSpent)}
+                  {OUTCOME_LABELS[report.outcome]}
                 </span>
               </li>
             ))}

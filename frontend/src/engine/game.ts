@@ -1,19 +1,22 @@
 // 게임 상태 머신. React/DOM과 무관한 순수 TS이고, 모든 전이는 새 상태를 돌려준다 (기존 상태는 건드리지 않음).
 //
-// 흐름:
-//   briefing --begin--> choosing --choose--> outcome --continue--> choosing (다음 단계)
-//                                                              \-> report --continue--> briefing (다음 객체)
-//   choose 중 즉사/사망/정신 붕괴/최종 엔딩, continue 중 노화·병 사망/100세, 해고(report 직후)면 ended
+// 시간이 먼저 흐르는 구조 (2026-10-20 개편): 나이는 객체·이벤트가 아니라 시계가 올린다. 시간은 한 해 단위로 흐르고,
+// 한 해가 흐를 때마다 노화·병 판정, 승급 점수 자동 누적(자동 승급), 그 해의 서술이 일어난다 (`tickYear`).
+// 팝업(선택)은 두 곳에서 나온다: 객체 배정(`nextObjectAge`에 도달했을 때)과 막간 이벤트(조건이 맞았을 때).
+// 객체 관리와 막간 이벤트는 한순간에 일어난다: 그 안에서는 시간이 흐르지 않아서 시간의 서술이 관리 서술 사이에 끼지 않고,
+// 시간은 객체·이벤트가 끝난 뒤(다음 팝업이 나오기 전)에만 한 해씩 흐른다.
 //
-// 막간 이벤트: 마지막 이벤트 이후 일정 시간이 지났으면, 객체 보고서를 본 뒤(다음 객체 배정 전)나
-// 긴 객체의 단계 사이에 끼어든다.
-//   (report | outcome) --continue--> interlude --choose--> interludeOutcome --continue--> 원래 흐름 (briefing | choosing)
+// 흐름:
+//   briefing --begin--> choosing --choose--> outcome --continue--> choosing (다음 단계, 시간은 안 흐름)
+//                                                               \-> report --continue--> (시간이 흐르다가) briefing | interlude
+//   interlude --choose--> interludeOutcome --continue--> (시간이 흐르다가) briefing | interlude
+//   choose 중 즉사/사망/정신 붕괴/최종 엔딩, 시간이 흐르는 중 노화·병 사망/100세, 해고(report 직후)면 ended
 //
 // 같은 시드와 같은 선택 기록이면 항상 같은 결과가 나온다 (`replayGame`으로 검증 가능).
 import { pickNextObject } from './assignment'
-import { ENTRY_AGE, MAX_AGE } from './config'
-import { flagsSetBy, openingEntries, pickFlowLines } from './flow'
-import { effectiveAge, isInterludeDue, pickInterlude } from './interlude'
+import { ENTRY_AGE, FINALE, MAX_AGE, OBJECT_SCHEDULE } from './config'
+import { flagsSetBy, openingEntries, pickYearLines } from './flow'
+import { pickYearlyInterlude } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import {
@@ -26,9 +29,9 @@ import {
   canPromote,
   createCareer,
   createInitialStats,
-  crossedAges,
   demote,
   isObjectCleared,
+  passivePromotionPoints,
   promote,
   recordObjectResult,
   rollChoice,
@@ -39,7 +42,6 @@ import type {
   Ending,
   GameEvent,
   GameState,
-  InterludeProgress,
   InterludeResult,
   LifeLogEntry,
   ObjectProgress,
@@ -54,7 +56,6 @@ import type {
   NpcDef,
   OpeningDef,
   PlayerState,
-  StatDelta,
   Stage,
   Stats,
 } from './types'
@@ -161,10 +162,11 @@ export function createGame(ctx: GameContext, options: GameOptions): GameState {
   }
   // 스탯을 직접 넘기면 그게 우선이고, 아니면 배경의 스탯, 둘 다 없으면 기본값
   const startStats = options.stats ?? background?.stats
+  const entryAge = options.age ?? ENTRY_AGE
   const player: PlayerState = {
-    age: options.age ?? ENTRY_AGE,
+    age: entryAge,
     stats: startStats ? { ...startStats } : createInitialStats(),
-    career: createCareer(),
+    career: createCareer(entryAge),
   }
   const initial: GameState = {
     seed: options.seed,
@@ -186,12 +188,14 @@ export function createGame(ctx: GameContext, options: GameOptions): GameState {
     lastInterludeResult: null,
     interludeLog: [],
     lastInterludeAge: player.age,
-    flowAge: player.age,
+    nextObjectAge: player.age,
     lifeLog: [],
     endingScene: null,
   }
-  const started = assignNext(ctx, initial)
-  // 배경을 고른 직후의 오프닝 장면. 첫 화면 위에 "흐름" 블록으로 보인다.
+  // 입사 첫날에는 바로 첫 객체를 배정받는다.
+  const rng = createRng(initial.rngState)
+  const started: GameState = { ...assignObject(ctx, initial, rng), rngState: rng.getState() }
+  // 배경을 고른 직후의 오프닝 장면
   return started.phase === 'ended' ? started : appendFlow(started, openingEntries(ctx, started.backgroundId, player.age))
 }
 
@@ -301,8 +305,8 @@ function choose(ctx: GameContext, state: GameState, choiceId: string): GameState
 
 /**
  * 선택 결과를 본 뒤: 다음 단계로 가거나 객체 관리를 마무리한다.
- * 객체 관리에 드는 시간은 여기서 흐르지 않는다. 쓴 시간(`yearsSpent`)만 쌓아 두었다가, 보고서를 본 뒤
- * 서술 구간(`continueFromReport`)에서 한꺼번에 흐른다. 그래서 한 객체의 모든 선택은 같은 나이에서 일어난다.
+ * 객체 관리는 한순간에 일어난다: 단계 사이에 시간이 흐르지 않고(그래서 관리 서술 사이에 시간의 서술이 끼지 않는다),
+ * 그 단계의 `years`는 이 객체에 쓴 시간(`yearsSpent`)으로 쌓이기만 한다. 그 시간은 보고서를 본 뒤 한 해씩 흐른다.
  */
 function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
   const { progress, lastResult } = state
@@ -314,26 +318,24 @@ function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
 
   const updatedProgress: ObjectProgress = { ...progress, yearsSpent: progress.yearsSpent + stage.years }
   const next: GameState = { ...state, progress: updatedProgress, events: [] }
-
   if (!lastResult.endsObject) {
-    const resumed: GameState = {
-      ...next,
-      phase: 'choosing',
-      progress: { ...updatedProgress, stageIndex: progress.stageIndex + 1 },
-    }
-    // 긴 객체는 단계 사이에도 막간 이벤트가 낄 수 있다.
-    return startInterlude(ctx, resumed, 'choosing') ?? resumed
+    return { ...next, phase: 'choosing', progress: { ...updatedProgress, stageIndex: progress.stageIndex + 1 } }
   }
   return finalizeObject(next, object, updatedProgress, lastResult)
 }
 
-/** 객체 관리 결과를 경력에 반영하고 보고서를 만든다. */
+/**
+ * 객체 관리 결과를 경력에 반영하고 보고서를 만든다.
+ * 다음 객체가 배정될 나이(`nextObjectAge`)도 여기서 정한다: 이 객체를 배정받은 나이에서 시작 간격이 지난 때.
+ * 객체에 쓴 시간(`yearsSpent`)이 간격보다 길었으면 그 시간이 다 흐른 뒤 최소 간격 뒤에 나온다.
+ */
 function finalizeObject(
   state: GameState,
   object: ContainmentObject,
   progress: ObjectProgress,
   lastResult: ChoiceResult,
 ): GameState {
+  const age = state.player.age
   const demotedByViolation = lastResult.failureKind === 'demotion'
   const cleared = !demotedByViolation && isObjectCleared(object, progress.failures)
   const flawless = cleared && progress.failures === 0
@@ -343,12 +345,12 @@ function finalizeObject(
   let demoted = false
   let dismissed = false
   if (demotedByViolation) {
-    const result = demote(career)
+    const result = demote(career, age)
     career = result.career
     dismissed = result.dismissed
     demoted = !result.dismissed
   } else if (cleared && canPromote(career, state.player.stats)) {
-    career = promote(career)
+    career = promote(career, age)
     promoted = true
   }
 
@@ -365,62 +367,37 @@ function finalizeObject(
     promoted,
     demoted,
     rankAfter: career.rank,
-    // 관리에 쓴 시간은 보고서 뒤에 흐르므로, 끝난 나이는 지금 나이에 쓴 시간을 더한 값이다.
-    ageAtEnd: state.player.age + progress.yearsSpent,
+    // 객체 관리는 한순간에 일어나고 쓴 시간은 보고서 뒤에 흐르므로, 끝난 나이는 지금 나이에 쓴 시간을 더한 값이다.
+    ageAtEnd: age + progress.yearsSpent,
   }
+
+  const rng = createRng(state.rngState)
+  const interval = Math.max(
+    OBJECT_SCHEDULE.intervalYears + rng.int(-OBJECT_SCHEDULE.jitterYears, OBJECT_SCHEDULE.jitterYears),
+    progress.yearsSpent + OBJECT_SCHEDULE.minGapAfterObject,
+  )
   return {
     ...state,
+    rngState: rng.getState(),
     phase: 'report',
     player: { ...state.player, career },
     managedCounts: { ...state.managedCounts, [object.id]: (state.managedCounts[object.id] ?? 0) + 1 },
     progress: null,
     history: [...state.history, report],
-    pendingEnding: dismissed
-      ? { kind: 'dismissed', age: state.player.age + progress.yearsSpent, objectId: object.id }
-      : null,
+    pendingEnding: dismissed ? { kind: 'dismissed', age, objectId: object.id } : null,
+    nextObjectAge: Math.max(age + OBJECT_SCHEDULE.minGapAfterObject, progress.startAge + interval),
   }
 }
 
+/** 보고서를 본 뒤: 다음 객체나 막간 이벤트가 나올 때까지 시간이 흐른다 ("관리하지 않는 해"의 서술이 나온다). */
 function continueFromReport(ctx: GameContext, state: GameState): GameState {
   if (state.pendingEnding) {
     return finish(state, state.pendingEnding)
   }
-  // 서술 구간: 방금 끝낸 객체 관리에 쓴 시간이 여기서 흐른다. 해가 바뀔 때마다 노화·병이 판정되고,
-  // 그 해들의 서술이 붙는다. 다음 객체나 막간 이벤트가 나오기 전의 숨 돌리는 구간이다.
-  const report = state.history[state.history.length - 1]
-  const rng = createRng(state.rngState)
-  const time = advanceTime(rng, state.player, report.yearsSpent, calcBondEffects(ctx.npcs ?? [], state.relations))
-  const next: GameState = { ...state, rngState: rng.getState(), player: time.player, events: time.events }
-  if (time.ending) {
-    return finish(next, { ...time.ending, objectId: report.objectId })
-  }
-  return withFlow(ctx, startInterlude(ctx, next, 'assign') ?? assignNext(ctx, next))
+  return runToEncounter(ctx, { ...state, events: [] })
 }
 
 // ───────────────────────── 막간 이벤트 ─────────────────────────
-
-/**
- * 막간 이벤트를 끼울 때가 됐고 나올 수 있는 이벤트가 있으면 interlude 단계로 넘어간 상태를 돌려준다.
- * 아니면 null (난수도 쓰지 않으므로 상태는 그대로다).
- */
-function startInterlude(ctx: GameContext, state: GameState, resume: InterludeProgress['resume']): GameState | null {
-  const defs = ctx.interludes ?? []
-  if (defs.length === 0 || !isInterludeDue(state)) {
-    return null
-  }
-  const rng = createRng(state.rngState)
-  const def = pickInterlude(rng, defs, state)
-  if (!def) {
-    return null
-  }
-  return {
-    ...state,
-    rngState: rng.getState(),
-    phase: 'interlude',
-    interlude: { eventId: def.id, resume },
-    lastInterludeResult: null,
-  }
-}
 
 function chooseInterlude(ctx: GameContext, state: GameState, choiceId: string): GameState {
   const { interlude } = state
@@ -455,50 +432,116 @@ function chooseInterlude(ctx: GameContext, state: GameState, choiceId: string): 
     flags: extras.flags,
     relations: extras.relations,
     lastInterludeResult: result,
-    interludeLog: [
-      ...state.interludeLog,
-      { eventId: def.id, age: effectiveAge(state), choiceId: choice.id, success },
-    ],
+    interludeLog: [...state.interludeLog, { eventId: def.id, age: state.player.age, choiceId: choice.id, success }],
     choiceLog: [...state.choiceLog, { interludeId: def.id, choiceId: choice.id }],
     events: [],
   }
 
   const age = state.player.age
-  const objectId = state.progress?.objectId
   if (stats.health <= 0) {
-    return finish(next, { kind: 'death', deathCause: 'injury', age, objectId }, outcome.text)
+    return finish(next, { kind: 'death', deathCause: 'injury', age }, outcome.text)
   }
   if (stats.sanity <= 0) {
-    return finish(next, { kind: 'breakdown', age, objectId }, outcome.text)
+    return finish(next, { kind: 'breakdown', age }, outcome.text)
   }
   return { ...next, phase: 'interludeOutcome' }
 }
 
-/** 막간 이벤트 결과를 본 뒤: 이벤트에 드는 시간이 흐르고, 원래 흐름(다음 객체 배정 / 객체의 다음 단계)으로 돌아간다. */
+/** 막간 이벤트 결과를 본 뒤: 다음 객체나 막간 이벤트가 나올 때까지 시간이 흐른다. 이벤트 자체는 시간을 쓰지 않는다. */
 function continueFromInterlude(ctx: GameContext, state: GameState): GameState {
-  const { interlude } = state
-  if (state.phase !== 'interludeOutcome' || !interlude) {
+  if (state.phase !== 'interludeOutcome' || !state.interlude) {
     throw new Error(`continue는 outcome/report/interludeOutcome 단계에서만 가능 (현재: ${state.phase})`)
   }
-  const def = findInterlude(ctx, interlude.eventId)
-  const rng = createRng(state.rngState)
-  const time = advanceTime(rng, state.player, def.years ?? 0, calcBondEffects(ctx.npcs ?? [], state.relations))
-  const next: GameState = {
+  return runToEncounter(ctx, {
     ...state,
-    rngState: rng.getState(),
-    player: time.player,
-    events: time.events,
     interlude: null,
-    lastInterludeAge: effectiveAge({ ...state, player: time.player }),
+    lastInterludeResult: null,
+    lastInterludeAge: state.player.age,
+    events: [],
+  })
+}
+
+// ───────────────────────── 시간 ─────────────────────────
+
+/**
+ * 시간을 한 해 흘린다. 나이가 하나 늘고, 그 해의 노화·병 판정, NPC 관계의 매년 효과, 승급 점수의 자동 누적(점수와 평판이
+ * 차면 자동 승급), 그 해의 서술이 일어난다. 일어난 일은 `events`에 순서대로 쌓인다 (화면이 한 해씩 재생한다).
+ * 체력이나 정신력이 0이 되거나 100세에 닿으면 판이 끝난다.
+ */
+function tickYear(ctx: GameContext, state: GameState, rng: Rng): GameState {
+  const age = state.player.age + 1
+  const objectId = state.progress?.objectId
+  if (age >= MAX_AGE) {
+    return finish({ ...state, player: { ...state.player, age: MAX_AGE } }, { kind: 'longevity', age: MAX_AGE, objectId })
   }
-  if (time.ending) {
-    return finish(next, { ...time.ending, objectId: state.progress?.objectId })
+
+  const aging = applyYearlyAging(rng, age, state.player.stats)
+  const stats = applyDelta(aging.stats, calcBondEffects(ctx.npcs ?? [], state.relations))
+
+  // 승급 점수가 시간에 따라 저절로 쌓이고, 조건이 차면 자동으로 승급한다. 수석은 더 오를 곳이 없다.
+  let career = state.player.career
+  let promotion: GameEvent | null = null
+  if (career.rank < 5) {
+    career = { ...career, promotionPoints: career.promotionPoints + passivePromotionPoints(stats) }
+    if (canPromote(career, stats)) {
+      const from = career.rank
+      career = promote(career, age)
+      promotion = { type: 'promotion', age, from, to: career.rank }
+    }
   }
-  // 객체 관리 도중에 낀 막간 이벤트면 서술은 관리가 끝난 뒤로 미룬다. 다음 객체로 넘어가는 막간 이벤트 뒤에는 바로 붙는다.
-  if (interlude.resume === 'assign') {
-    return withFlow(ctx, assignNext(ctx, next))
+
+  const aged: GameState = { ...state, player: { age, stats, career } }
+  const lines = pickYearLines(ctx, aged)
+  const yearEvents: GameEvent[] = [
+    { type: 'year', age, stats, rank: career.rank, points: career.promotionPoints },
+    ...lines.map((entry) => ({ type: 'flow' as const, entry })),
+    ...(aging.illness ? [{ type: 'illness' as const, age }] : []),
+    ...(promotion ? [promotion] : []),
+  ]
+  const next: GameState = {
+    ...aged,
+    // 이야기 비트가 켜는 플래그를 반영한다 (줄거리의 진행이 막간 이벤트·다른 서술의 조건이 된다)
+    flags: [...new Set([...aged.flags, ...flagsSetBy(ctx, lines)])],
+    lifeLog: [...aged.lifeLog, ...lines],
+    events: [...aged.events, ...yearEvents],
   }
-  return { ...next, phase: 'choosing' }
+
+  if (stats.health <= 0) {
+    return finish(next, { kind: 'death', deathCause: aging.illness ? 'illness' : 'aging', age, objectId })
+  }
+  if (stats.sanity <= 0) {
+    return finish(next, { kind: 'breakdown', age, objectId })
+  }
+  return next
+}
+
+/** 지금 팝업이 나올 때인지: 다음 객체가 배정될 나이에 닿았으면 객체 배정, 아니면 막간 이벤트가 나올 조건인지. */
+function findEncounter(ctx: GameContext, state: GameState, rng: Rng): GameState | null {
+  if (state.player.age >= state.nextObjectAge) {
+    return assignObject(ctx, state, rng)
+  }
+  const def = pickYearlyInterlude(rng, ctx.interludes ?? [], state)
+  if (def) {
+    return { ...state, phase: 'interlude', interlude: { eventId: def.id }, lastInterludeResult: null }
+  }
+  return null
+}
+
+/** 다음 객체나 막간 이벤트가 나올 때까지 시간을 한 해씩 흘린다. 판이 끝나면 거기서 멈춘다. */
+function runToEncounter(ctx: GameContext, state: GameState): GameState {
+  const rng = createRng(state.rngState)
+  let current = state
+  for (let step = 0; step < MAX_AGE; step++) {
+    const encounter = findEncounter(ctx, current, rng)
+    if (encounter) {
+      return { ...encounter, rngState: rng.getState() }
+    }
+    current = tickYear(ctx, current, rng)
+    if (current.phase === 'ended') {
+      break
+    }
+  }
+  return { ...current, rngState: rng.getState() }
 }
 
 // ───────────────────────── 내부 도우미 ─────────────────────────
@@ -515,33 +558,34 @@ function appendFlow(state: GameState, entries: readonly LifeLogEntry[]): GameSta
   }
 }
 
-/**
- * 객체 관리나 막간 이벤트가 끝난 뒤의 상태에 서술을 붙인다. 판이 끝난 상태에는 붙이지 않는다.
- * 서술을 마지막으로 붙인 나이(`flowAge`) 이후로 해가 바뀐 해 수만큼 일상 서술이 붙고(현재 나이를 단다), 붙인 뒤 `flowAge`를 현재 나이로 갱신한다.
- */
-function withFlow(ctx: GameContext, state: GameState): GameState {
-  if (state.phase === 'ended') {
-    return state
+/** 수석이 된 지 충분히 지나고 3막 서술이 끝났거나(또는 오래 수석으로 지냈으면) 최종 객체가 열린다. */
+function isFinaleOpen(state: GameState): boolean {
+  const { career, age } = state.player
+  if (career.rank !== 5) {
+    return false
   }
-  const crossed = crossedAges(state.flowAge, state.player.age)
-  const entries = pickFlowLines(ctx, state, crossed)
-  // 이야기 비트가 켜는 플래그를 반영한다 (줄거리의 진행이 막간 이벤트·다른 서술의 조건이 된다)
-  const flags = [...new Set([...state.flags, ...flagsSetBy(ctx, entries)])]
-  return appendFlow({ ...state, flowAge: state.player.age, flags }, entries)
+  const years = age - career.rankSince
+  return years >= FINALE.minYearsAtRank5 && (state.flags.includes(FINALE.storyFlag) || years >= FINALE.maxYearsAtRank5)
 }
 
-function assignNext(ctx: GameContext, state: GameState): GameState {
-  const rng = createRng(state.rngState)
+/** 다음 객체를 배정해 briefing 단계로 만든다. 배정할 객체가 없으면 퇴직으로 판이 끝난다. 난수 상태는 호출한 쪽이 저장한다. */
+function assignObject(ctx: GameContext, state: GameState, rng: Rng): GameState {
   const clearedIds = new Set(
     state.history.filter((report) => report.outcome === 'cleared').map((report) => report.objectId),
   )
-  const assignment = pickNextObject(rng, ctx.objects, state.player.career.rank, state.managedCounts, clearedIds)
-  const withRng: GameState = { ...state, rngState: rng.getState() }
+  const assignment = pickNextObject(
+    rng,
+    ctx.objects,
+    state.player.career.rank,
+    state.managedCounts,
+    clearedIds,
+    isFinaleOpen(state),
+  )
   if (!assignment) {
-    return finish(withRng, { kind: 'retired', age: state.player.age })
+    return finish(state, { kind: 'retired', age: state.player.age })
   }
   return {
-    ...withRng,
+    ...state,
     phase: 'briefing',
     progress: {
       objectId: assignment.object.id,
@@ -550,6 +594,7 @@ function assignNext(ctx: GameContext, state: GameState): GameState {
       stageIndex: 0,
       failures: 0,
       yearsSpent: 0,
+      startAge: state.player.age,
     },
     lastResult: null,
     pendingEnding: null,
@@ -559,44 +604,6 @@ function assignNext(ctx: GameContext, state: GameState): GameState {
 /** @param scene 판이 끝난 원인이 된 선택의 결과 서술. 선택이 원인이 아니면 생략. */
 function finish(state: GameState, ending: Ending, scene?: string): GameState {
   return { ...state, phase: 'ended', ending, pendingEnding: null, endingScene: scene ?? null }
-}
-
-/**
- * 시간을 `years`만큼 흘려보낸다. 해가 바뀔 때마다(정수 나이에 도달할 때마다) 노화·병을 판정하고
- * NPC와의 관계가 주는 매년 효과(`bondYearly`)를 더한다. 체력이나 정신력이 0이 되거나 100세에 닿으면
- * 거기서 멈추고 종료를 알려 준다.
- */
-function advanceTime(
-  rng: Rng,
-  player: PlayerState,
-  years: number,
-  bondYearly: StatDelta,
-): { player: PlayerState; events: GameEvent[]; ending: Ending | null } {
-  const targetAge = player.age + years
-  const events: GameEvent[] = []
-  let stats = player.stats
-
-  for (const age of crossedAges(player.age, targetAge)) {
-    if (age >= MAX_AGE) {
-      return { player: { ...player, age: MAX_AGE, stats }, events, ending: { kind: 'longevity', age: MAX_AGE } }
-    }
-    const aging = applyYearlyAging(rng, age, stats)
-    stats = applyDelta(aging.stats, bondYearly)
-    if (aging.illness) {
-      events.push({ type: 'illness', age })
-    }
-    if (stats.health <= 0) {
-      return {
-        player: { ...player, age, stats },
-        events,
-        ending: { kind: 'death', deathCause: aging.illness ? 'illness' : 'aging', age },
-      }
-    }
-    if (stats.sanity <= 0) {
-      return { player: { ...player, age, stats }, events, ending: { kind: 'breakdown', age } }
-    }
-  }
-  return { player: { ...player, age: targetAge, stats }, events, ending: null }
 }
 
 // ───────────────────────── 리플레이 ─────────────────────────

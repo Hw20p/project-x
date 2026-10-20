@@ -21,6 +21,8 @@ function Notes({ notes, tone }: { notes: string[] | undefined; tone: FeedItem['t
 /** 항목 종류에 따른 본문. 나이 표시는 바깥(StreamLine)에서 붙인다. */
 function LineBody({ item }: { item: FeedItem }): ReactNode {
   switch (item.kind) {
+    case 'year':
+      return null // 한 해 표시는 StreamLine이 따로 그린다
     case 'opening':
     case 'beat':
     case 'story':
@@ -62,6 +64,15 @@ function LineBody({ item }: { item: FeedItem }): ReactNode {
 }
 
 function StreamLine({ item, animate }: { item: FeedItem; animate: boolean }) {
+  // 한 해가 흘렀다는 표시: 나이와 가는 선. 이 아래로 그 해의 서술이 이어진다.
+  if (item.kind === 'year') {
+    return (
+      <li className={`flex items-center gap-3 pt-2 ${animate ? 'animate-fade-in-up' : ''}`}>
+        <span className="w-[3.6rem] text-xs tabular-nums text-fog">{formatAge(item.age)}</span>
+        <span className="h-px flex-1 bg-edge/70" aria-hidden="true" />
+      </li>
+    )
+  }
   return (
     <li className={`grid grid-cols-[3.6rem_1fr] gap-x-3 ${animate ? 'animate-fade-in-up' : ''}`}>
       <span className="pt-[0.45rem] text-xs tabular-nums text-ash">{formatAge(item.age)}</span>
