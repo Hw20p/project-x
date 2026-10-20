@@ -11,7 +11,7 @@ export default [
     title: '야근 뒤의 편의점',
     text: '야근이 끝난 새벽, 같은 시각에 퇴근하던 서지안과 마주쳤다. 먼저 말을 건 건 서지안이다. “커피 한잔 어때요.”',
     once: true,
-    weight: 2,
+    weight: 4,
     choices: [
       {
         id: 'join',
@@ -80,7 +80,7 @@ export default [
     title: '빈 책상',
     text: '서지안이 사흘째 자리를 비웠다. 연차가 아니라 병가다. 책상 위에는 마시다 만 커피와 펼쳐진 보고서가 그대로 놓여 있다.',
     once: true,
-    weight: 2,
+    weight: 4,
     when: { flags: ['met-jian'], minRank: 2 },
     choices: [
       {
@@ -143,7 +143,7 @@ export default [
     title: '사직서',
     text: '서지안이 퇴근길에 봉투를 내밀었다. 사직서다. “더 버틸 자신이 없어요. 말려 주지 않아도 돼요.”',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['met-jian'], minRank: 3, relations: { jian: { min: 30 } } },
     choices: [
       {
@@ -216,7 +216,7 @@ export default [
     title: '팀장 면담',
     text: '오태성 팀장이 첫 정기 면담을 요청했다. 회의실 탁자에는 당신의 관리 기록이 펼쳐져 있다.',
     once: true,
-    weight: 2,
+    weight: 4,
     choices: [
       {
         id: 'frank',
@@ -266,7 +266,7 @@ export default [
     title: '문책 회의',
     text: '객체 관리 중 사고가 있었다. 당신의 판단에 대한 문책 회의에서 오태성 팀장이 당신을 바라본다.',
     once: true,
-    weight: 2,
+    weight: 4,
     when: { flags: ['met-taeseong'], minRank: 3 },
     choices: [
       {
@@ -316,7 +316,7 @@ export default [
     title: '지워진 줄',
     text: '문하린 선임이 서류를 정리하다 말고 당신의 매뉴얼을 힐끗 본다. “그 줄, 누가 지웠는지 궁금하지 않아요?”',
     once: true,
-    weight: 2,
+    weight: 4,
     when: { minRank: 2 },
     choices: [
       {
@@ -366,7 +366,7 @@ export default [
     title: '선임의 서랍',
     text: '문하린 선임이 퇴근 전 당신을 불렀다. 서랍에서 낡은 노트를 꺼내 탁자에 올려놓는다. “읽어도 돼요. 대신 읽은 걸 잊지는 마요.”',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['met-harin'], minRank: 3, relations: { harin: { min: 10 } } },
     choices: [
       {
@@ -415,7 +415,7 @@ export default [
     title: '팀장의 부탁',
     text: '오태성 팀장이 퇴근 직전에 불렀다. 다음 인사 개편에서 팀 하나를 맡아 달라고 한다. 대신 지금 맡은 객체의 보고서 한 장을 고쳐 달라고 했다.',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['met-taeseong'], minRank: 4, relations: { taeseong: { min: 10 } } },
     choices: [
       {
@@ -485,7 +485,7 @@ export default [
     title: '지워진 사람',
     text: '문하린 선임이 오랜만에 책상 앞에 서서 말했다. 매뉴얼의 지워진 줄을 지운 사람이 누구인지 알려 주겠다고 한다. 그 사람은 지금도 이 건물에 있다고 한다.',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['harin-secret'], minRank: 4 },
     choices: [
       {
@@ -551,7 +551,7 @@ export default [
     title: '옆자리의 소식',
     text: '승급 발표 날, 서지안이 먼저 찾아왔다. 서지안의 사원증에는 새 직급이 인쇄되어 있다. 내 것은 아직 그대로다.',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['jian-stays'], minRank: 4 },
     choices: [
       {
@@ -615,7 +615,7 @@ export default [
     title: '서지안의 편지',
     text: '우편함에 발신인 없는 편지가 있다. 겉봉의 필체만으로도 서지안인 것을 알 수 있다. 소인은 지상 도시의 이름이다.',
     once: true,
-    weight: 3,
+    weight: 5,
     when: { flags: ['jian-left'], minRank: 4 },
     choices: [
       {

@@ -194,7 +194,7 @@ export function formatSimulationReport(
     `- 등급별 확률 보정: ${tierModifierText}`,
     `- 나이별 확률 감소: ${agePenaltyText}`,
     `- 정신력 연간 회복: +${YEARLY_SANITY_RECOVERY} / 스탯 상승 수확체감 하한: ×${GAIN_FLOOR}`,
-    `- 막간 이벤트: 최소 간격 ${INTERLUDE.minIntervalYears}년, 일상 이벤트는 ${INTERLUDE.freeIntervalYears}년 이상 지난 뒤 해마다 ${percent(INTERLUDE.freeChancePerYear)}, 기본 쿨다운 ${INTERLUDE.defaultCooldownYears}년, 정신력 낮을 때 회복 가중 최대 ×${1 + INTERLUDE.recoveryNeedBonus}`,
+    `- 막간 이벤트: 최소 간격 ${INTERLUDE.minIntervalYears}년, 조건 이벤트는 해마다 ${percent(INTERLUDE.specificChancePerYear)}, 일상 이벤트는 ${INTERLUDE.freeIntervalYears}년 이상 지난 뒤 해마다 ${percent(INTERLUDE.freeChancePerYear)}, 기본 쿨다운 ${INTERLUDE.defaultCooldownYears}년, 정신력 낮을 때 회복 가중 최대 ×${1 + INTERLUDE.recoveryNeedBonus}`,
     `- 시간 모델: 객체 시작 간격 ${OBJECT_SCHEDULE.intervalYears}±${OBJECT_SCHEDULE.jitterYears}년(끝난 뒤 최소 ${OBJECT_SCHEDULE.minGapAfterObject}년), 승급 점수 자동 누적 해마다 ${PASSIVE_PROMOTION.basePerYear}(평판·지식 보정, ${PASSIVE_PROMOTION.minPerYear}~${PASSIVE_PROMOTION.maxPerYear}), 객체 실패 -${PROMOTION.failurePenalty}점`,
     `- 최종 객체: 수석이 된 지 ${FINALE.minYearsAtRank5}년 이상이고 3막 서술(${FINALE.storyFlag})이 끝났거나 ${FINALE.maxYearsAtRank5}년 이상 수석일 때`,
     '',

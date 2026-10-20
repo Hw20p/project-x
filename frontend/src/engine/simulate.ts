@@ -333,8 +333,19 @@ export function simulate(
       npcMet.set(npcId, tally)
     }
 
+    // 직급 도달: 승급은 시간이 흐르며 저절로도 일어나므로 보고서가 아니라 직급 기록(rankLog)으로 센다
     let maxRank: Rank = 1
     const firstReached = new Set<Rank>()
+    for (const record of state.rankLog) {
+      if (record.rank > maxRank) {
+        maxRank = record.rank
+      }
+      if (record.rank > 1 && !firstReached.has(record.rank)) {
+        firstReached.add(record.rank)
+        yearsToRankSum[record.rank] += record.age - startAge
+        yearsToRankCount[record.rank] += 1
+      }
+    }
     for (const report of state.history) {
       totalManaged += 1
       if (report.outcome === 'cleared') {
@@ -342,16 +353,6 @@ export function simulate(
       }
       if (report.reassigned) {
         totalReassigned += 1
-      }
-      if (report.promoted) {
-        if (report.rankAfter > maxRank) {
-          maxRank = report.rankAfter
-        }
-        if (!firstReached.has(report.rankAfter)) {
-          firstReached.add(report.rankAfter)
-          yearsToRankSum[report.rankAfter] += report.ageAtEnd - startAge
-          yearsToRankCount[report.rankAfter] += 1
-        }
       }
 
       const stat = objectStats.get(report.objectId)

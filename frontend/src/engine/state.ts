@@ -114,6 +114,12 @@ export type GameEvent =
   | { type: 'illness'; age: number }
   | { type: 'promotion'; age: number; from: Rank; to: Rank }
 
+/** 직급이 바뀐 기록 (입사 때의 수습부터). 승급은 시간이 흐르며 저절로도 일어나므로 보고서가 아니라 여기에 남긴다. */
+export interface RankRecord {
+  age: number
+  rank: Rank
+}
+
 /** 진행 중인 막간 이벤트 */
 export interface InterludeProgress {
   eventId: string
@@ -161,6 +167,8 @@ export interface GameState {
   lastResult: ChoiceResult | null
   /** 지금까지 끝낸 객체 보고서 (오래된 순). report 단계에서는 마지막 항목이 방금 끝낸 것. */
   history: ObjectReport[]
+  /** 직급이 바뀐 기록 (오래된 순). 집계에서 직급 도달 시점을 잴 때 쓴다. */
+  rankLog: RankRecord[]
   /** report를 보고 나면 판이 끝나는 경우(해고)에 미리 정해 둔 종료 */
   pendingEnding: Ending | null
   ending: Ending | null

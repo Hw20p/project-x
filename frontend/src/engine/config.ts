@@ -47,10 +47,11 @@ export const AGE_CHANCE_PENALTY = [
 
 /**
  * 해마다 자연 회복되는 정신력 (일상 회복).
- * 시간이 먼저 흐르는 구조(2026-10-20 개편)에서는 객체·막간 이벤트가 줄어 회복 기회가 줄어서 +1로 둔다. 재측정 전의 초기 값.
+ * 시간이 먼저 흐르는 구조(2026-10-20 개편)에서 안전 우선 봇의 정신 붕괴 비율: +1 → 11.1%, +0 → 69.2% (목표 20~40%).
+ * 두 값의 중간인 +0.5로 둔다 (스탯은 소수로 들고 있고 화면에서는 반올림해 보인다). 재측정 전의 값.
  * (예전 구조에서 이벤트 없이 시뮬레이션했을 때 안전 우선 봇의 정신 붕괴 비율: +0 → 88%, +1 → 80%, +2 → 23%, +3 → 0.4%.)
  */
-export const YEARLY_SANITY_RECOVERY = 1
+export const YEARLY_SANITY_RECOVERY = 0.5
 
 /**
  * 객체가 배정되는 간격. 객체 관리는 한순간에 일어나고, 객체가 끝난 뒤 시작 간격이 지날 때까지 서술이 한 해씩 흐른다.
@@ -68,7 +69,7 @@ export const OBJECT_SCHEDULE = {
 
 /** 시간이 흐르며 승급 점수가 저절로 쌓이는 규칙. 해마다 `점수 = clamp(base + (평판-50)/reputationDivisor + (지식-50)/knowledgeDivisor, min, max)`. */
 export const PASSIVE_PROMOTION = {
-  basePerYear: 3,
+  basePerYear: 2,
   reputationDivisor: 20,
   knowledgeDivisor: 40,
   minPerYear: 0.5,
@@ -88,7 +89,12 @@ export const FINALE = {
 /** 막간 이벤트 설정 (2026-10-20 개편: 시간 간격이 아니라 조건으로 나온다) */
 export const INTERLUDE = {
   /** 막간 이벤트가 끝난 뒤 다음 막간 이벤트까지 최소로 비우는 해. 조건 이벤트·일상 이벤트 모두에 적용 */
-  minIntervalYears: 3,
+  minIntervalYears: 4,
+  /**
+   * 조건 이벤트가 나올 수 있는 해에 실제로 나올 확률. 1이면 조건이 맞는 즉시 나오고, 낮추면 한두 해 늦게 나오며
+   * 그 해에 일상 이벤트가 나올 틈이 생긴다 (1차 측정에서 조건 이벤트가 매번 먼저 나와 일상 이벤트가 거의 안 나왔다).
+   */
+  specificChancePerYear: 0.6,
   /** 조건이 없는 일상 이벤트(직급·나이 조건만 있는 이벤트 포함)가 나오려면 마지막 이벤트 이후 이만큼(년) 지나야 한다 */
   freeIntervalYears: 5,
   /** 위 간격이 지난 뒤, 해마다 일상 이벤트가 나올 확률 */

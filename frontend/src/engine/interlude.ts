@@ -112,8 +112,8 @@ export function isSpecificEvent(def: InterludeDef): boolean {
 
 /**
  * 한 해가 흐른 뒤, 지금 막간 이벤트가 나올지 판단해서 나올 이벤트를 돌려준다. 안 나오면 null.
- * 조건 이벤트가 나올 수 있으면 그중 하나(가중치)가 나오고, 아니면 일상 이벤트가 확률로 나온다.
- * 나올 후보가 없거나 간격이 안 찼을 때는 난수를 쓰지 않는다.
+ * 조건 이벤트가 나올 수 있으면 `specificChancePerYear` 확률로 그중 하나(가중치)가 나오고, 아니면(또는 조건 이벤트가 없으면)
+ * 일상 이벤트가 간격이 찬 뒤 확률로 나온다. 간격이 안 찼을 때는 난수를 쓰지 않는다.
  */
 export function pickYearlyInterlude(rng: Rng, defs: readonly InterludeDef[], state: GameState): InterludeDef | null {
   const since = state.player.age - state.lastInterludeAge
@@ -124,7 +124,7 @@ export function pickYearlyInterlude(rng: Rng, defs: readonly InterludeDef[], sta
   const weight = (def: InterludeDef) => (def.weight ?? 1) * needMultiplier(def, state)
 
   const specific = eligible.filter(isSpecificEvent)
-  if (specific.length > 0) {
+  if (specific.length > 0 && rng.chance(INTERLUDE.specificChancePerYear)) {
     return rng.pickWeighted(specific, weight)
   }
   const free = eligible.filter((def) => !isSpecificEvent(def))

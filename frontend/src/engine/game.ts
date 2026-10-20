@@ -178,6 +178,7 @@ export function createGame(ctx: GameContext, options: GameOptions): GameState {
     progress: null,
     lastResult: null,
     history: [],
+    rankLog: [{ age: entryAge, rank: 1 }],
     pendingEnding: null,
     ending: null,
     choiceLog: [],
@@ -384,6 +385,7 @@ function finalizeObject(
     managedCounts: { ...state.managedCounts, [object.id]: (state.managedCounts[object.id] ?? 0) + 1 },
     progress: null,
     history: [...state.history, report],
+    rankLog: career.rank !== state.player.career.rank ? [...state.rankLog, { age, rank: career.rank }] : state.rankLog,
     pendingEnding: dismissed ? { kind: 'dismissed', age, objectId: object.id } : null,
     nextObjectAge: Math.max(age + OBJECT_SCHEDULE.minGapAfterObject, progress.startAge + interval),
   }
@@ -490,7 +492,11 @@ function tickYear(ctx: GameContext, state: GameState, rng: Rng): GameState {
     }
   }
 
-  const aged: GameState = { ...state, player: { age, stats, career } }
+  const aged: GameState = {
+    ...state,
+    player: { age, stats, career },
+    rankLog: promotion ? [...state.rankLog, { age, rank: career.rank }] : state.rankLog,
+  }
   const lines = pickYearLines(ctx, aged)
   const yearEvents: GameEvent[] = [
     { type: 'year', age, stats, rank: career.rank, points: career.promotionPoints },
