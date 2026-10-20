@@ -160,12 +160,13 @@ function pickChoiceId(strategy: BotStrategy, options: readonly ChoiceOption[], b
 
 function pickByStrategy(strategy: BaseStrategy, options: readonly ChoiceOption[], botRng: Rng): string {
   if (strategy === 'bonding') {
-    // 관계가 가장 오르는 선택을 고르되, 실패하면 즉사하는 선택은 피한다 ("관계를 쌓지만 목숨을 걸지는 않는" 봇).
-    // 객체 선택지에도 관계 변화가 생기면서, 즉사 선택지(예: 합창에 내 이름을 내어줌)가 관계를 가장 많이 올려
-    // 이 봇이 스스로 죽는 문제가 생겨서 걸러 낸다.
+    // 관계가 가장 오르는 선택을 고르되, 실패하면 즉사하거나 좌천(관리 중단)되는 선택은 피한다
+    // ("관계를 쌓지만 직급과 목숨을 걸지는 않는" 봇). 객체 선택지에도 관계 변화가 생기면서, 즉사 선택지(예: 합창에 내
+    // 이름을 내어줌)와 좌천 선택지(예: X-009 근무자 교대)가 관계를 가장 많이 올려 이 봇이 스스로 무너지는 문제가
+    // 생겨서 걸러 낸다. 실패가 setback인 선택만 고른다.
     const relationGain = (option: ChoiceOption) =>
       Object.values(option.choice.success.relations ?? {}).reduce((sum, change) => sum + change, 0)
-    const careful = options.filter((option) => option.choice.failure.kind !== 'death')
+    const careful = options.filter((option) => option.choice.failure.kind === 'setback')
     const pool = careful.length > 0 ? careful : options
     const best = pool.reduce((top, option) => (relationGain(option) > relationGain(top) ? option : top))
     return relationGain(best) > 0 ? best.choice.id : pickByStrategy('safest', options, botRng)

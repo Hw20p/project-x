@@ -101,6 +101,10 @@ export interface LifeLogEntry {
   age: number
   kind: 'opening' | 'ambient' | 'beat'
   text: string
+  /** 이 서술로 실제 바뀐 스탯 (수확체감까지 반영한 값). 변화가 없으면 없음. */
+  effects?: StatDelta
+  /** 이 서술로 바뀐 NPC 관계 */
+  relations?: Record<string, number>
 }
 
 /**

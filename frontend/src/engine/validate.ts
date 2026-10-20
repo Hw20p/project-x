@@ -244,6 +244,18 @@ export function validateFlows(flows: readonly FlowDef[], openings: readonly Open
     if ((def.setFlags ?? []).some((flag) => !flag.trim())) {
       fail('setFlags에 빈 플래그가 있음')
     }
+    for (const [key, change] of Object.entries(def.effects ?? {})) {
+      if (!(STAT_KEYS as readonly string[]).includes(key) || !Number.isFinite(change)) {
+        fail(`effects가 올바르지 않음: ${key}=${change}`)
+      }
+    }
+    for (const [npcId, change] of Object.entries(def.relations ?? {})) {
+      if (!refs.npcIds.has(npcId)) {
+        fail(`relations의 NPC id가 정의되지 않음: ${npcId}`)
+      } else if (!Number.isFinite(change)) {
+        fail(`relations 값이 올바르지 않음: ${npcId}=${change}`)
+      }
+    }
     for (const flag of [...(when?.flags ?? []), ...(when?.notFlags ?? [])]) {
       if (!settableFlags.has(flag)) {
         fail(`등장 조건의 플래그 "${flag}"를 켜는 선택지가 어디에도 없음 (오타 확인)`)

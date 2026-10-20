@@ -55,11 +55,13 @@ export default {
           statWeights: { knowledge: 0.006 },
           success: {
             text: '대조 결과 일치하는 직원이 있었다. 이미 퇴사했고, 퇴사 사유는 “기억 상실”이었다.',
+            relations: { harin: 4 },
             effects: { knowledge: 9, reputation: 5 },
           },
           failure: {
             kind: 'setback',
             text: '사진 속 얼굴은 당신이었다. 아직 열매가 되지 않은 당신.',
+            relations: { harin: -1 },
             effects: { sanity: -13 },
           },
         },

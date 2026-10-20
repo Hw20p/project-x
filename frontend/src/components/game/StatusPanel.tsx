@@ -6,6 +6,7 @@ import { STAT_KEYS } from '../../engine/types'
 import type { StatKey } from '../../engine/types'
 import type { YearSnapshot } from '../../game/feed'
 import { formatAge } from '../../game/format'
+import { Portrait } from './Portrait'
 
 const STAT_COLORS: Record<StatKey, string> = {
   sanity: 'var(--color-sanity)',
@@ -48,15 +49,13 @@ interface StatusPanelProps {
    * `full`이면 가득 찬 채로 멈춰 있다 (팝업 앞에서 시간이 멈춘 때). `paused`이면 찬 만큼에서 멈춘다.
    */
   gauge?: { key: number; durationMs: number; full: boolean; paused: boolean }
-  /** 이름을 알게 된 사람이 있는지. 있으면 "관계" 버튼이 나온다. */
-  hasRelations?: boolean
   /** 아직 관계 화면에서 확인하지 않은 변화가 있는지. 버튼에 빨간 점이 붙는다. */
   relationsChanged?: boolean
   onOpenRelations?: () => void
 }
 
 /** 화면 위쪽에 항상 보이는 상태: 나이·직급·승급 진행, 시간의 흐름 게이지, 네 가지 스탯, 인간관계 */
-export function StatusPanel({ state, controls, view, gauge, hasRelations = false, relationsChanged = false, onOpenRelations }: StatusPanelProps) {
+export function StatusPanel({ state, controls, view, gauge, relationsChanged = false, onOpenRelations }: StatusPanelProps) {
   const age = view?.age ?? state.player.age
   const stats = view?.stats ?? state.player.stats
   const rank = view?.rank ?? state.player.career.rank
@@ -72,7 +71,7 @@ export function StatusPanel({ state, controls, view, gauge, hasRelations = false
             <span className="ml-3 tabular-nums text-fog">{formatAge(age)}</span>
           </span>
           <span className="flex items-center gap-3">
-            {hasRelations && onOpenRelations && (
+            {onOpenRelations && (
               <button
                 type="button"
                 onClick={onOpenRelations}
@@ -105,22 +104,34 @@ export function StatusPanel({ state, controls, view, gauge, hasRelations = false
           </div>
         )}
 
-        <div className="grid gap-1.5">
-          {STAT_KEYS.map((key) => (
-            <Bar key={key} label={STAT_LABELS[key]} value={stats[key]} color={STAT_COLORS[key]} />
-          ))}
-        </div>
+        <div className="flex items-start gap-3">
+          <Portrait backgroundId={state.backgroundId} age={age} sanity={stats.sanity} size={64} />
+          <div className="min-w-0 flex-1">
+            <div className="grid gap-1.5">
+              {STAT_KEYS.map((key) => (
+                <Bar key={key} label={STAT_LABELS[key]} value={stats[key]} color={STAT_COLORS[key]} />
+              ))}
+            </div>
 
-        {requirement ? (
-          <div className="mt-2 grid gap-1">
-            <Bar label="승급" value={points} max={requirement.points} color="var(--color-glow)" />
-            <p className="text-right text-xs text-ash">
-              점수 {Math.round(points)}/{requirement.points} · 평판 {Math.round(stats.reputation)}/{requirement.reputation}
-            </p>
+            {requirement ? (
+              <div className="mt-2 grid gap-1">
+                <Bar label="승급" value={points} max={requirement.points} color="var(--color-glow)" />
+                <p className="text-right text-xs text-ash">
+                  승급 조건:{' '}
+                  <span className={points >= requirement.points ? 'text-gain' : undefined}>
+                    점수 {Math.round(points)}/{requirement.points}
+                  </span>
+                  {' · '}
+                  <span className={stats.reputation >= requirement.reputation ? 'text-gain' : undefined}>
+                    평판 {Math.round(stats.reputation)}/{requirement.reputation}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-right text-xs text-ash">최고 직급</p>
+            )}
           </div>
-        ) : (
-          <p className="mt-2 text-right text-xs text-ash">최고 직급</p>
-        )}
+        </div>
       </div>
     </header>
   )

@@ -6,11 +6,10 @@ import type { NpcDef } from '../../engine/types'
 import { STAT_KEYS } from '../../engine/types'
 import type { RelationsView as RelationsData } from '../../game/feed'
 import { formatAge, formatSigned } from '../../game/format'
+import { Portrait } from './Portrait'
 
 /** 관계가 달라지는 경계(`NpcBond`의 구간 경계). 막대에 눈금으로 보여 준다. */
 const MARKS = [-30, -10, 10, 30]
-/** NPC 카드마다 보여 주는 최근 변화 개수 */
-const RECENT_COUNT = 3
 
 /** 지금 관계 단계의 이름. 어떤 구간에도 안 걸리면 무난한 사이. */
 function stageLabel(npc: NpcDef, relation: number): string {
@@ -87,19 +86,23 @@ export function RelationsView({ relations, playerAge }: { relations: RelationsDa
         {met.map((npc) => {
           const value = relations.values[npc.id] ?? 0
           const effect = yearlyText(npc, value)
-          const recent = relations.log.filter((entry) => entry.npcId === npc.id).slice(-RECENT_COUNT).reverse()
           return (
             <li key={npc.id} className="rounded-lg border border-edge bg-panel/60 px-4 py-3">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-bone">
-                  {npc.name}{' '}
-                  <span className="text-xs text-ash">
-                    {npc.role} · {formatAge(playerAge + npc.ageGap)}
-                  </span>
-                </p>
-                <span className={`text-sm tabular-nums ${value > 0 ? 'text-gain' : value < 0 ? 'text-loss' : 'text-fog'}`}>{value}</span>
+              <div className="flex items-start gap-3">
+                <Portrait npcId={npc.id} age={playerAge + npc.ageGap} size={56} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="text-bone">
+                      {npc.name}{' '}
+                      <span className="text-xs text-ash">
+                        {npc.role} · {formatAge(playerAge + npc.ageGap)}
+                      </span>
+                    </p>
+                    <span className={`text-sm tabular-nums ${value > 0 ? 'text-gain' : value < 0 ? 'text-loss' : 'text-fog'}`}>{value}</span>
+                  </div>
+                  <p className="mt-1 text-sm leading-relaxed text-fog">{npc.summary}</p>
+                </div>
               </div>
-              <p className="mt-1 text-sm leading-relaxed text-fog">{npc.summary}</p>
 
               <div className="mt-3">
                 <Meter value={value} name={npc.name} />
@@ -108,17 +111,6 @@ export function RelationsView({ relations, playerAge }: { relations: RelationsDa
                   {effect && <span className="text-ash">{effect}</span>}
                 </div>
               </div>
-
-              {recent.length > 0 && (
-                <ul className="mt-2 grid gap-0.5 border-t border-edge pt-2 text-xs" aria-label={`${npc.name}과의 최근 변화`}>
-                  {recent.map((entry, index) => (
-                    <li key={`${entry.age}-${index}`} className="flex justify-between text-ash">
-                      <span>{formatAge(entry.age)}</span>
-                      <span className={entry.change > 0 ? 'text-gain' : 'text-loss'}>{formatSigned(entry.change)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </li>
           )
         })}

@@ -48,13 +48,24 @@ export default [
   { id: 'amb-age-60-3', kind: 'ambient', when: { minAge: 60 }, text: '창이 없는 사무실에서 계절을 가늠하는 법을 잊어 간다.' },
 
   // ── 직급 ───────────────────────────────────────────
-  { id: 'amb-rank1-1', kind: 'ambient', when: { maxRank: 1 }, text: '신입이라서 눈치껏 커피를 돌렸다. 아무도 마시지 않은 잔이 하나 남았다.' },
-  { id: 'amb-rank1-2', kind: 'ambient', when: { maxRank: 1 }, text: '선임들은 객체 이야기가 나오면 화제를 돌린다. 서둘러 배워야 할 것은 화제를 돌리는 방법일지도 모른다.' },
-  { id: 'amb-rank1-3', kind: 'ambient', when: { maxRank: 1 }, text: '매뉴얼의 지워진 줄을 한 번 더 읽었다. 지운 사람의 손자국이 아직 선명했다.' },
+  // 입사 초기 서술에는 가볍게 스탯·관계가 오르는 것이 섞여 있다 (effects / relations). 한 줄에 +1~3 정도.
+  { id: 'amb-rank1-1', kind: 'ambient', when: { maxRank: 1 }, relations: { jian: 2 }, text: '신입이라서 눈치껏 커피를 돌렸다. 아무도 마시지 않은 잔이 하나 남았는데, 서지안이 그 잔을 가져갔다.' },
+  { id: 'amb-rank1-2', kind: 'ambient', when: { maxRank: 1 }, effects: { knowledge: 1 }, text: '선임들은 객체 이야기가 나오면 화제를 돌린다. 서둘러 배워야 할 것은 화제를 돌리는 방법일지도 모른다.' },
+  { id: 'amb-rank1-3', kind: 'ambient', when: { maxRank: 1 }, effects: { knowledge: 1 }, text: '매뉴얼의 지워진 줄을 한 번 더 읽었다. 지운 사람의 손자국이 아직 선명했다.' },
   { id: 'amb-rank1-4', kind: 'ambient', when: { maxRank: 1 }, text: '첫 월급 명세서의 공제 항목에 “관리 보존비”가 있었다. 무엇을 보존하는지는 적혀 있지 않았다.' },
-  { id: 'amb-rank1-5', kind: 'ambient', when: { maxRank: 1 }, text: '식당에서 선임이 숟가락을 놓는 순서를 따라 했다. 이유는 아무도 알려 주지 않았고, 아무도 틀렸다고 하지 않았다.' },
+  { id: 'amb-rank1-5', kind: 'ambient', when: { maxRank: 1 }, relations: { harin: 2 }, text: '식당에서 선임이 숟가락을 놓는 순서를 따라 했다. 이유는 아무도 알려 주지 않았고, 아무도 틀렸다고 하지 않았다.' },
   { id: 'amb-rank1-6', kind: 'ambient', when: { maxRank: 1 }, text: '근무복 소매가 조금 길다. 전에 입던 사람의 치수라고 했다. 그 사람의 이름은 아무도 말하지 않았다.' },
   { id: 'amb-rank1-7', kind: 'ambient', when: { maxRank: 1 }, text: '출입 단말기는 출근 시각 옆에 빈칸을 하나 더 남긴다. 무엇을 적는 칸인지 아직 모른다.' },
+  // 사원 때까지의 젊은 날(32세 이하): 동기·팀장·선임과 가까워지는 일상. 조건이 두 개라 이 시기에 자주 나온다.
+  { id: 'amb-early-jian-1', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { jian: 3 }, text: '서지안이 점심 식권을 한 장 나눠 주었다. 이유는 묻지 않았고, 서지안도 말하지 않았다.' },
+  { id: 'amb-early-jian-2', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { jian: 2 }, effects: { sanity: 1 }, text: '서지안과 비상계단에서 마주쳤다. 둘 다 같은 층에서 길을 잃은 척했다.' },
+  { id: 'amb-early-taeseong-1', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { taeseong: 3 }, text: '오태성 팀장이 첫 보고서에 빨간 줄을 한 줄만 그었다. 줄 옆에는 “좋은 질문”이라고 적혀 있었다.' },
+  { id: 'amb-early-taeseong-2', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { taeseong: 2 }, effects: { reputation: 1 }, text: '아침 조회에서 팀장이 내 이름을 틀리지 않고 불렀다. 그것만으로 하루가 조금 가벼웠다.' },
+  { id: 'amb-early-harin-1', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { harin: 3 }, text: '문하린 선임이 지나가다 내 매뉴얼의 접힌 모서리를 펴 주었다. “그 줄은 나중에 읽어요.”' },
+  { id: 'amb-early-harin-2', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { harin: 2 }, effects: { knowledge: 1 }, text: '선임이 지나가며 읽어 두면 좋을 보고서 번호를 알려 주었다. 번호는 외우기 어렵지 않았다.' },
+  { id: 'amb-early-party', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, relations: { jian: 1, taeseong: 1, harin: 1 }, effects: { sanity: 1 }, text: '회식 자리에서 얼결에 건배사를 맡았다. 아무도 내용을 기억하지 못했지만 아무도 나무라지 않았다.' },
+  { id: 'amb-early-stairs', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, effects: { health: 1 }, text: '첫 달부터 계단으로 출근하는 습관이 생겼다. 다리가 먼저 이 건물에 익숙해졌다.' },
+  { id: 'amb-early-welcome', kind: 'ambient', when: { maxRank: 2, maxAge: 32 }, effects: { reputation: 2 }, text: '신입 환영회에서 선배 한 명이 내 이름을 처음부터 외우고 있었다.' },
   { id: 'amb-rank2-3', kind: 'ambient', when: { minRank: 2, maxRank: 2 }, text: '입사 동기 한 명이 보이지 않는다. 휴가 중이라고 했지만 사물함의 이름표는 떼어져 있었다.' },
   { id: 'amb-rank2-4', kind: 'ambient', when: { minRank: 2, maxRank: 2 }, text: '후임이 첫 보고서를 들고 왔다. 내 첫 보고서와 같은 오타가 같은 자리에 있었다.' },
   { id: 'amb-rank2-5', kind: 'ambient', when: { minRank: 2, maxRank: 2 }, text: '야간 순찰 경로가 한 칸 바뀌었다. 바뀐 이유를 적은 공문은 없었다.' },

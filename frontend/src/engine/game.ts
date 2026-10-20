@@ -57,8 +57,10 @@ import type {
   OpeningDef,
   PlayerState,
   Stage,
+  StatDelta,
   Stats,
 } from './types'
+import { STAT_KEYS } from './types'
 
 /** 게임이 참조하는 콘텐츠. 보통 `content/index.ts`의 `gameContext`를 넘긴다. */
 export interface GameContext {
@@ -498,28 +500,62 @@ function tickYear(ctx: GameContext, state: GameState, rng: Rng): GameState {
     player: { age, stats, career },
     rankLog: promotion ? [...state.rankLog, { age, rank: career.rank }] : state.rankLog,
   }
-  const lines = pickYearLines(ctx, aged)
+  // 서술 중에는 스탯·관계를 바꾸는 것이 있다. 차례로 적용하고(선택 결과와 같은 규칙: 상승분에 수확체감),
+  // 화면에는 실제로 바뀐 값을 보여 주도록 서술 기록에 다시 적는다.
+  let finalStats = stats
+  let relations = state.relations
+  const lines = pickYearLines(ctx, aged).map((entry): LifeLogEntry => {
+    if (!entry.effects && !entry.relations) {
+      return entry
+    }
+    const before = finalStats
+    finalStats = applyOutcomeEffects(finalStats, entry.effects)
+    relations = applyExtras([], relations, { relations: entry.relations }).relations
+    const effects = statChanges(before, finalStats)
+    return {
+      id: entry.id,
+      age: entry.age,
+      kind: entry.kind,
+      text: entry.text,
+      ...(Object.keys(effects).length > 0 ? { effects } : {}),
+      ...(entry.relations ? { relations: entry.relations } : {}),
+    }
+  })
   const yearEvents: GameEvent[] = [
-    { type: 'year', age, stats, rank: career.rank, points: career.promotionPoints },
+    { type: 'year', age, stats: finalStats, rank: career.rank, points: career.promotionPoints },
     ...lines.map((entry) => ({ type: 'flow' as const, entry })),
     ...(aging.illness ? [{ type: 'illness' as const, age }] : []),
     ...(promotion ? [promotion] : []),
   ]
   const next: GameState = {
     ...aged,
+    player: { ...aged.player, stats: finalStats },
+    relations,
     // 이야기 비트가 켜는 플래그를 반영한다 (줄거리의 진행이 막간 이벤트·다른 서술의 조건이 된다)
     flags: [...new Set([...aged.flags, ...flagsSetBy(ctx, lines)])],
     lifeLog: [...aged.lifeLog, ...lines],
     events: [...aged.events, ...yearEvents],
   }
 
-  if (stats.health <= 0) {
+  if (finalStats.health <= 0) {
     return finish(next, { kind: 'death', deathCause: aging.illness ? 'illness' : 'aging', age, objectId })
   }
-  if (stats.sanity <= 0) {
+  if (finalStats.sanity <= 0) {
     return finish(next, { kind: 'breakdown', age, objectId })
   }
   return next
+}
+
+/** 두 스탯의 차이 (바뀐 항목만, 소수 첫째 자리까지). 서술이 실제로 바꾼 값을 기록하는 데 쓴다. */
+function statChanges(before: Stats, after: Stats): StatDelta {
+  const delta: StatDelta = {}
+  for (const key of STAT_KEYS) {
+    const change = Math.round((after[key] - before[key]) * 10) / 10
+    if (change !== 0) {
+      delta[key] = change
+    }
+  }
+  return delta
 }
 
 /** 지금 팝업이 나올 때인지: 다음 객체가 배정될 나이에 닿았으면 객체 배정, 아니면 막간 이벤트가 나올 조건인지. */

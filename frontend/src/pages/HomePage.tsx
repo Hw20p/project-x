@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { findBackground } from '../content'
 import { describeEnding } from '../content/epilogues'
+import { isSimulationPageOpen } from '../devTools'
 import { RANK_LABELS } from '../engine/config'
 import { formatAge } from '../game/format'
 import { loadGame, loadRecords } from '../game/storage'
@@ -68,7 +69,8 @@ export function HomePage() {
         </section>
       )}
 
-      {import.meta.env.DEV && (
+      {/* 밸런스를 확정해서 잠가 두었다(`devTools.ts`의 스위치). 잠겨 있으면 아무것도 보이지 않는다. */}
+      {isSimulationPageOpen && (
         <Link to="/dev/sim" className="text-xs text-ash underline hover:text-fog">
           [개발] 밸런스 시뮬레이션
         </Link>

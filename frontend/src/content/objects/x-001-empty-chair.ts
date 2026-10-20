@@ -118,11 +118,13 @@ export default {
           statWeights: { knowledge: 0.005 },
           success: {
             text: '“의자가 비어 있다고 믿지 말 것.” 복원된 문장을 읽은 순간, 휴게실의 의자들이 조금 가까워진 느낌이 들었다.',
+            relations: { harin: 6 },
             effects: { knowledge: 8, sanity: -3 },
           },
           failure: {
             kind: 'setback',
             text: '문질러 낸 문장은 읽히지 않았다. 대신 종이가 따뜻해졌다.',
+            relations: { harin: -2 },
             effects: { sanity: -9 },
           },
         },

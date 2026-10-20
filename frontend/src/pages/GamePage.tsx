@@ -307,7 +307,6 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
             durationMs: playback.gauge.durationMs / stream.speed,
             paused: stream.paused,
           }}
-          hasRelations={Object.keys(relations.values).length > 0}
           relationsChanged={relations.log.length > seenRelationLog}
           onOpenRelations={() => setRelationsOpen(true)}
           controls={

@@ -37,11 +37,13 @@ export default {
           statWeights: { health: 0.003, reputation: 0.002 },
           success: {
             text: '열두 개의 인형은 밤새 움직이지 않았다. 아침이 오자 모든 인형이 조금 안도한 표정이었다.',
+            relations: { jian: 5 },
             effects: { reputation: 4, health: -3 },
           },
           failure: {
             kind: 'setback',
             text: '눈을 깜빡인 순간 한 개가 문 앞에 서 있었다. 아무도 그것이 움직이는 소리를 듣지 못했다.',
+            relations: { jian: -1 },
             effects: { sanity: -10 },
           },
         },

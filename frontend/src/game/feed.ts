@@ -163,7 +163,14 @@ export function describeTransition(
         })
         break
       case 'flow':
-        drafts.push({ age: event.entry.age, kind: event.entry.kind, text: event.entry.text })
+        drafts.push({
+          age: event.entry.age,
+          kind: event.entry.kind,
+          text: event.entry.text,
+          // 서술이 스탯·관계를 바꿨다면 줄 아래에 칩으로 보여 준다
+          ...(event.entry.effects ? { delta: event.entry.effects } : {}),
+          ...(event.entry.relations ? { relations: event.entry.relations } : {}),
+        })
         break
       case 'illness':
         drafts.push({ age: event.age, kind: 'system', text: '몸에 병이 들었다.', tone: 'bad' })

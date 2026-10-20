@@ -55,11 +55,13 @@ export default {
           statWeights: { knowledge: 0.006 },
           success: {
             text: '사라진 지명은 열두 곳. 모두 누군가 소원을 말한 장소였다.',
+            relations: { harin: 4 },
             effects: { knowledge: 8, reputation: 5 },
           },
           failure: {
             kind: 'setback',
             text: '대조하던 사본에도 같은 곳이 이미 지워져 있다. 사본은 어제 인쇄된 것이다.',
+            relations: { harin: -1 },
             effects: { sanity: -11 },
           },
         },
@@ -134,6 +136,7 @@ export default {
           statWeights: { knowledge: 0.005, sanity: 0.003 },
           success: {
             text: '섬은 한 계절 동안 존재했다. 우리는 그곳에서 지도의 식사 시간을 알아냈다.',
+            relations: { jian: 4 },
             effects: { knowledge: 13, reputation: 12, sanity: -7 },
             finish: true,
           },

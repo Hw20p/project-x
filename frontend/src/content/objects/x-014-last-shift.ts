@@ -55,11 +55,13 @@ export default {
           statWeights: { reputation: 0.003 },
           success: {
             text: '서명하고 일어섰다. 복도 끝에서 의자 끄는 소리가 났다.',
+            relations: { taeseong: 3 },
             effects: { reputation: 4 },
           },
           failure: {
             kind: 'setback',
             text: '서명을 하는 순간 펜이 멈췄다. 서명란에는 이미 내 서명이 있었다.',
+            relations: { taeseong: -1 },
             effects: { sanity: -6 },
           },
         },
@@ -72,6 +74,7 @@ export default {
           statWeights: { sanity: 0.005 },
           success: {
             text: '문이 열리고 들어온 사람은 눈을 마주치지 않았다. 일지의 서명이 한 칸 아래로 옮겨졌다.',
+            relations: { jian: 5 },
             effects: { knowledge: 10, reputation: 8, sanity: -6 },
             finish: true,
           },

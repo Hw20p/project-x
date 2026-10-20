@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { backgrounds } from '../../../content'
-import { DEFAULT_STATS } from '../../../engine/config'
+import { DEFAULT_STATS, ENTRY_AGE } from '../../../engine/config'
 import { STAT_LABELS } from '../../../engine/report'
 import { STAT_KEYS } from '../../../engine/types'
 import type { BackgroundDef } from '../../../engine/types'
 import { formatSigned } from '../../../game/format'
 import { Eyebrow } from '../Controls'
 import { Narration } from '../Narration'
+import { Portrait } from '../Portrait'
 
 /** 기본 스탯과 비교한 입사 시점 스탯. 무엇을 얻고 무엇을 포기하는지 한눈에 보이게 한다. */
 function BackgroundStats({ background }: { background: BackgroundDef }) {
@@ -61,9 +62,10 @@ export function BackgroundScreen({ seed, onSelect }: BackgroundScreenProps) {
             <button
               type="button"
               onClick={() => onSelect(background.id)}
-              className="group grid w-full grid-cols-[1.5rem_1fr] items-start gap-x-3 gap-y-2 rounded border border-edge bg-panel/60 px-4 py-3 text-left transition-colors hover:border-glow/60 hover:bg-panel"
+              className="group grid w-full grid-cols-[1.5rem_4rem_1fr] items-start gap-x-3 gap-y-2 rounded border border-edge bg-panel/60 px-4 py-3 text-left transition-colors hover:border-glow/60 hover:bg-panel"
             >
               <span className="pt-0.5 text-sm tabular-nums text-ash group-hover:text-glow">{index + 1}</span>
+              <Portrait backgroundId={background.id} age={ENTRY_AGE} size={64} />
               <span className="grid gap-1.5">
                 <span className="font-serif-kr text-lg text-bone">{background.name}</span>
                 <span className="font-serif-kr leading-relaxed text-fog">{background.summary}</span>

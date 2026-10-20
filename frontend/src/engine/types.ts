@@ -137,6 +137,13 @@ export interface FlowDef {
   afterYears?: number
   /** 이 서술이 나오면 켜지는 플래그. 막간 이벤트·다른 서술의 `flags` 조건으로 줄거리의 진행을 이을 수 있다. */
   setFlags?: string[]
+  /**
+   * 이 서술이 나오면 바뀌는 스탯. 선택 결과와 같은 규칙(상승분에 수확체감)을 따른다.
+   * 몇몇 서술에만 쓴다: 특히 입사 초기에 자주 나오는 서술에 넣어 천천히 쌓이게 한다.
+   */
+  effects?: StatDelta
+  /** 이 서술이 나오면 바뀌는 NPC 관계 (npc id → 변화량). 읽은 줄이 곧 관계 변화로 이어진다. */
+  relations?: Record<string, number>
 }
 
 /** 입사 배경별 오프닝 장면. 배경을 고른 직후 첫 화면 위에 줄 단위로 보인다. */

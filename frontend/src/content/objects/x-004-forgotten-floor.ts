@@ -96,11 +96,13 @@ export default {
           statWeights: { knowledge: 0.004, reputation: 0.003 },
           success: {
             text: '일지가 쌓일수록 지워지는 기억은 줄었다. 그러나 지워진 쪽의 공백은 여전히 같은 모양이다.',
+            relations: { jian: 4 },
             effects: { knowledge: 6, reputation: 6 },
           },
           failure: {
             kind: 'setback',
             text: '일지 속 어제의 기록이 오늘의 필체로 바뀌어 있었다.',
+            relations: { jian: -1 },
             effects: { sanity: -9 },
           },
         },

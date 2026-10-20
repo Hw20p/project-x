@@ -97,11 +97,13 @@ export default {
           statWeights: { reputation: 0.004, knowledge: 0.003 },
           success: {
             text: '시선은 교체되는 사람마다 첫 번째에는 약했고 두 번째에는 강했다. 교체 방식은 그럭저럭 효과가 있었다.',
+            relations: { taeseong: 4 },
             effects: { reputation: 7, knowledge: 4 },
           },
           failure: {
             kind: 'setback',
             text: '교체된 직원이 첫날 퇴근 후 돌아오지 않았다. 별은 이름을 기억하지 못하는데도 그 사람만은 기억했다.',
+            relations: { taeseong: -1 },
             effects: { sanity: -12, reputation: -3 },
           },
         },
@@ -232,6 +234,7 @@ export default {
           statWeights: { knowledge: 0.006, sanity: 0.004 },
           success: {
             text: '“관측자는 관측되는 자다.” 그 한 줄이 전부였다. 당신은 그것을 기록했고, 기록은 한 번도 사라지지 않았다.',
+            relations: { harin: 5 },
             effects: { knowledge: 14, reputation: 12, sanity: -7 },
           },
           failure: {

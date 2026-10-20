@@ -54,6 +54,14 @@ function pickVariant(rng: Rng, text: string | string[]): string {
   return typeof text === 'string' ? text : text[rng.int(0, text.length - 1)]
 }
 
+/** 서술이 주는 스탯·관계 변화 (있을 때만 담는다). 실제로 적용되는 값은 `tickYear`가 수확체감을 거쳐 다시 적는다. */
+function withExtras(def: FlowDef): Pick<LifeLogEntry, 'effects' | 'relations'> {
+  return {
+    ...(def.effects ? { effects: def.effects } : {}),
+    ...(def.relations ? { relations: def.relations } : {}),
+  }
+}
+
 /** 조건이 몇 개 걸려 있는지. 많을수록 구체적인 문장이라 지금 상태와 맞을 때 더 자주 뽑는다. */
 function specificity(when: InterludeCondition | undefined): number {
   return Object.values(when ?? {}).filter((value) => value !== undefined).length
@@ -138,7 +146,13 @@ export function pickYearLines(source: FlowSource, state: GameState): LifeLogEntr
     }
     const def = rng.pickWeighted(candidates, (candidate) => (candidate.weight ?? 1) * (1 + SPECIFICITY_BONUS * specificity(candidate.when)))
     recent.add(def.id)
-    entries.push({ id: def.id, age, kind: 'ambient', text: fillTemplate(pickVariant(rng, def.text), vars) })
+    entries.push({
+      id: def.id,
+      age,
+      kind: 'ambient',
+      text: fillTemplate(pickVariant(rng, def.text), vars),
+      ...withExtras(def),
+    })
   }
 
   // 2) 이야기 비트: 조건이 맞고 아직 안 나온 것 (우선순위가 높은 것부터)
@@ -153,7 +167,13 @@ export function pickYearLines(source: FlowSource, state: GameState): LifeLogEntr
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
     .slice(0, MAX_BEATS_PER_YEAR)
   for (const beat of beats) {
-    entries.push({ id: beat.id, age, kind: 'beat', text: fillTemplate(pickVariant(rng, beat.text), vars) })
+    entries.push({
+      id: beat.id,
+      age,
+      kind: 'beat',
+      text: fillTemplate(pickVariant(rng, beat.text), vars),
+      ...withExtras(beat),
+    })
   }
 
   return entries

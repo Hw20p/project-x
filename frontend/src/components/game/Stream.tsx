@@ -18,6 +18,21 @@ function Notes({ notes, tone }: { notes: string[] | undefined; tone: FeedItem['t
   )
 }
 
+/** 흘러가는 서술 한 줄. 이 줄이 스탯·관계를 바꿨다면(일부 서술만 그렇다) 아래에 변화 칩이 붙는다. */
+function NarrationLine({ item, className }: { item: FeedItem; className: string }) {
+  const hasChips = item.delta !== undefined || item.relations !== undefined
+  if (!hasChips) {
+    return <p className={`narration text-[0.95rem] ${className}`}>{item.text}</p>
+  }
+  return (
+    <div className="grid gap-1">
+      <p className={`narration text-[0.95rem] ${className}`}>{item.text}</p>
+      {item.delta && <StatDeltaChips delta={item.delta} />}
+      <RelationChips relations={item.relations} />
+    </div>
+  )
+}
+
 /** 항목 종류에 따른 본문. 나이 표시는 바깥(StreamLine)에서 붙인다. */
 function LineBody({ item }: { item: FeedItem }): ReactNode {
   switch (item.kind) {
@@ -27,9 +42,9 @@ function LineBody({ item }: { item: FeedItem }): ReactNode {
     case 'beat':
     case 'story':
     case 'closing':
-      return <p className="narration text-[0.95rem] text-bone">{item.text}</p>
+      return <NarrationLine item={item} className="text-bone" />
     case 'ambient':
-      return <p className="narration text-[0.95rem] text-fog">{item.text}</p>
+      return <NarrationLine item={item} className="text-fog" />
     case 'choice':
       return <p className="font-serif-kr text-sm italic leading-relaxed text-ash">▸ {item.text}</p>
     case 'result':

@@ -38,11 +38,13 @@ export default {
           statWeights: { health: 0.003, knowledge: 0.003, sanity: 0.002 },
           success: {
             text: '신호는 거의 정확히 도착했다. 구역 안의 열흘이 바깥의 한 시간처럼 지나갔다. 이 방식으로 우리는 구역을 지도로 만들었다.',
+            relations: { jian: 5 },
             effects: { knowledge: 9, reputation: 8, health: -4 },
           },
           failure: {
             kind: 'setback',
             text: '신호가 한 번 끊겼다. 돌아온 당신의 머리카락은 희끗했다. 아무도 처음엔 알아보지 못했다.',
+            relations: { jian: -1 },
             effects: { health: -14, sanity: -8 },
           },
         },
@@ -114,6 +116,7 @@ export default {
           statWeights: { reputation: 0.006, sanity: 0.003 },
           success: {
             text: '교대 체계가 자리 잡자 구역의 시간 도둑질이 분산되었다. 아무도 한꺼번에 늙지 않았다.',
+            relations: { taeseong: 5 },
             effects: { knowledge: 8, reputation: 12 },
           },
           failure: {
