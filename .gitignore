@@ -1,0 +1,10 @@
+# IDE
+.idea/
+.vscode/
+
+# Claude Code 로컬 설정 (개인별 권한 허용 목록 등)
+.claude/settings.local.json*
+
+# OS
+.DS_Store
+Thumbs.db

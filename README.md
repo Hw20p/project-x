@@ -57,6 +57,36 @@ frontend/src/
   pages/     페이지 (HomePage, GamePage, 개발 서버에서만 열리는 SimulationPage /dev/sim)
 ```
 
+## 배포
+
+백엔드가 없는 정적 사이트라서 빌드 결과만 서버에 올리면 된다.
+
+1. `frontend`에서 `npm run build`를 실행한다. (`package.json`이 `frontend` 안에 있으므로 루트에서 실행하면 안 된다.)
+2. `frontend/dist` **안의 파일들**(`index.html`, `favicon.svg`, `assets/`)을 서버의 웹 루트에 올린다. 폴더 구조를 그대로 유지하고, `dist` 폴더째 올리지 않는다.
+3. nginx는 서버에 직접 설정해 두었다 (`test.maplespec.kr`, 웹 루트 `/home/deploy/apps/lifesim/current`, HTTPS는 certbot). 이 저장소에는 서버 설정 파일을 두지 않는다. 꼭 필요한 규칙은 `/play` 같은 주소를 새로고침해도 열리게 하는 SPA 폴백이다.
+
+   ```nginx
+   location / {
+       try_files $uri $uri/ /index.html;
+   }
+   ```
+
+4. 종료 화면의 "이 삶의 주소 복사" 버튼은 HTTPS에서만 동작한다.
+
+다시 배포할 때는 `assets/`를 통째로 새것으로 교체하고 `index.html`도 덮어쓴다 (파일 이름이 빌드마다 바뀐다). 개발용 `/dev/sim`은 빌드에 포함되지 않는다.
+
+### 자동 배포 (GitHub Actions)
+
+`main` 브랜치에 push하면 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)이 `npm ci` → `npm run build`(타입체크 포함) → SSH로 서버의 `/home/deploy/apps/lifesim/current/`에 교체한다. 빌드가 실패하면 배포되지 않는다. `frontend/` 안의 변경이 있을 때만 돌고, Actions 탭에서 수동 실행도 된다.
+
+저장소의 Settings → Secrets and variables → Actions에 아래 세 값을 등록해야 한다.
+
+| 이름 | 값 |
+| --- | --- |
+| `SSH_HOST` | 서버 주소 |
+| `SSH_USER` | 접속 계정 (`deploy`) |
+| `SSH_PRIVATE_KEY` | 배포용 SSH 개인 키 (서버 계정의 `authorized_keys`에 짝이 되는 공개 키가 등록되어 있어야 함) |
+
 ## 플레이
 
 `npm run dev` 후 `http://localhost:5173`에서 "새 삶을 시작한다"를 누른다. 주소는 이렇게 쓴다.
