@@ -1,4 +1,5 @@
 // 콘텐츠를 손으로 작성하다 생기는 실수를 잡는 검증기. content/index.ts가 로드 시점에 호출한다.
+import type { AfterwordDef } from './afterword'
 import { FLOW_PLACEHOLDERS } from './flow'
 import { STAT_KEYS } from './types'
 import type {
@@ -43,7 +44,7 @@ function validateChoice(choice: Choice, where: string, npcIds: ReadonlySet<strin
 }
 
 /** 객체·막간 이벤트의 모든 선택지 결과가 켜는 플래그 */
-function collectSetFlags(
+export function collectSetFlags(
   objects: readonly ContainmentObject[],
   interludes: readonly InterludeDef[],
   flows: readonly FlowDef[] = [],
@@ -434,6 +435,52 @@ export function validateInterludes(
       }
       if (choice.success.finish || choice.success.endingId !== undefined) {
         fail(`${where}: 막간 이벤트에서는 finish·endingId를 쓸 수 없음`)
+      }
+    }
+  }
+  return errors
+}
+
+interface AfterwordRefs {
+  npcIds: ReadonlySet<string>
+  endingIds: ReadonlySet<string>
+  backgroundIds: ReadonlySet<string>
+  /** 선택지·서술이 켜는 모든 플래그 (조건의 플래그가 오타인지 확인하는 용도) */
+  settableFlags: ReadonlySet<string>
+}
+
+/** 후일담 검증: id 중복, 빈 글, 조건이 가리키는 플래그·NPC·엔딩·입사 배경이 실제로 있는지 */
+export function validateAfterwords(afterwords: readonly AfterwordDef[], refs: AfterwordRefs): string[] {
+  const errors: string[] = []
+  const ids = new Set<string>()
+  for (const def of afterwords) {
+    const fail = (message: string) => errors.push(`[후일담 ${def.id}] ${message}`)
+    if (!def.id || !def.group || !def.text.trim()) {
+      fail('id·group·text가 비어 있음')
+    }
+    if (ids.has(def.id)) {
+      fail('후일담 id 중복')
+    }
+    ids.add(def.id)
+    const when = def.when
+    for (const flag of [...(when?.flags ?? []), ...(when?.notFlags ?? [])]) {
+      if (!refs.settableFlags.has(flag)) {
+        fail(`조건의 플래그 "${flag}"를 켜는 선택지가 어디에도 없음 (오타 확인)`)
+      }
+    }
+    for (const npcId of Object.keys(when?.relations ?? {})) {
+      if (!refs.npcIds.has(npcId)) {
+        fail(`조건의 NPC id가 정의되지 않음: ${npcId}`)
+      }
+    }
+    for (const endingId of when?.endingIds ?? []) {
+      if (!refs.endingIds.has(endingId)) {
+        fail(`조건의 엔딩 id가 정의되지 않음: ${endingId}`)
+      }
+    }
+    for (const backgroundId of when?.backgrounds ?? []) {
+      if (!refs.backgroundIds.has(backgroundId)) {
+        fail(`조건의 입사 배경 id가 정의되지 않음: ${backgroundId}`)
       }
     }
   }

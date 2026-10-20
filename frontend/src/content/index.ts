@@ -6,6 +6,8 @@
 // 새 객체·이벤트·서술을 추가하려면 해당 폴더에 파일만 더 만들면 된다.
 import type { GameContext } from '../engine/game'
 import {
+  collectSetFlags,
+  validateAfterwords,
   validateBackgrounds,
   validateFlows,
   validateInterludes,
@@ -13,6 +15,7 @@ import {
   validateObjects,
 } from '../engine/validate'
 import type { BackgroundDef, ContainmentObject, EndingDef, FlowDef, InterludeDef, Rank } from '../engine/types'
+import { afterwords } from './afterwords'
 import { backgrounds } from './backgrounds'
 import { endings } from './endings'
 import { npcs } from './npcs'
@@ -30,7 +33,7 @@ export const interludes: InterludeDef[] = Object.values(eventModules).flatMap((m
 
 export const flows: FlowDef[] = Object.values(flowModules).flatMap((module) => module.default)
 
-export { backgrounds, endings, npcs, openings }
+export { afterwords, backgrounds, endings, npcs, openings }
 
 /** 게임 엔진에 넘기는 콘텐츠 묶음 */
 export const gameContext: GameContext = { objects, interludes, npcs, backgrounds, flows, openings }
@@ -57,6 +60,12 @@ const errors = [
   ...validateObjects(objects, endingIds, npcIds),
   ...validateInterludes(interludes, npcIds, objects, flows),
   ...validateFlows(flows, openings, { backgroundIds, npcIds, objects, interludes }),
+  ...validateAfterwords(afterwords, {
+    npcIds,
+    endingIds,
+    backgroundIds,
+    settableFlags: collectSetFlags(objects, interludes, flows),
+  }),
 ]
 if (errors.length > 0) {
   const message = `콘텐츠 데이터 검증 실패:\n${errors.join('\n')}`

@@ -6,16 +6,11 @@ import type { NpcDef } from '../../engine/types'
 import { STAT_KEYS } from '../../engine/types'
 import type { RelationsView as RelationsData } from '../../game/feed'
 import { formatAge, formatSigned } from '../../game/format'
+import { relationStageLabel } from '../../game/relations'
 import { Portrait } from './Portrait'
 
 /** 관계가 달라지는 경계(`NpcBond`의 구간 경계). 막대에 눈금으로 보여 준다. */
 const MARKS = [-30, -10, 10, 30]
-
-/** 지금 관계 단계의 이름. 어떤 구간에도 안 걸리면 무난한 사이. */
-function stageLabel(npc: NpcDef, relation: number): string {
-  const labels = findActiveBonds(npc, relation).map((bond) => bond.label)
-  return labels.length > 0 ? labels.join(', ') : '아직은 평범한 사이'
-}
 
 /** 지금 관계가 해마다 주는 효과: "매년 정신력 +1" */
 function yearlyText(npc: NpcDef, relation: number): string | null {
@@ -72,7 +67,16 @@ function Meter({ value, name }: { value: number; name: string }) {
  * 인간관계 화면. 만난 사람마다 지금의 관계 단계·값·해마다 받는 효과·최근의 변화를 보여 준다.
  * 아직 읽지 않은 줄거리의 결과는 반영하지 않는다 (`relations`는 읽은 줄 기준).
  */
-export function RelationsView({ relations, playerAge }: { relations: RelationsData; playerAge: number }) {
+export function RelationsView({
+  relations,
+  changes = {},
+  playerAge,
+}: {
+  relations: RelationsData
+  /** 사람별로 아직 못 본 관계 변화의 합. 0이 아니면 점수 옆에 (+3)처럼 보여 준다. */
+  changes?: Record<string, number>
+  playerAge: number
+}) {
   const met = npcs.filter((npc) => relations.values[npc.id] !== undefined)
   const unmet = npcs.length - met.length
 
@@ -98,7 +102,14 @@ export function RelationsView({ relations, playerAge }: { relations: RelationsDa
                         {npc.role} · {formatAge(playerAge + npc.ageGap)}
                       </span>
                     </p>
-                    <span className={`text-sm tabular-nums ${value > 0 ? 'text-gain' : value < 0 ? 'text-loss' : 'text-fog'}`}>{value}</span>
+                    <span className={`text-sm tabular-nums ${value > 0 ? 'text-gain' : value < 0 ? 'text-loss' : 'text-fog'}`}>
+                      {value}
+                      {changes[npc.id] ? (
+                        <span className={`ml-1 text-xs ${changes[npc.id] > 0 ? 'text-gain' : 'text-loss'}`}>
+                          ({formatSigned(changes[npc.id])})
+                        </span>
+                      ) : null}
+                    </span>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-fog">{npc.summary}</p>
                 </div>
@@ -107,7 +118,7 @@ export function RelationsView({ relations, playerAge }: { relations: RelationsDa
               <div className="mt-3">
                 <Meter value={value} name={npc.name} />
                 <div className="mt-1.5 flex flex-wrap justify-between gap-x-3 text-xs">
-                  <span className="text-bone">{stageLabel(npc, value)}</span>
+                  <span className="text-bone">{relationStageLabel(npc, value)}</span>
                   {effect && <span className="text-ash">{effect}</span>}
                 </div>
               </div>

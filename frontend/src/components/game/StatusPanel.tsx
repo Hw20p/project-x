@@ -5,7 +5,7 @@ import type { GameState } from '../../engine/state'
 import { STAT_KEYS } from '../../engine/types'
 import type { StatKey } from '../../engine/types'
 import type { YearSnapshot } from '../../game/feed'
-import { formatAge } from '../../game/format'
+import { formatAge, formatStat } from '../../game/format'
 import { Portrait } from './Portrait'
 
 const STAT_COLORS: Record<StatKey, string> = {
@@ -18,7 +18,7 @@ const STAT_COLORS: Record<StatKey, string> = {
 function Bar({ label, value, color, max = 100 }: { label: string; value: number; color: string; max?: number }) {
   const ratio = Math.max(0, Math.min(1, value / max))
   return (
-    <div className="grid grid-cols-[3.2rem_1fr_2rem] items-center gap-2 text-xs">
+    <div className="grid grid-cols-[3.2rem_1fr_2.6rem] items-center gap-2 text-xs">
       <span className="text-fog">{label}</span>
       <div
         className="h-1 overflow-hidden rounded-full bg-edge"
@@ -30,7 +30,7 @@ function Bar({ label, value, color, max = 100 }: { label: string; value: number;
       >
         <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${ratio * 100}%`, backgroundColor: color }} />
       </div>
-      <span className="text-right tabular-nums text-bone">{Math.round(value)}</span>
+      <span className="text-right tabular-nums text-bone">{formatStat(value)}</span>
     </div>
   )
 }
@@ -119,11 +119,11 @@ export function StatusPanel({ state, controls, view, gauge, relationsChanged = f
                 <p className="text-right text-xs text-ash">
                   승급 조건:{' '}
                   <span className={points >= requirement.points ? 'text-gain' : undefined}>
-                    점수 {Math.round(points)}/{requirement.points}
+                    점수 {formatStat(points)}/{requirement.points}
                   </span>
                   {' · '}
                   <span className={stats.reputation >= requirement.reputation ? 'text-gain' : undefined}>
-                    평판 {Math.round(stats.reputation)}/{requirement.reputation}
+                    평판 {formatStat(stats.reputation)}/{requirement.reputation}
                   </span>
                 </p>
               </div>

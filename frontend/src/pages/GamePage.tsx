@@ -279,6 +279,16 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
       setSeenRelationLog(relations.log.length)
     }
   }, [relationsOpen, relations.log.length])
+  // 관계 화면을 열면 "열기 전에 못 본 변화"를 사람별로 합쳐 점수 옆에 (+3)처럼 보여 준다. 열려 있는 동안 생긴 변화도 더해진다.
+  const [relationsFrom, setRelationsFrom] = useState(0)
+  const openRelations = () => {
+    setRelationsFrom(seenRelationLog)
+    setRelationsOpen(true)
+  }
+  const relationChanges: Record<string, number> = {}
+  for (const entry of relations.log.slice(relationsFrom)) {
+    relationChanges[entry.npcId] = (relationChanges[entry.npcId] ?? 0) + entry.change
+  }
 
   const confirmRestart = () => {
     if (window.confirm('지금까지의 삶을 버리고 처음부터 다시 시작할까요?')) {
@@ -308,7 +318,7 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
             paused: stream.paused,
           }}
           relationsChanged={relations.log.length > seenRelationLog}
-          onOpenRelations={() => setRelationsOpen(true)}
+          onOpenRelations={openRelations}
           controls={
             <SpeedControl
               speed={stream.speed}
@@ -347,7 +357,7 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
 
       {relationsOpen && (
         <DecisionPopup label="인간관계" closeLabel="닫기" onClose={closeRelations}>
-          <RelationsView relations={relations} playerAge={playback.view?.age ?? game.player.age} />
+          <RelationsView relations={relations} changes={relationChanges} playerAge={playback.view?.age ?? game.player.age} />
         </DecisionPopup>
       )}
 

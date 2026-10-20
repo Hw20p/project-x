@@ -268,37 +268,55 @@ interface PortraitProps {
   className?: string
 }
 
-/** 도트로 그린 얼굴 프로필. 나이가 들수록 머리가 세고 주름이 늘어난다. */
-export function Portrait({ backgroundId, npcId, age, sanity, size = 56, className = '' }: PortraitProps) {
-  const requested = npcId ?? backgroundId
+/** 도트 한 줄(같은 색으로 이어진 칸들): 16×16 격자 위의 좌표와 너비 */
+export interface PortraitRect {
+  x: number
+  y: number
+  width: number
+  fill: string
+}
+
+/** 도트 격자의 한 변 칸 수 */
+export const PORTRAIT_GRID = SIZE
+
+/**
+ * 얼굴 그림을 이루는 도트 줄들. 화면의 SVG와 엔딩 카드(캔버스)가 같은 그림을 쓰도록 계산만 따로 뺐다.
+ * @param requested 입사 배경 id 또는 NPC id (모르는 값이면 사무직)
+ */
+export function portraitRects(requested: string | null | undefined, age: number, sanity?: number): PortraitRect[] {
   const id = requested && KIND_LAYERS[requested] ? requested : DEFAULT_KIND
   const stage = lookStage(age)
   const tired = sanity !== undefined && sanity < 30
-
-  const rects = useMemo(() => {
-    const grid = buildGrid(id, stage, tired)
-    const look = LOOKS[stage]
-    const outfit = OUTFITS[id]
-    const result: { x: number; y: number; width: number; fill: string }[] = []
-    // 같은 줄에서 이웃한 같은 색 칸은 하나로 합쳐 그린다
-    for (let y = 0; y < SIZE; y++) {
-      let x = 0
-      while (x < SIZE) {
-        const fill = colorOf(grid[y][x], look, outfit)
-        if (fill === null) {
-          x++
-          continue
-        }
-        let end = x + 1
-        while (end < SIZE && colorOf(grid[y][end], look, outfit) === fill) {
-          end++
-        }
-        result.push({ x, y, width: end - x, fill })
-        x = end
+  const grid = buildGrid(id, stage, tired)
+  const look = LOOKS[stage]
+  const outfit = OUTFITS[id]
+  const result: PortraitRect[] = []
+  // 같은 줄에서 이웃한 같은 색 칸은 하나로 합쳐 그린다
+  for (let y = 0; y < SIZE; y++) {
+    let x = 0
+    while (x < SIZE) {
+      const fill = colorOf(grid[y][x], look, outfit)
+      if (fill === null) {
+        x++
+        continue
       }
+      let end = x + 1
+      while (end < SIZE && colorOf(grid[y][end], look, outfit) === fill) {
+        end++
+      }
+      result.push({ x, y, width: end - x, fill })
+      x = end
     }
-    return result
-  }, [id, stage, tired])
+  }
+  return result
+}
+
+/** 도트로 그린 얼굴 프로필. 나이가 들수록 머리가 세고 주름이 늘어난다. */
+export function Portrait({ backgroundId, npcId, age, sanity, size = 56, className = '' }: PortraitProps) {
+  const requested = npcId ?? backgroundId
+  const tired = sanity !== undefined && sanity < 30
+  // 모양이 달라지는 값(그림 종류·나이 단계·피곤함)이 같으면 다시 계산하지 않는다
+  const rects = useMemo(() => portraitRects(requested, age, tired ? 0 : undefined), [requested, age, tired])
 
   return (
     <svg

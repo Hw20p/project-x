@@ -26,6 +26,11 @@ export function diffStats(before: Stats, after: Stats): StatDelta {
   return delta
 }
 
+/** 스탯·점수 표시: 소수 첫째 자리까지, 정수면 소수점 없이 ("47", "47.3"). 매년 0.3~0.5씩 오르내리는 값이 보이게 한다. */
+export function formatStat(value: number): string {
+  return String(Math.round(value * 10) / 10)
+}
+
 export function formatSigned(value: number): string {
   return value > 0 ? `+${value}` : `${value}`
 }
