@@ -1,5 +1,6 @@
 // 줄거리 스트림에 쌓이는 항목(feed)과, 엔진 상태 전이를 항목으로 바꾸는 함수.
 // 선택의 결과·객체 보고서·시간이 흘러간 서술은 팝업이 아니라 이 스트림으로 보여 준다.
+import { pickClosing } from '../content/closings'
 import { RANK_LABELS } from '../engine/config'
 import { findInterlude, findObject } from '../engine/game'
 import type { GameContext } from '../engine/game'
@@ -13,11 +14,21 @@ import { toParagraphs } from './text'
  * - opening/ambient/beat: 엔진이 만든 흐르는 서술
  * - choice : 플레이어가 고른 선택지 (기록용)
  * - result : 선택의 결과 서술 (실제로 바뀐 스탯·관계, 안내 문구 포함)
+ * - closing: 객체 관리를 마칠 때의 마무리 서술 (보고서 바로 앞)
  * - report : 객체 한 건의 관리 보고서
  * - assign : 새 객체를 맡게 됨
  * - system : 막간 이벤트 시작, 병 같은 알림
  */
-export type FeedKind = 'opening' | 'ambient' | 'beat' | 'choice' | 'result' | 'report' | 'assign' | 'system'
+export type FeedKind =
+  | 'opening'
+  | 'ambient'
+  | 'beat'
+  | 'choice'
+  | 'result'
+  | 'closing'
+  | 'report'
+  | 'assign'
+  | 'system'
 export type FeedTone = 'good' | 'bad'
 
 export interface FeedItem {
@@ -152,6 +163,11 @@ export function describeTransition(
       if (next.pendingEnding?.kind === 'dismissed') {
         notes.push('수습 직급에서의 규정 위반이다. 인사팀에서 해고 통보가 도착했다.')
       }
+      drafts.push(
+        ...toParagraphs(pickClosing(findObject(ctx, report.objectId), report.outcome, next.seed, next.history.length)).map(
+          (text) => ({ age, kind: 'closing' as const, text }),
+        ),
+      )
       drafts.push({
         age,
         kind: 'report',

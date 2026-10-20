@@ -128,6 +128,15 @@ export interface FlowDef {
   weight?: number
   /** 이야기 비트가 한 전환에 여러 개 걸릴 때의 우선순위. 클수록 먼저. 기본 0. */
   priority?: number
+  /**
+   * 이야기 사슬: 이 서술(id)이 이미 나온 뒤에만 열린다. 같은 조건이면 먼저 나와야 하는 순서를 만든다.
+   * 이 필드만으로도 등장 조건이 되지만, 직급·나이 같은 `when`을 같이 걸어 두면 너무 늦게 나오지 않게 막을 수 있다.
+   */
+  after?: string
+  /** `after`가 나온 뒤 최소 몇 년이 지나야 열리는지. 기본 0. */
+  afterYears?: number
+  /** 이 서술이 나오면 켜지는 플래그. 막간 이벤트·다른 서술의 `flags` 조건으로 줄거리의 진행을 이을 수 있다. */
+  setFlags?: string[]
 }
 
 /** 입사 배경별 오프닝 장면. 배경을 고른 직후 첫 화면 위에 줄 단위로 보인다. */
@@ -198,6 +207,15 @@ export interface Stage {
   choices: Choice[]
 }
 
+/** 객체 관리의 결말: 관리 성공 / 실패(허용치 초과) / 규정 위반 */
+export type ClosingOutcome = 'cleared' | 'failed' | 'demoted'
+
+/**
+ * 객체 관리가 끝났을 때 보고서 앞에 흘러나오는 마무리 서술. 결말마다 문장 하나 또는 변주 배열(그중 하나를 고름).
+ * 쓰지 않은 결말은 `content/closings.ts`의 기본 문구를 쓴다. 자리표시자는 `{object}`(객체 이름)만 쓸 수 있다.
+ */
+export type ObjectClosing = Partial<Record<ClosingOutcome, string | string[]>>
+
 export interface ContainmentObject {
   id: string
   /** 표시용 관리 번호. 정렬 기준이기도 함. */
@@ -210,6 +228,8 @@ export interface ContainmentObject {
   observation: string[]
   /** 관리 매뉴얼 — 선택지 판단의 힌트. 일부는 지워져 있거나 불완전할 수 있음. */
   manual: string[]
+  /** 관리를 마칠 때의 마무리 서술. 없으면 기본 문구. */
+  closing?: ObjectClosing
   /** 실패(setback)가 이 횟수 이하면 관리 성공으로 인정. 기본 0. */
   failureTolerance?: number
   /**

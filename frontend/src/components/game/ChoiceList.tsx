@@ -16,7 +16,8 @@ function RiskDots({ risk }: { risk: number }) {
 }
 
 /**
- * 선택지 목록. 성공 확률(스탯·등급·나이·보너스가 모두 반영된 값)과 위험도를 보여 준다.
+ * 선택지 목록. 성공 확률 숫자는 보여 주지 않고 위험도(난이도)만 보여 준다. 객체 정보를 읽고 추리하는 재미를 위해서이고,
+ * 실제 확률은 선택한 뒤 기록(스트림)에 남는다.
  * 숫자 키(1, 2, 3...)로도 고를 수 있다.
  */
 export function ChoiceList({ options, onChoose }: { options: ChoiceOption[]; onChoose: (choiceId: string) => void }) {
@@ -36,7 +37,7 @@ export function ChoiceList({ options, onChoose }: { options: ChoiceOption[]; onC
 
   return (
     <ol className="grid gap-3">
-      {options.map(({ choice, chance }, index) => (
+      {options.map(({ choice }, index) => (
         <li key={choice.id}>
           <button
             type="button"
@@ -45,12 +46,9 @@ export function ChoiceList({ options, onChoose }: { options: ChoiceOption[]; onC
           >
             <span className="pt-0.5 text-sm tabular-nums text-ash group-hover:text-glow">{index + 1}</span>
             <span className="font-serif-kr leading-relaxed text-bone">{choice.text}</span>
-            <span className="grid justify-items-end gap-1 pt-0.5 text-right">
-              <span className="text-lg leading-none tabular-nums text-glow">{Math.round(chance * 100)}%</span>
-              <span className="flex items-center gap-1.5 text-xs text-fog">
-                <RiskDots risk={choice.risk} />
-                {RISK_LABELS[choice.risk]}
-              </span>
+            <span className="flex items-center gap-1.5 pt-1 text-xs text-fog">
+              <RiskDots risk={choice.risk} />
+              {RISK_LABELS[choice.risk]}
             </span>
           </button>
         </li>

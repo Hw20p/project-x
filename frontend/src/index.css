@@ -49,6 +49,30 @@ body {
   background: rgb(169 191 223 / 0.3);
 }
 
+/* 스크롤바: 어두운 바탕에 묻히는 가는 막대. 팝업 안의 스크롤 영역에도 똑같이 적용된다.
+   표준 속성(scrollbar-color)을 지원하지 않는 브라우저에서만 -webkit- 방식을 쓴다. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3e4d transparent;
+}
+
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3a3e4d;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #50566a;
+  }
+}
+
 button:focus-visible,
 a:focus-visible,
 summary:focus-visible {

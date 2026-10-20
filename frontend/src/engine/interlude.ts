@@ -8,9 +8,17 @@ import { clamp } from './rules'
 import type { GameState } from './state'
 import type { InterludeCondition, InterludeDef, Rank, StatKey } from './types'
 
+/**
+ * 막간 이벤트의 간격·쿨다운을 재는 나이. 객체 관리에 드는 시간은 보고서 뒤에 한꺼번에 흐르므로,
+ * 관리 도중에는 지금까지 쓴 시간(`progress.yearsSpent`)을 더해서 센다 (긴 객체의 단계 사이에도 이벤트가 낄 수 있게).
+ */
+export function effectiveAge(state: GameState): number {
+  return state.player.age + (state.progress?.yearsSpent ?? 0)
+}
+
 /** 마지막 막간 이벤트 이후 충분한 시간이 지났는지 */
 export function isInterludeDue(state: GameState): boolean {
-  return state.player.age - state.lastInterludeAge >= INTERLUDE.minIntervalYears
+  return effectiveAge(state) - state.lastInterludeAge >= INTERLUDE.minIntervalYears
 }
 
 function inRange(value: number, range: { min?: number; max?: number }): boolean {
@@ -85,7 +93,7 @@ export function isEligible(def: InterludeDef, state: GameState): boolean {
   }
   const last = past[past.length - 1]
   const cooldown = def.cooldownYears ?? INTERLUDE.defaultCooldownYears
-  if (last && state.player.age - last.age < cooldown) {
+  if (last && effectiveAge(state) - last.age < cooldown) {
     return false
   }
   return meetsCondition(def.when, state)

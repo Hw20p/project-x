@@ -12,8 +12,8 @@
 // 같은 시드와 같은 선택 기록이면 항상 같은 결과가 나온다 (`replayGame`으로 검증 가능).
 import { pickNextObject } from './assignment'
 import { ENTRY_AGE, MAX_AGE } from './config'
-import { openingEntries, pickFlowLines } from './flow'
-import { isInterludeDue, pickInterlude } from './interlude'
+import { flagsSetBy, openingEntries, pickFlowLines } from './flow'
+import { effectiveAge, isInterludeDue, pickInterlude } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import {
@@ -186,6 +186,7 @@ export function createGame(ctx: GameContext, options: GameOptions): GameState {
     lastInterludeResult: null,
     interludeLog: [],
     lastInterludeAge: player.age,
+    flowAge: player.age,
     lifeLog: [],
     endingScene: null,
   }
@@ -298,7 +299,11 @@ function choose(ctx: GameContext, state: GameState, choiceId: string): GameState
   return { ...next, phase: 'outcome' }
 }
 
-/** 선택 결과를 본 뒤: 단계에 걸리는 시간이 흐르고, 다음 단계로 가거나 객체 관리를 마무리한다. */
+/**
+ * 선택 결과를 본 뒤: 다음 단계로 가거나 객체 관리를 마무리한다.
+ * 객체 관리에 드는 시간은 여기서 흐르지 않는다. 쓴 시간(`yearsSpent`)만 쌓아 두었다가, 보고서를 본 뒤
+ * 서술 구간(`continueFromReport`)에서 한꺼번에 흐른다. 그래서 한 객체의 모든 선택은 같은 나이에서 일어난다.
+ */
 function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
   const { progress, lastResult } = state
   if (state.phase !== 'outcome' || !progress || !lastResult) {
@@ -307,21 +312,9 @@ function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
   const object = findObject(ctx, progress.objectId)
   const stage = object.stages[progress.stageIndex]
 
-  const rng = createRng(state.rngState)
-  const time = advanceTime(rng, state.player, stage.years, calcBondEffects(ctx.npcs ?? [], state.relations))
   const updatedProgress: ObjectProgress = { ...progress, yearsSpent: progress.yearsSpent + stage.years }
-  const next: GameState = {
-    ...state,
-    rngState: rng.getState(),
-    player: time.player,
-    progress: updatedProgress,
-    events: time.events,
-  }
+  const next: GameState = { ...state, progress: updatedProgress, events: [] }
 
-  if (time.ending) {
-    return finish(next, { ...time.ending, objectId: object.id })
-  }
-  const crossed = crossedAges(state.player.age, time.player.age)
   if (!lastResult.endsObject) {
     const resumed: GameState = {
       ...next,
@@ -329,9 +322,9 @@ function continueFromOutcome(ctx: GameContext, state: GameState): GameState {
       progress: { ...updatedProgress, stageIndex: progress.stageIndex + 1 },
     }
     // 긴 객체는 단계 사이에도 막간 이벤트가 낄 수 있다.
-    return withFlow(ctx, startInterlude(ctx, resumed, 'choosing') ?? resumed, crossed)
+    return startInterlude(ctx, resumed, 'choosing') ?? resumed
   }
-  return withFlow(ctx, finalizeObject(next, object, updatedProgress, lastResult), crossed)
+  return finalizeObject(next, object, updatedProgress, lastResult)
 }
 
 /** 객체 관리 결과를 경력에 반영하고 보고서를 만든다. */
@@ -372,7 +365,8 @@ function finalizeObject(
     promoted,
     demoted,
     rankAfter: career.rank,
-    ageAtEnd: state.player.age,
+    // 관리에 쓴 시간은 보고서 뒤에 흐르므로, 끝난 나이는 지금 나이에 쓴 시간을 더한 값이다.
+    ageAtEnd: state.player.age + progress.yearsSpent,
   }
   return {
     ...state,
@@ -381,7 +375,9 @@ function finalizeObject(
     managedCounts: { ...state.managedCounts, [object.id]: (state.managedCounts[object.id] ?? 0) + 1 },
     progress: null,
     history: [...state.history, report],
-    pendingEnding: dismissed ? { kind: 'dismissed', age: state.player.age, objectId: object.id } : null,
+    pendingEnding: dismissed
+      ? { kind: 'dismissed', age: state.player.age + progress.yearsSpent, objectId: object.id }
+      : null,
   }
 }
 
@@ -389,9 +385,16 @@ function continueFromReport(ctx: GameContext, state: GameState): GameState {
   if (state.pendingEnding) {
     return finish(state, state.pendingEnding)
   }
-  // 보고서 화면에 보여 준 서술은 비우고, 다음 화면에서는 새로 생긴 비트만 붙인다 (이 전환에는 시간이 흐르지 않는다).
-  const base: GameState = { ...state, events: [] }
-  return withFlow(ctx, startInterlude(ctx, base, 'assign') ?? assignNext(ctx, base), [])
+  // 서술 구간: 방금 끝낸 객체 관리에 쓴 시간이 여기서 흐른다. 해가 바뀔 때마다 노화·병이 판정되고,
+  // 그 해들의 서술이 붙는다. 다음 객체나 막간 이벤트가 나오기 전의 숨 돌리는 구간이다.
+  const report = state.history[state.history.length - 1]
+  const rng = createRng(state.rngState)
+  const time = advanceTime(rng, state.player, report.yearsSpent, calcBondEffects(ctx.npcs ?? [], state.relations))
+  const next: GameState = { ...state, rngState: rng.getState(), player: time.player, events: time.events }
+  if (time.ending) {
+    return finish(next, { ...time.ending, objectId: report.objectId })
+  }
+  return withFlow(ctx, startInterlude(ctx, next, 'assign') ?? assignNext(ctx, next))
 }
 
 // ───────────────────────── 막간 이벤트 ─────────────────────────
@@ -454,7 +457,7 @@ function chooseInterlude(ctx: GameContext, state: GameState, choiceId: string): 
     lastInterludeResult: result,
     interludeLog: [
       ...state.interludeLog,
-      { eventId: def.id, age: state.player.age, choiceId: choice.id, success },
+      { eventId: def.id, age: effectiveAge(state), choiceId: choice.id, success },
     ],
     choiceLog: [...state.choiceLog, { interludeId: def.id, choiceId: choice.id }],
     events: [],
@@ -486,16 +489,16 @@ function continueFromInterlude(ctx: GameContext, state: GameState): GameState {
     player: time.player,
     events: time.events,
     interlude: null,
-    lastInterludeAge: time.player.age,
+    lastInterludeAge: effectiveAge({ ...state, player: time.player }),
   }
   if (time.ending) {
     return finish(next, { ...time.ending, objectId: state.progress?.objectId })
   }
-  const crossed = crossedAges(state.player.age, time.player.age)
+  // 객체 관리 도중에 낀 막간 이벤트면 서술은 관리가 끝난 뒤로 미룬다. 다음 객체로 넘어가는 막간 이벤트 뒤에는 바로 붙는다.
   if (interlude.resume === 'assign') {
-    return withFlow(ctx, assignNext(ctx, next), crossed)
+    return withFlow(ctx, assignNext(ctx, next))
   }
-  return withFlow(ctx, { ...next, phase: 'choosing' }, crossed)
+  return { ...next, phase: 'choosing' }
 }
 
 // ───────────────────────── 내부 도우미 ─────────────────────────
@@ -513,14 +516,18 @@ function appendFlow(state: GameState, entries: readonly LifeLogEntry[]): GameSta
 }
 
 /**
- * 시간이 흐른 전환(또는 보고서를 본 뒤)의 결과 상태에 서술을 붙인다. 판이 끝난 상태에는 붙이지 않는다.
- * @param crossed 이번 전환에서 새로 도달한 정수 나이들
+ * 객체 관리나 막간 이벤트가 끝난 뒤의 상태에 서술을 붙인다. 판이 끝난 상태에는 붙이지 않는다.
+ * 서술을 마지막으로 붙인 나이(`flowAge`) 이후로 해가 바뀐 해 수만큼 일상 서술이 붙고(현재 나이를 단다), 붙인 뒤 `flowAge`를 현재 나이로 갱신한다.
  */
-function withFlow(ctx: GameContext, state: GameState, crossed: readonly number[]): GameState {
+function withFlow(ctx: GameContext, state: GameState): GameState {
   if (state.phase === 'ended') {
     return state
   }
-  return appendFlow(state, pickFlowLines(ctx, state, crossed))
+  const crossed = crossedAges(state.flowAge, state.player.age)
+  const entries = pickFlowLines(ctx, state, crossed)
+  // 이야기 비트가 켜는 플래그를 반영한다 (줄거리의 진행이 막간 이벤트·다른 서술의 조건이 된다)
+  const flags = [...new Set([...state.flags, ...flagsSetBy(ctx, entries)])]
+  return appendFlow({ ...state, flowAge: state.player.age, flags }, entries)
 }
 
 function assignNext(ctx: GameContext, state: GameState): GameState {

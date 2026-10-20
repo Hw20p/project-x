@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { ChoiceOption } from '../../../engine/game'
 import type { ContainmentObject, Stage } from '../../../engine/types'
-import { formatYears } from '../../../game/format'
 import { ChoiceList } from '../ChoiceList'
 import { Eyebrow } from '../Controls'
 import { Narration } from '../Narration'
@@ -62,7 +61,7 @@ export function ChoosingScreen({ object, stage, stageIndex, options, onChoose }:
           <ChoiceList options={options} onChoose={onChoose} />
 
           <p className="text-xs text-ash">
-            이 단계에는 {formatYears(stage.years)}이 걸린다 · 숫자 키로도 고를 수 있다
+            숫자 키로도 고를 수 있다
           </p>
         </div>
       ) : (

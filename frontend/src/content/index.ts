@@ -55,7 +55,7 @@ const errors = [
   ...validateBackgrounds(backgrounds),
   ...validateNpcs(npcs),
   ...validateObjects(objects, endingIds, npcIds),
-  ...validateInterludes(interludes, npcIds, objects),
+  ...validateInterludes(interludes, npcIds, objects, flows),
   ...validateFlows(flows, openings, { backgroundIds, npcIds, objects, interludes }),
 ]
 if (errors.length > 0) {

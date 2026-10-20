@@ -39,8 +39,18 @@ function validateChoice(choice: Choice, where: string, npcIds: ReadonlySet<strin
 }
 
 /** 객체·막간 이벤트의 모든 선택지 결과가 켜는 플래그 */
-function collectSetFlags(objects: readonly ContainmentObject[], interludes: readonly InterludeDef[]): Set<string> {
+function collectSetFlags(
+  objects: readonly ContainmentObject[],
+  interludes: readonly InterludeDef[],
+  flows: readonly FlowDef[] = [],
+): Set<string> {
   const flags = new Set<string>()
+  // 이야기 비트(흐르는 서술)가 켜는 플래그도 포함한다
+  for (const def of flows) {
+    for (const flag of def.setFlags ?? []) {
+      flags.add(flag)
+    }
+  }
   const choices = [
     ...objects.flatMap((object) => object.stages.flatMap((stage) => stage.choices)),
     ...interludes.flatMap((def) => def.choices),
@@ -76,6 +86,21 @@ export function validateObject(
   }
   if (object.stages.length === 0) {
     fail('stages가 비어 있음')
+  }
+  for (const [outcome, text] of Object.entries(object.closing ?? {})) {
+    if (outcome !== 'cleared' && outcome !== 'failed' && outcome !== 'demoted') {
+      fail(`closing의 결말 이름이 올바르지 않음: ${outcome}`)
+    }
+    for (const variant of typeof text === 'string' ? [text] : (text ?? [])) {
+      if (!variant.trim()) {
+        fail(`closing.${outcome}: 텍스트가 비어 있음`)
+      }
+      for (const match of variant.matchAll(/\{(\w+)\}/g)) {
+        if (match[1] !== 'object') {
+          fail(`closing.${outcome}: 알 수 없는 자리표시자 {${match[1]}} (쓸 수 있는 것: object)`)
+        }
+      }
+    }
   }
 
   let totalYears = 0
@@ -165,9 +190,10 @@ export interface FlowRefs {
  */
 export function validateFlows(flows: readonly FlowDef[], openings: readonly OpeningDef[], refs: FlowRefs): string[] {
   const errors: string[] = []
-  const settableFlags = collectSetFlags(refs.objects, refs.interludes)
+  const settableFlags = collectSetFlags(refs.objects, refs.interludes, flows)
   const objectIds = new Set(refs.objects.map((object) => object.id))
   const ids = new Set<string>()
+  const flowIds = new Set(flows.map((def) => def.id))
 
   for (const def of flows) {
     const fail = (message: string) => errors.push(`[서술 ${def.id}] ${message}`)
@@ -197,8 +223,22 @@ export function validateFlows(flows: readonly FlowDef[], openings: readonly Open
     }
 
     const when = def.when
-    if (def.kind === 'beat' && !Object.values(when ?? {}).some((value) => value !== undefined)) {
-      fail('이야기 비트에는 등장 조건(when)이 있어야 함 (없으면 첫 전환에 바로 나옴)')
+    const hasCondition = Object.values(when ?? {}).some((value) => value !== undefined) || def.after !== undefined
+    if (def.kind === 'beat' && !hasCondition) {
+      fail('이야기 비트에는 등장 조건(when 또는 after)이 있어야 함 (없으면 첫 전환에 바로 나옴)')
+    }
+    if (def.after !== undefined) {
+      if (def.after === def.id) {
+        fail('after가 자기 자신을 가리킴')
+      } else if (!flowIds.has(def.after)) {
+        fail(`after가 가리키는 서술이 없음: ${def.after}`)
+      }
+    }
+    if (def.afterYears !== undefined && (def.after === undefined || def.afterYears < 0)) {
+      fail('afterYears는 after와 함께 0 이상으로 써야 함')
+    }
+    if ((def.setFlags ?? []).some((flag) => !flag.trim())) {
+      fail('setFlags에 빈 플래그가 있음')
     }
     for (const flag of [...(when?.flags ?? []), ...(when?.notFlags ?? [])]) {
       if (!settableFlags.has(flag)) {
@@ -312,9 +352,10 @@ export function validateInterludes(
   defs: readonly InterludeDef[],
   npcIds: ReadonlySet<string>,
   objects: readonly ContainmentObject[],
+  flows: readonly FlowDef[] = [],
 ): string[] {
   const errors: string[] = []
-  const settableFlags = collectSetFlags(objects, defs)
+  const settableFlags = collectSetFlags(objects, defs, flows)
   const ids = new Set<string>()
 
   for (const def of defs) {

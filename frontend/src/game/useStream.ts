@@ -28,11 +28,18 @@ function saveSpeed(speed: Speed): void {
   }
 }
 
+/** 선택지를 누른 뒤 내가 고른 문장이 기록에 붙기까지의 짧은 텀 (바로 붙으면 오히려 정신없다) */
+const CHOICE_APPEAR_DELAY_MS = 300
+/** 내가 고른 선택지 줄 다음에 결과가 나오기까지의 짧은 간격 (내가 고른 문장이라 읽을 시간이 필요 없다) */
+const CHOICE_ECHO_DELAY_MS = 450
+
 /** 한 줄을 읽는 데 주는 시간. 긴 문장일수록 오래 머문다. */
 function readingDelay(item: FeedItem): number {
+  if (item.kind === 'choice') {
+    return CHOICE_ECHO_DELAY_MS
+  }
   const chars = Math.min(item.text.length, MAX_READ_CHARS)
-  const extra = item.kind === 'choice' ? 0 : item.kind === 'report' ? 500 : 0
-  return BASE_DELAY_MS + chars * PER_CHAR_MS + extra
+  return BASE_DELAY_MS + chars * PER_CHAR_MS + (item.kind === 'report' ? 500 : 0)
 }
 
 /**
@@ -55,7 +62,14 @@ export function useStream(feed: readonly FeedItem[], initialRevealed: number) {
     if (revealed >= feed.length) {
       return
     }
-    const delay = revealed === 0 ? FIRST_LINE_DELAY_MS : readingDelay(feed[revealed - 1])
+    // 선택지를 고른 직후의 줄(내가 고른 문장)은 앞 줄을 읽던 시간을 기다리지 않고 짧은 텀만 두고 보여 준다.
+    // 클릭에 곧 반응해야 선택이 됐는지 헷갈리지 않는다.
+    const delay =
+      revealed === 0
+        ? FIRST_LINE_DELAY_MS
+        : feed[revealed].kind === 'choice'
+          ? CHOICE_APPEAR_DELAY_MS
+          : readingDelay(feed[revealed - 1])
     const timer = window.setTimeout(() => setRevealed((count) => count + 1), delay / speed)
     return () => window.clearTimeout(timer)
   }, [revealed, feed, speed])

@@ -1,6 +1,6 @@
 // 흐르는 서술을 고르는 규칙. 시간이 흐르는 전환마다 상태에 맞는 서술이 최대 `MAX_FLOW_LINES`줄 골라진다.
 //   1) 이야기 비트: 조건이 맞고 아직 안 나온 것 (한 번만). 우선순위가 높은 것부터, 한 전환에 최대 `MAX_BEATS`개
-//   2) 일상 서술: 해가 바뀐 만큼, 남은 줄 수 안에서 (가장 최근 해부터). 조건이 많이 맞을수록 더 자주 나온다.
+//   2) 일상 서술: 해가 바뀐 만큼, 남은 줄 수 안에서. 현재 나이를 달고 나온다. 조건이 많이 맞을수록 더 자주 나온다.
 //
 // 서술을 고르는 난수는 게임 판정용 난수와 완전히 분리한다: 시드와 시점(나이, 쌓인 기록 수)에서 매번 새로 파생한다.
 // 그래서 서술을 추가하거나 바꿔도 확률 판정과 시뮬레이션 결과는 달라지지 않고, 같은 시드·같은 선택이면 같은 서술이 나온다.
@@ -12,8 +12,8 @@ import type { Rng } from './rng'
 import type { GameState, LifeLogEntry } from './state'
 import type { BackgroundDef, ContainmentObject, FlowDef, InterludeCondition, OpeningDef } from './types'
 
-/** 한 전환에서 보여 줄 최대 줄 수 */
-export const MAX_FLOW_LINES = 3
+/** 한 번에 보여 줄 최대 줄 수 (이야기 비트 + 일상 서술). 서술 구간이 한 번에 이야기를 이을 수 있게 넉넉히 둔다. */
+export const MAX_FLOW_LINES = 4
 /** 그중 이야기 비트의 최대 개수 */
 const MAX_BEATS = 2
 /** 최근에 나온 일상 서술 몇 개를 다시 뽑지 않을지 */
@@ -57,6 +57,23 @@ function specificity(when: InterludeCondition | undefined): number {
   return Object.values(when ?? {}).filter((value) => value !== undefined).length
 }
 
+/**
+ * 이야기 사슬: `after`가 있으면 그 서술이 이미 나왔고, 나온 뒤 `afterYears`년이 지나야 열린다.
+ * (나온 나이는 삶의 기록에 남은 나이로 센다.) `after`가 없으면 항상 열려 있다.
+ */
+function isUnlocked(def: FlowDef, state: GameState): boolean {
+  if (def.after === undefined) {
+    return true
+  }
+  const shown = state.lifeLog.find((entry) => entry.id === def.after)
+  return shown !== undefined && state.player.age - shown.age >= (def.afterYears ?? 0)
+}
+
+/** 이 서술들이 켜는 플래그. 이야기 비트가 줄거리의 진행을 표시해서 막간 이벤트·다른 서술의 조건이 되게 한다. */
+export function flagsSetBy(source: FlowSource, entries: readonly LifeLogEntry[]): string[] {
+  return entries.flatMap((entry) => (source.flows ?? []).find((def) => def.id === entry.id)?.setFlags ?? [])
+}
+
 /** 입사 배경에 맞는 오프닝 장면. 배경이 없으면 빈 배열. */
 export function openingEntries(source: FlowSource, backgroundId: string | null, age: number): LifeLogEntry[] {
   if (backgroundId === null) {
@@ -71,7 +88,8 @@ export function openingEntries(source: FlowSource, backgroundId: string | null, 
 
 /**
  * 이번 전환에서 보여 줄 서술을 고른다.
- * @param crossedAges 이번 전환에서 새로 도달한 정수 나이들. 해가 바뀐 만큼 일상 서술이 붙고, 비어 있으면 비트만 나올 수 있다.
+ * @param crossedAges 마지막 서술 이후 새로 도달한 정수 나이들. 그 개수만큼(최대 줄 수 안에서) 일상 서술이 붙고, 비어 있으면 비트만 나올 수 있다.
+ *   서술에 달리는 나이는 이 해들이 아니라 현재 나이다.
  */
 export function pickFlowLines(source: FlowSource, state: GameState, crossedAges: readonly number[]): LifeLogEntry[] {
   const defs = source.flows ?? []
@@ -79,7 +97,9 @@ export function pickFlowLines(source: FlowSource, state: GameState, crossedAges:
     return []
   }
 
-  const object = state.progress ? source.objects.find((candidate) => candidate.id === state.progress?.objectId) : undefined
+  // 관리 중인 객체. 관리가 끝난 직후(진행 정보가 비어 있을 때)에는 방금 끝낸 객체를 기준으로 삼는다.
+  const objectId = state.progress?.objectId ?? state.history[state.history.length - 1]?.objectId
+  const object = objectId ? source.objects.find((candidate) => candidate.id === objectId) : undefined
   const conditionBase: ConditionContext = { objectId: object?.id, objectTier: object?.tier }
   const backgroundName = (source.backgrounds ?? []).find((candidate) => candidate.id === state.backgroundId)?.name ?? ''
   const currentAge = Math.floor(state.player.age)
@@ -96,7 +116,13 @@ export function pickFlowLines(source: FlowSource, state: GameState, crossedAges:
 
   // 1) 이야기 비트
   const beats = defs
-    .filter((def) => def.kind === 'beat' && !shownIds.has(def.id) && meetsCondition(def.when, state, conditionBase))
+    .filter(
+      (def) =>
+        def.kind === 'beat' &&
+        !shownIds.has(def.id) &&
+        isUnlocked(def, state) &&
+        meetsCondition(def.when, state, conditionBase),
+    )
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
     .slice(0, MAX_BEATS)
   for (const beat of beats) {
@@ -108,9 +134,9 @@ export function pickFlowLines(source: FlowSource, state: GameState, crossedAges:
     })
   }
 
-  // 2) 일상 서술: 해가 바뀐 만큼, 남은 줄 수 안에서 가장 최근 해부터
-  const slots = MAX_FLOW_LINES - entries.length
-  const ages = slots > 0 ? crossedAges.slice(-slots) : []
+  // 2) 일상 서술: 해가 바뀐 해마다 한 줄씩, 남은 줄 수 안에서 가장 최근 해부터.
+  //    객체 관리의 시간은 보고서 뒤 서술 구간에서 흐르므로, 이 해들은 보고서의 나이보다 항상 뒤라서 나이가 거꾸로 가지 않는다.
+  const ages = MAX_FLOW_LINES - entries.length > 0 ? crossedAges.slice(-(MAX_FLOW_LINES - entries.length)) : []
   const recent = new Set(
     state.lifeLog
       .filter((entry) => entry.kind === 'ambient')
@@ -119,7 +145,11 @@ export function pickFlowLines(source: FlowSource, state: GameState, crossedAges:
   )
   for (const age of ages) {
     const candidates = defs.filter(
-      (def) => def.kind === 'ambient' && !recent.has(def.id) && meetsCondition(def.when, state, { ...conditionBase, age }),
+      (def) =>
+        def.kind === 'ambient' &&
+        !recent.has(def.id) &&
+        isUnlocked(def, state) &&
+        meetsCondition(def.when, state, { ...conditionBase, age }),
     )
     if (candidates.length === 0) {
       continue

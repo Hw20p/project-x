@@ -168,6 +168,11 @@ export interface GameState {
   interludeLog: InterludeRecord[]
   /** 마지막 막간 이벤트를 겪은 나이. 다음 이벤트까지의 간격 계산에 쓴다. 시작 나이로 초기화. */
   lastInterludeAge: number
+  /**
+   * 일상 서술을 마지막으로 고른 시점의 나이. 객체 관리 도중에는 서술을 붙이지 않고(관리 서술 사이에 끼지 않게),
+   * 관리가 끝난 뒤(보고서를 본 뒤)와 막간 이벤트가 끝난 뒤에 이 나이 이후로 흐른 해만큼 한꺼번에 붙인다.
+   */
+  flowAge: number
   /** 지금까지 흘러간 서술 (오래된 순). 오프닝과 일상·비트 서술이 모두 들어간다. */
   lifeLog: LifeLogEntry[]
   /**
