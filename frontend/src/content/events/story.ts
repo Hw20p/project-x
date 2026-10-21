@@ -15,6 +15,7 @@ export default [
       {
         id: 'read-back',
         text: '사원증 뒷면에 적힌 글을 읽는다',
+        story: '사원증을 뒤집어 책상 등불 아래로 가져갔다. 눈을 가늘게 뜨고 뒷면을 읽기 시작했다.',
         risk: 3,
         baseChance: 0.6,
         statWeights: { knowledge: 0.004 },
@@ -31,6 +32,7 @@ export default [
       {
         id: 'put-back',
         text: '서랍에 도로 넣고 닫는다',
+        story: '사원증을 서랍 안쪽 모서리까지 밀어 넣었다. 손잡이를 잡은 채 한 번 더 숨을 골랐다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -46,6 +48,7 @@ export default [
       {
         id: 'ask-senior',
         text: '선임에게 전임자가 누구였는지 묻는다',
+        story: '퇴근 무렵 선임의 책상 앞에 서서 사원증을 내밀었다. 목소리를 낮춰 전임자의 이름을 물었다.',
         risk: 2,
         baseChance: 0.7,
         statWeights: { reputation: 0.003 },
@@ -73,6 +76,7 @@ export default [
       {
         id: 'look-down',
         text: '계단참에서 아래만 내려다본다',
+        story: '난간에 손을 얹고 계단참에서 멈춰 섰다. 아래쪽 어둠에 눈이 익기를 기다렸다.',
         risk: 2,
         baseChance: 0.7,
         statWeights: { sanity: 0.003 },
@@ -89,6 +93,7 @@ export default [
       {
         id: 'descend',
         text: '한 층만 내려가 본다',
+        story: '계단 수를 세며 한 걸음씩 내려갔다. 손은 벽을 짚은 채 떼지 않았다.',
         risk: 4,
         baseChance: 0.35,
         statWeights: { sanity: 0.005, knowledge: 0.003 },
@@ -105,6 +110,7 @@ export default [
       {
         id: 'report-floor',
         text: '층의 존재를 보고서에 적는다',
+        story: '책상에 앉아 보고서 양식을 꺼냈다. 층의 위치와 계단 수를 한 줄씩 적어 넣었다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { reputation: 0.004 },
@@ -132,6 +138,7 @@ export default [
       {
         id: 'write-nothing',
         text: '아무것도 적지 않고 덮는다',
+        story: '펜 뚜껑을 열지도 닫지도 않은 채 마지막 장을 한참 내려다보았다. 천천히 일지를 덮었다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -147,6 +154,7 @@ export default [
       {
         id: 'write-name',
         text: '오늘 날짜 아래에 내 이름을 쓴다',
+        story: '펜을 집어 들고 오늘 날짜 바로 아래에 펜촉을 댔다. 한 글자씩 천천히 내 이름을 썼다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.004, knowledge: 0.003 },
@@ -163,6 +171,7 @@ export default [
       {
         id: 'copy-pages',
         text: '일지 전체를 복사해 보관한다',
+        story: '일지를 겨드랑이에 끼고 복사실로 갔다. 한 장씩 유리판 위에 펼쳐 놓았다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { knowledge: 0.004 },
@@ -190,6 +199,7 @@ export default [
       {
         id: 'wait-lamp',
         text: '불이 꺼질 때까지 기다린다',
+        story: '문 앞 벽에 등을 대고 섰다. 센서등 불빛 아래서 시계를 보지 않고 기다렸다.',
         risk: 1,
         baseChance: 0.8,
         statWeights: { sanity: 0.003 },
@@ -206,6 +216,7 @@ export default [
       {
         id: 'step-on-print',
         text: '발자국 위에 발을 올려 본다',
+        story: '발자국 앞에 신발을 나란히 놓고 숨을 골랐다. 천천히 한 발을 올렸다.',
         risk: 4,
         baseChance: 0.35,
         statWeights: { sanity: 0.005, knowledge: 0.003 },
@@ -222,6 +233,7 @@ export default [
       {
         id: 'cover-lamp',
         text: '센서등을 가린다',
+        story: '주머니에서 손수건을 꺼내 센서등 쪽으로 팔을 뻗었다. 발끝을 세우고 한 번 더 뻗었다.',
         risk: 2,
         baseChance: 0.65,
         success: {

@@ -1,6 +1,7 @@
 // 줄거리 스트림에 쌓이는 항목(feed)과, 엔진 상태 전이를 항목으로 바꾸는 함수.
 // 선택의 결과·객체 보고서·시간이 흘러간 서술은 팝업이 아니라 이 스트림으로 보여 준다.
 import { pickClosing } from '../content/closings'
+import { pickIntro } from '../content/intros'
 import { RANK_LABELS } from '../engine/config'
 import { findInterlude, findObject } from '../engine/game'
 import type { GameContext } from '../engine/game'
@@ -250,8 +251,26 @@ export function describeTransition(
         notes,
       })
     }
+  } else if (
+    next.phase === 'choosing' &&
+    prev?.phase === 'outcome' &&
+    next.progress &&
+    prev.progress &&
+    next.progress.stageIndex > prev.progress.stageIndex
+  ) {
+    // 다음 단계로 넘어올 때: 앞 단계의 결과에서 새 단계의 상황으로 이어 주는 연결 해설 (선택 팝업이 뜨기 전에 스트림에 흐른다)
+    const stage = findObject(ctx, next.progress.objectId).stages[next.progress.stageIndex]
+    const lead = prev.lastResult?.success === false ? (stage.leadAfterFailure ?? stage.lead) : stage.lead
+    if (lead) {
+      drafts.push(...toParagraphs(lead).map((text) => ({ age, kind: 'story' as const, text })))
+    }
   } else if (next.phase === 'briefing' && next.progress && prev?.phase !== 'briefing') {
     const object = findObject(ctx, next.progress.objectId)
+    // 어떤 계기로 이 객체를 맡게 되었는지: 배정 안내 바로 앞에 한두 문장 (재배정이면 기본 문구)
+    const intro = pickIntro(object, next.progress.reassigned, next.seed, next.history.length)
+    if (intro) {
+      drafts.push(...toParagraphs(intro).map((text) => ({ age, kind: 'story' as const, text })))
+    }
     drafts.push({
       age,
       kind: 'assign',

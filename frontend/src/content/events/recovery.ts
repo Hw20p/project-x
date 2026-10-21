@@ -12,6 +12,7 @@ export default [
       {
         id: 'sea',
         text: '바닷가로 간다',
+        story: '기차를 갈아타며 바다 쪽으로 향했다. 사원증은 가방 가장 깊은 곳에 넣어 두었다.',
         risk: 1,
         baseChance: 0.92,
         statWeights: { health: 0.002 },
@@ -28,6 +29,7 @@ export default [
       {
         id: 'home',
         text: '집에서 아무것도 하지 않는다',
+        story: '전화기를 끄고 커튼을 쳤다. 일정표에 적힌 것은 한 줄도 없었다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -43,6 +45,7 @@ export default [
       {
         id: 'work-trip',
         text: '쉬는 척하며 자료를 챙겨 간다',
+        story: '가방 한쪽에 자료철을 슬쩍 밀어 넣었다. 쉬러 가는 것이라고 스스로에게 두 번 말했다.',
         risk: 2,
         baseChance: 0.7,
         statWeights: { knowledge: 0.003 },
@@ -68,6 +71,7 @@ export default [
       {
         id: 'open-up',
         text: '있는 그대로 털어놓는다',
+        story: '상담실 의자에 앉아 숨을 한 번 고르고 입을 열었다. 어디까지 말해도 되는지는 따지지 않기로 했다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { sanity: 0.003, reputation: 0.002 },
@@ -84,6 +88,7 @@ export default [
       {
         id: 'formal',
         text: '형식적으로 답하고 나온다',
+        story: '질문마다 준비해 둔 답을 꺼냈다. 시계를 몇 번 흘끗거리며 시간을 채웠다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -108,6 +113,7 @@ export default [
       {
         id: 'around-block',
         text: '건물 주변만 한 바퀴 돈다',
+        story: '사원증을 고쳐 매고 건물 담을 따라 걷기 시작했다. 가로등 간격을 마음속으로 세었다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -123,6 +129,7 @@ export default [
       {
         id: 'far',
         text: '멀리까지 걸어간다',
+        story: '출입구를 지나 큰길 쪽으로 방향을 틀었다. 돌아갈 시각은 정하지 않았다.',
         risk: 2,
         baseChance: 0.68,
         statWeights: { health: 0.003, sanity: 0.002 },
@@ -149,6 +156,7 @@ export default [
       {
         id: 'stay-long',
         text: '오래 머물며 식사를 함께 한다',
+        story: '짐을 풀고 소매를 걷어 부엌일을 거들었다. 휴대전화는 서랍 안에 넣어 두었다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -164,6 +172,7 @@ export default [
       {
         id: 'short',
         text: '잠깐 얼굴만 비추고 돌아온다',
+        story: '현관에서 신발도 다 벗지 않고 안부를 건넸다. 시계를 보는 일은 가족도 모른 척해 주었다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -188,6 +197,7 @@ export default [
       {
         id: 'clinic',
         text: '사내 수면 클리닉에 간다',
+        story: '수면 클리닉 접수대에서 이름과 사번을 적었다. 이마에 붙인 전극이 차가웠다.',
         risk: 1,
         baseChance: 0.88,
         success: {
@@ -203,6 +213,7 @@ export default [
       {
         id: 'dream-journal',
         text: '꿈 일지를 쓰며 단어를 기록한다',
+        story: '머리맡에 노트와 펜을 놓고 잤다. 깨자마자 입속에 맴도는 단어를 받아 적었다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { knowledge: 0.004, sanity: 0.004 },
@@ -228,6 +239,7 @@ export default [
       {
         id: 'water-plants',
         text: '화단에 물을 준다',
+        story: '주전자를 들고 옥상 수도로 향했다. 마른 흙이 보이는 화단 앞에 쭈그려 앉았다.',
         risk: 1,
         baseChance: 0.92,
         success: {
@@ -243,6 +255,7 @@ export default [
       {
         id: 'look-sky',
         text: '난간에 기대어 하늘을 본다',
+        story: '난간 앞에 서서 팔꿈치를 걸쳤다. 점심시간이 끝나는 종은 못 들은 척했다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -258,6 +271,7 @@ export default [
       {
         id: 'count-windows',
         text: '건물 창문의 수를 세어 본다',
+        story: '난간에 기대어 본관의 창을 한 줄씩 세기 시작했다. 손가락을 접으며 숫자를 입속으로 굴렸다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { knowledge: 0.004, sanity: 0.003 },
@@ -284,6 +298,7 @@ export default [
       {
         id: 'listen',
         text: '끝까지 듣는다',
+        story: '휴게실 의자를 끌어당겨 라디오 앞에 앉았다. 노래가 끝날 때까지 자리를 뜨지 않기로 했다.',
         risk: 2,
         baseChance: 0.75,
         statWeights: { sanity: 0.003 },
@@ -300,6 +315,7 @@ export default [
       {
         id: 'tune',
         text: '주파수를 돌려 본다',
+        story: '손끝으로 다이얼을 천천히 돌렸다. 잡음이 갈라지는 틈마다 귀를 가까이 댔다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { knowledge: 0.004 },
@@ -316,6 +332,7 @@ export default [
       {
         id: 'unplug',
         text: '코드를 뽑는다',
+        story: '라디오 뒤로 손을 뻗어 코드를 더듬었다. 전원 표시등은 여전히 꺼져 있었다.',
         risk: 1,
         baseChance: 0.88,
         success: {
@@ -340,6 +357,7 @@ export default [
       {
         id: 'eat-together',
         text: '남은 밥을 함께 먹는다',
+        story: '조리사 맞은편 의자를 빼 앉았다. 수저를 건네받으며 말없이 고개를 숙였다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -355,6 +373,7 @@ export default [
       {
         id: 'take-away',
         text: '도시락으로 싸서 숙소로 가져간다',
+        story: '빈 도시락통에 밥과 국을 나누어 담았다. 조리사가 뚜껑을 닫아 주었다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -370,6 +389,7 @@ export default [
       {
         id: 'ask-cook',
         text: '조리사에게 이 건물에서 일한 이야기를 묻는다',
+        story: '숟가락을 내려놓고 이 건물에서 얼마나 일했는지 물었다. 조리사가 행주를 접던 손을 멈췄다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { reputation: 0.003 },

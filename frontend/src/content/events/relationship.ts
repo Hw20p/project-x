@@ -16,6 +16,7 @@ export default [
       {
         id: 'join',
         text: '같이 가서 컵라면을 먹는다',
+        story: '서지안 옆에서 편의점 자동문을 밀었다. 컵라면 두 개를 골라 뜨거운 물을 부었다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -35,6 +36,7 @@ export default [
       {
         id: 'confide',
         text: '요즘 일이 얼마나 힘든지 털어놓는다',
+        story: '라면이 익는 동안 말을 고르다가 입을 열었다. 요즘 얼마나 힘든지 하나씩 풀어놓기 시작했다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { sanity: 0.003 },
@@ -55,6 +57,7 @@ export default [
       {
         id: 'decline',
         text: '피곤하다며 먼저 간다',
+        story: '피곤하다며 가방끈을 고쳐 멨다. 서지안이 건네는 인사에 손만 들어 보이고 돌아섰다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -86,6 +89,7 @@ export default [
       {
         id: 'cover',
         text: '보고서를 대신 마무리하고 병문안을 간다',
+        story: '서지안의 책상에 펼쳐진 보고서를 집어 들었다. 밤늦도록 자료를 맞추고 이튿날 병원으로 향했다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { health: 0.002, reputation: 0.002 },
@@ -104,6 +108,7 @@ export default [
       {
         id: 'message',
         text: '안부 메시지만 남기고 일에 집중한다',
+        story: '메신저 창에 안부를 몇 줄 적어 보냈다. 보낸 뒤에는 다시 내 보고서로 돌아왔다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -120,6 +125,7 @@ export default [
       {
         id: 'ignore',
         text: '내 일이 우선이다',
+        story: '빈 책상 쪽으로 눈길을 주지 않으려 했다. 내 일의 마감부터 조용히 처리해 나갔다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -149,6 +155,7 @@ export default [
       {
         id: 'persuade',
         text: '남아 달라고 설득한다',
+        story: '봉투를 쥔 서지안의 손을 바라보며 천천히 입을 열었다. 남아야 하는 이유를 하나씩 꺼냈다.',
         risk: 2,
         baseChance: 0.55,
         statWeights: { reputation: 0.003, sanity: 0.003 },
@@ -169,6 +176,7 @@ export default [
       {
         id: 'let-go',
         text: '말없이 사직서를 받아 준다',
+        story: '말없이 손을 내밀어 봉투를 받았다. 서지안이 고개를 끄덕일 때까지 아무 말도 하지 않았다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -188,6 +196,7 @@ export default [
       {
         id: 'recommend-transfer',
         text: '부서 이동을 주선한다',
+        story: '그날 밤 인사팀 양식을 꺼내 이동 요청서를 썼다. 팀장실 문 앞에서 한참 서성이다 노크했다.',
         risk: 3,
         baseChance: 0.45,
         statWeights: { reputation: 0.005 },
@@ -221,6 +230,7 @@ export default [
       {
         id: 'frank',
         text: '솔직하게 어려운 점을 말한다',
+        story: '회의실 의자에 등을 붙이고 앉았다. 숨을 고른 뒤 어려운 점을 하나씩 솔직하게 말하기 시작했다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { reputation: 0.003 },
@@ -241,6 +251,7 @@ export default [
       {
         id: 'report-only',
         text: '기록에 있는 내용만 보고한다',
+        story: '펼쳐진 관리 기록에서 눈을 떼지 않았다. 적혀 있는 내용만 순서대로 짚어 보고했다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -272,6 +283,7 @@ export default [
       {
         id: 'own-up',
         text: '책임을 인정하고 보고서를 쓴다',
+        story: '밤새 보고서를 다시 고쳐 썼다. 회의실에서 한 장씩 앞으로 밀어 팀장 앞에 놓았다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { reputation: 0.003 },
@@ -290,6 +302,7 @@ export default [
       {
         id: 'defend',
         text: '규정을 근거로 판단이 옳았다고 주장한다',
+        story: '규정집을 펼쳐 조항에 손가락을 짚었다. 판단의 근거를 순서대로 읽어 내려갔다.',
         risk: 3,
         baseChance: 0.45,
         statWeights: { knowledge: 0.004 },
@@ -322,6 +335,7 @@ export default [
       {
         id: 'ask',
         text: '궁금하다고 솔직히 묻는다',
+        story: '매뉴얼의 지워진 줄을 손가락으로 짚으며 입을 열었다. 누가 지웠는지 정말 궁금하다고 말했다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { knowledge: 0.003 },
@@ -342,6 +356,7 @@ export default [
       {
         id: 'avoid',
         text: '규정대로 하겠다며 넘어간다',
+        story: '매뉴얼을 덮고 어깨를 조금 폈다. 규정대로 하겠다며 다음 장으로 넘어갔다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -372,6 +387,7 @@ export default [
       {
         id: 'read',
         text: '노트를 읽는다',
+        story: '노트를 끌어당겨 첫 장을 펼쳤다. 손바닥이 먼저 식은땀에 젖었다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.004, knowledge: 0.003 },
@@ -391,6 +407,7 @@ export default [
       {
         id: 'decline',
         text: '읽지 않겠다고 정중히 거절한다',
+        story: '노트에 손을 얹지 않고 의자를 뒤로 물렸다. 정중한 거절의 말을 고르느라 입술을 축였다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -421,6 +438,7 @@ export default [
       {
         id: 'accept-both',
         text: '팀을 맡겠다고 하고 보고서도 고친다',
+        story: '인사 개편 서류와 보고서를 한꺼번에 받아 들었다. 밤이 깊도록 서류를 한 장씩 고쳐 나갔다.',
         risk: 3,
         baseChance: 0.55,
         statWeights: { reputation: 0.003 },
@@ -441,6 +459,7 @@ export default [
       {
         id: 'team-only',
         text: '팀은 맡되 보고서는 그대로 두겠다고 한다',
+        story: '팀 개편 서류에만 서명했다. 보고서는 그대로 두겠다는 말을 천천히 꺼냈다.',
         risk: 2,
         baseChance: 0.7,
         success: {
@@ -460,6 +479,7 @@ export default [
       {
         id: 'refuse',
         text: '둘 다 정중히 거절한다',
+        story: '서류를 책상 위로 도로 밀어 놓았다. 거절의 이유를 정리하며 고개를 들었다.',
         risk: 1,
         baseChance: 0.8,
         success: {
@@ -491,6 +511,7 @@ export default [
       {
         id: 'listen',
         text: '끝까지 듣는다',
+        story: '의자를 끌어당겨 선임 앞에 앉았다. 숨을 죽이고 이름이 나오기를 기다렸다.',
         risk: 3,
         baseChance: 0.55,
         statWeights: { sanity: 0.003, knowledge: 0.003 },
@@ -510,6 +531,7 @@ export default [
       {
         id: 'decline-hear',
         text: '듣지 않겠다고 한다',
+        story: '두 손을 무릎에 올린 채 고개를 저었다. 듣지 않겠다는 말을 천천히 꺼냈다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -527,6 +549,7 @@ export default [
       {
         id: 'check-record',
         text: '먼저 인사 기록을 확인해 보겠다고 한다',
+        story: '인사 기록 열람 신청서를 꺼냈다. 이름을 듣기 전에 기록부터 확인하겠다고 말했다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { reputation: 0.003, knowledge: 0.003 },
@@ -557,6 +580,7 @@ export default [
       {
         id: 'congratulate',
         text: '진심으로 축하한다',
+        story: '서지안이 내민 사원증을 두 손으로 받아 들었다. 새 직급이 인쇄된 줄을 바라보며 웃음을 고쳐 지었다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -574,6 +598,7 @@ export default [
       {
         id: 'be-honest',
         text: '부럽다고 솔직하게 말한다',
+        story: '컵을 내려놓고 서지안을 똑바로 바라보았다. 부러운 마음을 숨기지 않고 입 밖으로 꺼냈다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { sanity: 0.003 },
@@ -592,6 +617,7 @@ export default [
       {
         id: 'change-subject',
         text: '화제를 돌려 일 이야기를 한다',
+        story: '사원증에서 눈을 돌려 책상 위 서류를 집었다. 일 이야기로 말머리를 돌렸다.',
         risk: 1,
         baseChance: 0.8,
         success: {
@@ -621,6 +647,7 @@ export default [
       {
         id: 'read-now',
         text: '곧바로 읽는다',
+        story: '우편함 앞에 선 채 봉투를 뜯었다. 접힌 편지지를 펴는 손이 조금 떨렸다.',
         risk: 2,
         baseChance: 0.7,
         statWeights: { sanity: 0.003 },
@@ -639,6 +666,7 @@ export default [
       {
         id: 'reply',
         text: '답장을 쓴다',
+        story: '책상에 앉아 편지지를 꺼냈다. 첫 줄을 쓰고 지우기를 몇 번 되풀이했다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003 },
@@ -657,6 +685,7 @@ export default [
       {
         id: 'keep-unopened',
         text: '열지 않고 서랍에 넣는다',
+        story: '봉투를 뜯지 않은 채 서랍을 열었다. 겉봉의 필체를 한 번 쓸어 보고 안쪽 깊이 밀어 넣었다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -688,6 +717,7 @@ export default [
       {
         id: 'share',
         text: '우산 안으로 들어간다',
+        story: '서지안이 기울여 준 우산 안으로 한 걸음 들어갔다. 어깨가 닿지 않게 하려다 오히려 가까워졌다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -706,6 +736,7 @@ export default [
       {
         id: 'ask',
         text: '요즘 무슨 생각을 하는지 슬쩍 물어본다',
+        story: '빗소리 사이로 말을 골라 요즘 무슨 생각을 하는지 물었다. 서지안이 걸음을 늦췄다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { sanity: 0.003 },
@@ -725,6 +756,7 @@ export default [
       {
         id: 'run',
         text: '괜찮다며 비를 맞고 뛰어간다',
+        story: '괜찮다며 가방을 머리 위로 들었다. 현관을 박차고 빗속으로 달려 나갔다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -759,6 +791,7 @@ export default [
       {
         id: 'confess',
         text: '먼저 마음을 말한다',
+        story: '가로등 아래 멈춰 서서 숨을 들이쉬었다. 하고 싶었던 말을 더는 미루지 않기로 했다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003 },
@@ -779,6 +812,7 @@ export default [
       {
         id: 'wait',
         text: '서지안이 말하기를 기다린다',
+        story: '서지안의 걸음에 맞추어 말없이 서 있었다. 먼저 입을 열 때까지 기다렸다.',
         risk: 2,
         baseChance: 0.65,
         success: {
@@ -798,6 +832,7 @@ export default [
       {
         id: 'stay-friends',
         text: '지금 이대로가 좋다고 말한다',
+        story: '서지안이 입을 열기 전에 먼저 웃으며 말했다. 지금 이대로가 좋다고.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -829,6 +864,7 @@ export default [
       {
         id: 'take-leave',
         text: '일을 미루고 연차를 같이 쓴다',
+        story: '결재란에 연차 신청서를 올리고 서랍 속 서류를 정리했다. 서지안과 약속한 날의 아침이 밝았다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { reputation: 0.003 },
@@ -847,6 +883,7 @@ export default [
       {
         id: 'share-secret',
         text: '서지안에게 객체 이야기를 털어놓는다',
+        story: '서지안 옆에 앉아 입을 열었다. 말해서는 안 되는 이야기부터 조용히 꺼냈다.',
         risk: 4,
         baseChance: 0.4,
         statWeights: { sanity: 0.003 },
@@ -866,6 +903,7 @@ export default [
       {
         id: 'work-first',
         text: '이번에는 일을 우선하겠다고 한다',
+        story: '연차 신청서를 서랍에 도로 넣고 서지안에게 말했다. 이번에는 일을 먼저 하겠다고.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -897,6 +935,7 @@ export default [
       {
         id: 'read-together',
         text: '기록을 같이 소리 내어 읽는다',
+        story: '보온병을 받아 들고 선임 옆에 앉았다. 기록의 첫 줄을 소리 내어 읽기 시작했다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { sanity: 0.003 },
@@ -916,6 +955,7 @@ export default [
       {
         id: 'ask-about',
         text: '선임 자신의 이야기를 물어본다',
+        story: '보온병의 김이 가라앉기를 기다렸다. 기록이 아니라 선임 자신의 이야기를 물어보았다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003 },
@@ -935,6 +975,7 @@ export default [
       {
         id: 'tea-only',
         text: '말없이 차만 마시고 먼저 나온다',
+        story: '말없이 보온병을 받아 따뜻한 차만 마셨다. 빈 잔을 내려놓고 일어서 문 쪽으로 걸었다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -970,6 +1011,7 @@ export default [
       {
         id: 'memorize-together',
         text: '괜찮다고 하고 함께 외운다',
+        story: '선임 옆에 바싹 붙어 앉아 종이를 마주 보았다. 한 줄씩 소리 내어 같이 외우기 시작했다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003, knowledge: 0.002 },
@@ -990,6 +1032,7 @@ export default [
       {
         id: 'carry-alone',
         text: '대신 내가 혼자 외우겠다고 한다',
+        story: '선임의 손에서 종이를 가만히 받아 들었다. 혼자 외우겠다고 말하고 첫 줄을 펼쳤다.',
         risk: 4,
         baseChance: 0.4,
         statWeights: { sanity: 0.004 },
@@ -1010,6 +1053,7 @@ export default [
       {
         id: 'not-yet',
         text: '아직은 같이 질 수 없다고 말한다',
+        story: '종이에 손을 내밀지 않고 고개를 저었다. 아직은 같이 질 수 없다고 낮게 말했다.',
         risk: 1,
         baseChance: 0.9,
         success: {
@@ -1041,6 +1085,7 @@ export default [
       {
         id: 'write-name',
         text: '이름을 적는다',
+        story: '선임이 내민 펜을 받아 마지막 장 앞에 앉았다. 천천히 내 이름의 첫 글자를 썼다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003 },
@@ -1060,6 +1105,7 @@ export default [
       {
         id: 'date-only',
         text: '이름 대신 날짜만 적는다',
+        story: '펜 끝을 종이 위에서 한참 멈추었다. 이름 대신 오늘 날짜를 또박또박 적었다.',
         risk: 2,
         baseChance: 0.7,
         success: {
@@ -1077,6 +1123,7 @@ export default [
       {
         id: 'rest-together',
         text: '기록을 덮고 같이 쉬자고 한다',
+        story: '펜을 내려놓고 기록을 덮었다. 선임에게 오늘은 같이 쉬자고 말했다.',
         risk: 1,
         baseChance: 0.85,
         success: {

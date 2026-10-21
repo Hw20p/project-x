@@ -228,6 +228,14 @@ export interface Stage {
    */
   years: number
   text: string
+  /**
+   * 이 단계가 시작될 때 줄거리 스트림에 먼저 흐르는 "연결 해설": 앞 단계의 결과에서 이 단계의 상황으로 넘어오는 한두 문장.
+   * 첫 단계에는 쓸 수 없다 (첫 단계는 객체 배정과 브리핑이 이어 준다). 앞 단계가 성공했을 때 쓰고,
+   * 실패(setback)로 끝났다면 `leadAfterFailure`가 있을 때 그것을 쓴다. 없으면 이 문장을 그대로 쓴다.
+   */
+  lead?: string
+  /** 앞 단계가 실패(setback)로 끝나 이 단계로 넘어올 때 `lead` 대신 쓰는 연결 해설 */
+  leadAfterFailure?: string
   choices: Choice[]
 }
 
@@ -242,6 +250,11 @@ export type ObjectClosing = Partial<Record<ClosingOutcome, string | string[]>>
 
 export interface ContainmentObject {
   id: string
+  /**
+   * 객체를 처음 맡게 된 계기: 객체 배정 안내 바로 앞에 줄거리 스트림에 흐르는 한두 문장 (왜 내가 이 객체를 맡게 되었는지).
+   * 재배정(이미 관리해 본 객체를 다시 맡는 경우)에는 쓰지 않고 `content/intros.ts`의 기본 문구를 쓴다. 없으면 아무것도 흐르지 않는다.
+   */
+  intro?: string
   /** 표시용 관리 번호. 정렬 기준이기도 함. */
   code: string
   name: string

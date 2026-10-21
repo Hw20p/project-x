@@ -92,6 +92,9 @@ export function validateObject(
   if (object.stages.length === 0) {
     fail('stages가 비어 있음')
   }
+  if (object.intro !== undefined && !object.intro.trim()) {
+    fail('intro(객체를 맡게 된 계기)가 비어 있음')
+  }
   for (const [outcome, text] of Object.entries(object.closing ?? {})) {
     if (outcome !== 'cleared' && outcome !== 'failed' && outcome !== 'demoted') {
       fail(`closing의 결말 이름이 올바르지 않음: ${outcome}`)
@@ -121,6 +124,22 @@ export function validateObject(
       fail(`${stage.id}: years는 1 이상의 정수여야 함 (${stage.years})`)
     }
     totalYears += stage.years
+
+    // 연결 해설: 첫 단계에는 이어 줄 앞 단계가 없다. 쓴다면 비어 있으면 안 되고, 실패용은 성공용(기본 문장)과 함께 쓴다.
+    for (const [field, value] of [['lead', stage.lead], ['leadAfterFailure', stage.leadAfterFailure]] as const) {
+      if (value === undefined) {
+        continue
+      }
+      if (stageIndex === 0) {
+        fail(`${stage.id}: 첫 단계에는 ${field}를 쓸 수 없음 (앞 단계가 없음)`)
+      }
+      if (!value.trim()) {
+        fail(`${stage.id}: ${field}가 비어 있음`)
+      }
+    }
+    if (stage.leadAfterFailure !== undefined && stage.lead === undefined) {
+      fail(`${stage.id}: leadAfterFailure만 있고 lead가 없음 (앞 단계가 성공했을 때 쓸 문장도 필요)`)
+    }
 
     if (stage.choices.length < 2) {
       fail(`${stage.id}: 선택지가 2개 미만`)

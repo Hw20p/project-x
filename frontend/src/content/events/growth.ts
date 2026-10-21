@@ -12,6 +12,7 @@ export default [
       {
         id: 'diligent',
         text: '성실하게 전 과정을 수강한다',
+        story: '매주 이틀을 비우고 강의실 맨 앞줄에 앉았다. 필기장은 반년 만에 두 권이 되었다.',
         risk: 1,
         baseChance: 0.9,
         statWeights: { knowledge: 0.002 },
@@ -28,6 +29,7 @@ export default [
       {
         id: 'practical',
         text: '실습 위주로 파고든다',
+        story: '이론 시간은 건너뛰고 실습실 열쇠부터 받았다. 장갑을 낀 채 모형 앞에 오래 서 있었다.',
         risk: 2,
         baseChance: 0.65,
         statWeights: { knowledge: 0.004, health: 0.002 },
@@ -54,6 +56,7 @@ export default [
       {
         id: 'read-index',
         text: '목차와 색인만 훑어본다',
+        story: '서고 입구에서 목차 책자만 집어 들었다. 색인 쪽수를 엄지로 넘기며 훑었다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -69,6 +72,7 @@ export default [
       {
         id: 'read-deep',
         text: '가장 안쪽 서가의 기록을 정독한다',
+        story: '가장 안쪽 서가 앞에서 먼지를 털고 첫 권을 꺼냈다. 의자를 끌어와 불을 하나 더 켰다.',
         risk: 3,
         baseChance: 0.45,
         statWeights: { sanity: 0.004, knowledge: 0.003 },
@@ -94,6 +98,7 @@ export default [
       {
         id: 'routine',
         text: '매일 같은 시간에 가볍게 운동한다',
+        story: '이용권을 들고 이른 아침 체육관에 갔다. 러닝머신 속도를 가장 낮게 맞추었다.',
         risk: 1,
         baseChance: 0.9,
         statWeights: { health: 0.002 },
@@ -110,6 +115,7 @@ export default [
       {
         id: 'hard',
         text: '한계까지 몰아붙이는 훈련을 받는다',
+        story: '트레이너에게 가장 힘든 과정으로 부탁했다. 첫날부터 숨이 목까지 차올랐다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { health: 0.004 },
@@ -136,6 +142,7 @@ export default [
       {
         id: 'volunteer',
         text: '자원해서 발표를 맡는다',
+        story: '손을 들자 회의실이 조용해졌다. 자료를 다시 정리하며 발표 순서를 입속으로 외웠다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { reputation: 0.003, knowledge: 0.003 },
@@ -152,6 +159,7 @@ export default [
       {
         id: 'listen',
         text: '청중으로 앉아 필기만 한다',
+        story: '맨 뒷자리에 앉아 필기장을 펼쳤다. 발표자의 말을 한 줄도 놓치지 않으려 했다.',
         risk: 1,
         baseChance: 0.95,
         success: {
@@ -177,6 +185,7 @@ export default [
       {
         id: 'observe',
         text: '옆에서 관찰만 한다',
+        story: '시찰단 뒤로 한 걸음 물러나 따라 걸었다. 수첩에 본 것만 짧게 적었다.',
         risk: 1,
         baseChance: 0.85,
         statWeights: { knowledge: 0.003 },
@@ -193,6 +202,7 @@ export default [
       {
         id: 'assist',
         text: '보조로 직접 나선다',
+        story: '장갑을 끼고 시찰단 옆에 붙어 섰다. 설비를 건넬 때마다 손끝이 먼저 움직였다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { health: 0.003, sanity: 0.003 },
@@ -209,6 +219,7 @@ export default [
       {
         id: 'lead',
         text: '선임이 비운 자리를 대신 맡는다',
+        story: '선임의 안내 서류를 건네받아 앞에 섰다. 첫 문장을 입속으로 한 번 더 연습했다.',
         risk: 4,
         baseChance: 0.35,
         statWeights: { reputation: 0.004, sanity: 0.004 },
@@ -235,6 +246,7 @@ export default [
       {
         id: 'teach-slow',
         text: '하나씩 천천히 가르친다',
+        story: '후임 옆자리에 의자를 당겨 앉았다. 매뉴얼의 첫 장부터 한 줄씩 짚어 가며 설명했다.',
         risk: 1,
         baseChance: 0.85,
         success: {
@@ -250,6 +262,7 @@ export default [
       {
         id: 'hands-off',
         text: '스스로 해 보라고 맡긴다',
+        story: '후임에게 첫 객체 서류를 통째로 넘겼다. 곁에서 한 걸음 떨어져 팔짱을 꼈다.',
         risk: 2,
         baseChance: 0.6,
         statWeights: { reputation: 0.003 },
@@ -266,6 +279,7 @@ export default [
       {
         id: 'tell-truth',
         text: '지워진 매뉴얼 줄이 있다는 사실까지 말해 준다',
+        story: '사람이 드문 복도로 후임을 불러냈다. 매뉴얼을 펼쳐 지워진 줄을 손가락으로 짚어 주었다.',
         risk: 3,
         baseChance: 0.5,
         statWeights: { sanity: 0.003, knowledge: 0.003 },
