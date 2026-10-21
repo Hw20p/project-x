@@ -351,7 +351,7 @@ export function EndingGuidePage() {
 
       <Section title={`조건부 선택지 (숨은 길, ${hiddenChoices.length}개)`}>
         <p className="text-sm text-fog">
-          조건을 채워야 선택지 목록에 나타나는 선택지다(못 채우면 아예 안 보인다). 나타나면 테두리가 하늘색으로 밝아진다. 객체 단계와 막간 이벤트에 있다.
+          조건을 채워야 선택지 목록에 나타나는 선택지다(못 채우면 아예 안 보인다). 나타나면 번호 아래에 옅은 ◆ 표식이 붙는다. 객체 단계와 막간 이벤트에 있다.
         </p>
         <ul className="grid gap-2">
           {hiddenChoices.map((item) => (
