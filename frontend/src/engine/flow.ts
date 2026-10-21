@@ -10,7 +10,7 @@ import type { ConditionContext } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import type { GameState, LifeLogEntry } from './state'
-import type { BackgroundDef, ContainmentObject, FlowDef, InterludeCondition, OpeningDef } from './types'
+import type { Act, BackgroundDef, ContainmentObject, FlowDef, InterludeCondition, OpeningDef } from './types'
 
 /** 한 해에 나오는 일상 서술의 줄 수 범위 (80억분의 1처럼 한 해에 여러 줄). 한 판의 플레이 시간을 정하는 값이다. */
 export const AMBIENT_PER_YEAR = { min: 1, max: 2 } as const
@@ -22,6 +22,17 @@ const RECENT_OBJECT_YEARS = 2
 const RECENT_AMBIENT_WINDOW = 30
 /** 조건이 하나 붙을 때마다 일상 서술의 가중치에 더해지는 배율 (조건이 많을수록 "지금 상태"에 맞는 문장) */
 const SPECIFICITY_BONUS = 1.5
+
+/** 막의 이름 (상태 표시에 "2막 · 규칙의 균열"로 보인다) */
+export const ACT_TITLES: Record<Act, string> = { 1: '낯선 규칙', 2: '규칙의 균열', 3: '문 앞' }
+
+/** 지금 큰 줄거리의 몇 막인지: 막을 닫는 플래그(`act1-done`·`act2-done`)가 켜질 때마다 다음 막이 된다. 3막은 끝까지 3막이다. */
+export function currentAct(flags: readonly string[]): Act {
+  if (flags.includes('act2-done')) {
+    return 3
+  }
+  return flags.includes('act1-done') ? 2 : 1
+}
 
 /** 서술에 쓸 수 있는 자리표시자. 이 밖의 `{...}`는 검증기가 에러로 잡는다. */
 export const FLOW_PLACEHOLDERS = ['age', 'rank', 'object', 'background'] as const

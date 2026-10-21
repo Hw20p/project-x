@@ -1,5 +1,5 @@
 // 게임 진행 상태 타입. 전부 JSON으로 직렬화할 수 있는 값만 담는다 (localStorage 저장, 리플레이 검증용).
-import type { FailureKind, PlayerState, Rank, StatDelta, Stats } from './types'
+import type { Act, FailureKind, PlayerState, Rank, StatDelta, Stats } from './types'
 
 /**
  * 진행 단계
@@ -115,7 +115,7 @@ export interface LifeLogEntry {
  * - promotion: 시간이 흐르며 점수가 차서 자동으로 승급함
  */
 export type GameEvent =
-  | { type: 'year'; age: number; stats: Stats; rank: Rank; points: number }
+  | { type: 'year'; age: number; stats: Stats; rank: Rank; points: number; act: Act }
   | { type: 'flow'; entry: LifeLogEntry }
   | { type: 'illness'; age: number }
   | { type: 'promotion'; age: number; from: Rank; to: Rank }

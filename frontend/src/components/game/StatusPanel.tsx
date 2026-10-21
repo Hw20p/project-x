@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { PROMOTION_REQUIREMENTS, RANK_LABELS } from '../../engine/config'
+import { ACT_TITLES, currentAct } from '../../engine/flow'
 import { STAT_LABELS } from '../../engine/report'
 import type { GameState } from '../../engine/state'
 import { STAT_KEYS } from '../../engine/types'
@@ -59,6 +60,7 @@ export function StatusPanel({ state, controls, view, gauge, relationsChanged = f
   const age = view?.age ?? state.player.age
   const stats = view?.stats ?? state.player.stats
   const rank = view?.rank ?? state.player.career.rank
+  const act = view?.act ?? currentAct(state.flags)
   const points = view?.points ?? state.player.career.promotionPoints
   const requirement = rank === 5 ? null : PROMOTION_REQUIREMENTS[rank]
 
@@ -105,7 +107,15 @@ export function StatusPanel({ state, controls, view, gauge, relationsChanged = f
         )}
 
         <div className="flex items-start gap-3">
-          <Portrait backgroundId={state.backgroundId} age={age} sanity={stats.sanity} size={64} />
+          <div className="flex w-16 shrink-0 flex-col items-center gap-1">
+            <Portrait backgroundId={state.backgroundId} age={age} sanity={stats.sanity} size={64} />
+            {/* 큰 줄거리의 막: 프로필 아래에 "2막 / 규칙의 균열"로 보인다 */}
+            <p className="text-center text-[0.68rem] leading-tight text-ash">
+              <span className="text-fog">{act}막</span>
+              <br />
+              {ACT_TITLES[act]}
+            </p>
+          </div>
           <div className="min-w-0 flex-1">
             <div className="grid gap-1.5">
               {STAT_KEYS.map((key) => (

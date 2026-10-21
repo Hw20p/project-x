@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { findBackground } from '../content'
 import { describeEnding } from '../content/epilogues'
-import { isSimulationPageOpen } from '../devTools'
+import { isEndingGuidePageOpen, isSimulationPageOpen } from '../devTools'
 import { RANK_LABELS } from '../engine/config'
 import { formatAge } from '../game/format'
 import { loadGame, loadRecords } from '../game/storage'
@@ -74,6 +74,14 @@ export function HomePage() {
         <Link to="/dev/sim" className="text-xs text-ash underline hover:text-fog">
           [개발] 밸런스 시뮬레이션
         </Link>
+      )}
+      {/* 엔딩·막 조건 정리 페이지: 시뮬레이션 링크 아래. 개발 서버에서 스위치가 켜져 있을 때만 보인다. */}
+      {isEndingGuidePageOpen && (
+        <div className="mt-1">
+          <Link to="/dev/endings" className="text-xs text-ash underline hover:text-fog">
+            [개발] 엔딩·막 조건 정리
+          </Link>
+        </div>
       )}
     </main>
   )

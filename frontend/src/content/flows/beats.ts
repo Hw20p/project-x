@@ -5,12 +5,15 @@ import type { FlowDef } from '../../engine/types'
 //   1막 (수습~사원) 낯선 규칙 — 사원증·매뉴얼·퇴직자 명단에서 "이 자리는 이미 누군가 앉았던 자리"라는 위화감
 //   2막 (주임~책임) 규칙의 균열 — 객체들의 발견 위치가 한 방향을 가리키고, 건물의 층 수와 전임자의 일지가 맞지 않음
 //   3막 (수석)      문 앞 — 수석만 아는 엘리베이터 버튼, 역대 수석 명단, 문을 두드리는 소리. X-011 「바깥」으로 이어진다
+// 각 비트의 `act: 1|2|3`이 어느 막인지 나타낸다 (화면에는 안 보이는 작성·검증용 표시). 막마다 `act{n}-done`을 켜는
+// 닫는 비트가 하나씩 있고, 이 플래그가 뒤 막과 이야기 이벤트를 연다. 아래의 인물(NPC) 후속 비트는 막에 속하지 않아 act가 없다.
 // NPC 이야기(서지안·문하린)의 결과 플래그도 같은 방식으로 비트에 반영한다.
 export default [
   // ── 1막 ────────────────────────────────────────────
   {
     id: 'beat-badge-number',
     kind: 'beat',
+    act: 1,
     when: { maxRank: 1, minAge: 23 },
     setFlags: ['story-badge'],
     text: '사원증의 사번은 입사 서류에 적힌 번호와 달랐다. 인사팀은 “배정 번호”라고만 했다. 이미 한 번 쓰인 번호처럼 손때가 묻은 느낌이 들었다.',
@@ -18,6 +21,7 @@ export default [
   {
     id: 'beat-locker',
     kind: 'beat',
+    act: 1,
     when: { maxRank: 3 },
     after: 'beat-badge-number',
     afterYears: 1,
@@ -26,6 +30,7 @@ export default [
   {
     id: 'beat-handbook-margin',
     kind: 'beat',
+    act: 1,
     when: { maxRank: 3 },
     after: 'beat-locker',
     afterYears: 1,
@@ -34,12 +39,14 @@ export default [
   {
     id: 'beat-first-promotion',
     kind: 'beat',
+    act: 1,
     when: { minRank: 2 },
     text: '첫 승급 날, 인사팀은 사원증을 새로 만들어 주었다. 사진은 입사 때 찍은 그대로인데, 표정이 조금 달라 보였다.',
   },
   {
     id: 'beat-erased-names',
     kind: 'beat',
+    act: 1,
     when: { minRank: 2, minAge: 26 },
     setFlags: ['story-erased'],
     text: '퇴직자 명단에서 이름 몇 개가 지워져 있었다. 지운 흔적은 없었다. 처음부터 없었던 것처럼 줄이 맞아 있었다.',
@@ -47,6 +54,7 @@ export default [
   {
     id: 'beat-senior-warning',
     kind: 'beat',
+    act: 1,
     when: { minRank: 2, maxRank: 4 },
     after: 'beat-erased-names',
     afterYears: 1,
@@ -55,6 +63,7 @@ export default [
   {
     id: 'beat-predecessor-badge',
     kind: 'beat',
+    act: 1,
     when: { minRank: 2, maxRank: 4 },
     after: 'beat-senior-warning',
     afterYears: 1,
@@ -64,6 +73,7 @@ export default [
   {
     id: 'beat-act1-close',
     kind: 'beat',
+    act: 1,
     when: { minRank: 3 },
     after: 'beat-predecessor-badge',
     afterYears: 1,
@@ -75,6 +85,7 @@ export default [
   {
     id: 'beat-map-pattern',
     kind: 'beat',
+    act: 2,
     when: { minRank: 3 },
     setFlags: ['story-map'],
     text: '객체들이 발견된 위치를 도면에 표시해 보았다. 모두 같은 방향, 지하 최하층 쪽으로 늘어서 있었다. 누군가 이미 그어 둔 선 위에 점을 찍고 있는 기분이었다.',
@@ -82,6 +93,7 @@ export default [
   {
     id: 'beat-extra-floor',
     kind: 'beat',
+    act: 2,
     when: { minRank: 3, minAge: 33 },
     setFlags: ['story-floor'],
     text: '본관 도면보다 지하층이 한 층 더 많다는 걸 알게 되었다. 아무도 그 층에 대해 묻지 않는다. 묻지 않는 것이 규칙처럼 보였다.',
@@ -89,6 +101,7 @@ export default [
   {
     id: 'beat-predecessor-ledger',
     kind: 'beat',
+    act: 2,
     when: { minRank: 4 },
     priority: 1,
     text: '전임 책임자의 서랍에서 일지가 나왔다. 마지막 장은 비어 있고, 날짜만 적혀 있었다. 오늘 날짜였다.',
@@ -96,6 +109,7 @@ export default [
   {
     id: 'beat-survey-team',
     kind: 'beat',
+    act: 2,
     when: { minRank: 3 },
     after: 'beat-map-pattern',
     afterYears: 1,
@@ -104,6 +118,7 @@ export default [
   {
     id: 'beat-stairs-count',
     kind: 'beat',
+    act: 2,
     when: { minRank: 3 },
     after: 'beat-extra-floor',
     afterYears: 1,
@@ -112,6 +127,7 @@ export default [
   {
     id: 'beat-ledger-handwriting',
     kind: 'beat',
+    act: 2,
     when: { minRank: 4 },
     after: 'beat-predecessor-ledger',
     afterYears: 1,
@@ -121,6 +137,7 @@ export default [
   {
     id: 'beat-act2-close',
     kind: 'beat',
+    act: 2,
     when: { minRank: 4 },
     after: 'beat-ledger-handwriting',
     afterYears: 1,
@@ -132,6 +149,7 @@ export default [
   {
     id: 'beat-elevator-button',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5 },
     priority: 2,
     text: '수석 사원증으로만 눌리는 엘리베이터 버튼이 하나 생겼다. 층 표시는 없다. 눌러 보지는 않았다. 아직은.',
@@ -139,18 +157,21 @@ export default [
   {
     id: 'beat-successor-list',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5, minAge: 48 },
     text: '역대 수석 관리자들의 이름이 한 줄에 적힌 명단을 보았다. 이름은 모두 달랐고 필체는 모두 같았다. 마지막 칸은 비어 있었다.',
   },
   {
     id: 'beat-door-knocking',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5, minAge: 55 },
     text: '밤이 되면 지하 어딘가에서 문을 두드리는 소리가 난다. 안쪽에서인지 바깥쪽에서인지 이제는 구분되지 않는다.',
   },
   {
     id: 'beat-two-clocks',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5 },
     after: 'beat-elevator-button',
     afterYears: 1,
@@ -159,6 +180,7 @@ export default [
   {
     id: 'beat-door-lamp',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5 },
     after: 'beat-door-knocking',
     afterYears: 1,
@@ -168,6 +190,7 @@ export default [
   {
     id: 'beat-act3-close',
     kind: 'beat',
+    act: 3,
     when: { minRank: 5 },
     after: 'beat-door-lamp',
     afterYears: 1,

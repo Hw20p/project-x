@@ -5,7 +5,7 @@ import { RANK_LABELS } from '../engine/config'
 import { findInterlude, findObject } from '../engine/game'
 import type { GameContext } from '../engine/game'
 import type { GameState } from '../engine/state'
-import type { Rank, StatDelta, Stats } from '../engine/types'
+import type { Act, Rank, StatDelta, Stats } from '../engine/types'
 import { toParagraphs } from './text'
 
 /**
@@ -54,6 +54,8 @@ export interface FeedItem {
 
 /** 한 해가 끝난 시점의 플레이어 상태 (화면 재생용) */
 export interface YearSnapshot {
+  /** 큰 줄거리의 막 */
+  act: Act
   age: number
   stats: Stats
   rank: Rank
@@ -159,7 +161,7 @@ export function describeTransition(
           age: event.age,
           kind: 'year',
           text: '',
-          snapshot: { age: event.age, stats: event.stats, rank: event.rank, points: event.points },
+          snapshot: { age: event.age, stats: event.stats, rank: event.rank, points: event.points, act: event.act },
         })
         break
       case 'flow':

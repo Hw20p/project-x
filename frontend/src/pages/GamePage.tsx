@@ -13,6 +13,7 @@ import { ChoosingScreen } from '../components/game/screens/ChoosingScreen'
 import { EndedScreen } from '../components/game/screens/EndedScreen'
 import { InterludeScreen } from '../components/game/screens/InterludeScreens'
 import { RELATION_MAX, RELATION_MIN } from '../engine/config'
+import { currentAct } from '../engine/flow'
 import { getChoiceOptions, getCurrentInterlude, getCurrentObject, getCurrentStage } from '../engine/game'
 import type { GameAction } from '../engine/game'
 import type { GameState } from '../engine/state'
@@ -88,7 +89,7 @@ const FOLLOW_DISTANCE_PX = 420
 
 function snapshotOf(game: GameState): YearSnapshot {
   const { age, stats, career } = game.player
-  return { age, stats, rank: career.rank, points: career.promotionPoints }
+  return { age, stats, rank: career.rank, points: career.promotionPoints, act: currentAct(game.flags) }
 }
 
 /** 한 해에 속하는 줄의 종류: 한 해 표시 뒤에 이어지는 서술·알림. 선택 결과·보고서·객체 배정 같은 것은 그 해가 아니다. */

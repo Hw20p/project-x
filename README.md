@@ -106,7 +106,7 @@ frontend/src/
 
 ## 밸런스 확인
 
-**지금은 잠겨 있다** (밸런스를 확정하면서 홈의 링크와 `/dev/sim` 라우트를 모두 막았다). 다시 쓰려면 `frontend/src/devTools.ts`의 `SIMULATION_PAGE_ENABLED`를 `true`로 바꾼다.
+**지금은 잠겨 있다** (밸런스를 확정하면서 홈의 링크와 `/dev/sim` 라우트를 모두 막았다). 다시 쓰려면 `frontend/src/devTools.ts`의 `SIMULATION_PAGE_ENABLED`를 `true`로 바꾼다. 같은 파일의 `ENDING_GUIDE_PAGE_ENABLED`는 엔딩·막 조건을 정리해 보여 주는 `/dev/endings` 페이지의 스위치다(개발 서버에서만, 홈의 시뮬레이션 링크 아래에 링크가 나온다).
 
 `npm run dev` 후 `http://localhost:5173/dev/sim`(홈의 "[개발] 밸런스 시뮬레이션" 링크)에서 봇이 수천 판을 자동으로 돌려 승급 속도, 사망 원인, 평균 수명, 객체별 성공률을 보여 준다. 시드가 같으면 결과도 같다. `engine/config.ts`나 `content/objects/`를 고치고 다시 실행해 비교하면 된다.
 

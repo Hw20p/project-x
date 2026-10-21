@@ -1,11 +1,12 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { isSimulationPageOpen } from './devTools'
+import { isEndingGuidePageOpen, isSimulationPageOpen } from './devTools'
 import { GamePage } from './pages/GamePage'
 import { HomePage } from './pages/HomePage'
 
-// 개발용 페이지는 개발 서버에서, 스위치(`devTools.ts`)가 켜져 있을 때만 라우트를 연다. 지금은 잠겨 있다.
+// 개발용 페이지는 개발 서버에서, 스위치(`devTools.ts`)가 켜져 있을 때만 라우트를 연다.
 const SimulationPage = lazy(() => import('./pages/SimulationPage').then((module) => ({ default: module.SimulationPage })))
+const EndingGuidePage = lazy(() => import('./pages/EndingGuidePage').then((module) => ({ default: module.EndingGuidePage })))
 
 function App() {
   return (
@@ -19,6 +20,16 @@ function App() {
             element={
               <Suspense fallback={null}>
                 <SimulationPage />
+              </Suspense>
+            }
+          />
+        )}
+        {isEndingGuidePageOpen && (
+          <Route
+            path="/dev/endings"
+            element={
+              <Suspense fallback={null}>
+                <EndingGuidePage />
               </Suspense>
             }
           />

@@ -15,7 +15,7 @@
 // 같은 시드와 같은 선택 기록이면 항상 같은 결과가 나온다 (`replayGame`으로 검증 가능).
 import { pickNextObject } from './assignment'
 import { ENTRY_AGE, FINALE, MAX_AGE, OBJECT_SCHEDULE } from './config'
-import { flagsSetBy, openingEntries, pickYearLines } from './flow'
+import { currentAct, flagsSetBy, openingEntries, pickYearLines } from './flow'
 import { pickYearlyInterlude } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
@@ -522,7 +522,8 @@ function tickYear(ctx: GameContext, state: GameState, rng: Rng): GameState {
     }
   })
   const yearEvents: GameEvent[] = [
-    { type: 'year', age, stats: finalStats, rank: career.rank, points: career.promotionPoints },
+    // 막은 그 해의 서술이 열기 전의 플래그로 센다: 막을 닫는 비트를 읽은 다음 해부터 다음 막으로 표시된다
+    { type: 'year', age, stats: finalStats, rank: career.rank, points: career.promotionPoints, act: currentAct(aged.flags) },
     ...lines.map((entry) => ({ type: 'flow' as const, entry })),
     ...(aging.illness ? [{ type: 'illness' as const, age }] : []),
     ...(promotion ? [promotion] : []),

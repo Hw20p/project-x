@@ -284,6 +284,31 @@ export function validateFlows(flows: readonly FlowDef[], openings: readonly Open
     }
   }
 
+  // 큰 줄거리의 막: act는 이야기 비트에만, 막마다 닫는 비트(`act{n}-done`)가 정확히 하나, 사슬(after)이 뒷막을 거슬러 가지 않을 것
+  const flowById = new Map(flows.map((def) => [def.id, def]))
+  for (const def of flows) {
+    const fail = (message: string) => errors.push(`[서술 ${def.id}] ${message}`)
+    if (def.act === undefined) {
+      continue
+    }
+    if (def.kind !== 'beat') {
+      fail('act는 이야기 비트(beat)에만 쓸 수 있음')
+    }
+    if (def.act !== 1 && def.act !== 2 && def.act !== 3) {
+      fail(`act는 1·2·3 중 하나여야 함: ${def.act}`)
+    }
+    const previous = def.after !== undefined ? flowById.get(def.after) : undefined
+    if (previous?.act !== undefined && previous.act > def.act) {
+      fail(`${def.act}막 비트가 더 뒷막(${previous.act}막)의 ${previous.id} 뒤에 이어짐`)
+    }
+  }
+  for (const act of [1, 2, 3] as const) {
+    const closers = flows.filter((def) => def.act === act && (def.setFlags ?? []).includes(`act${act}-done`))
+    if (closers.length !== 1) {
+      errors.push(`[줄거리] ${act}막을 닫는 비트(act${act}-done을 켜는 act: ${act} 비트)가 정확히 하나여야 함 (지금 ${closers.length}개)`)
+    }
+  }
+
   const coveredBackgrounds = new Set<string>()
   for (const opening of openings) {
     const fail = (message: string) => errors.push(`[오프닝 ${opening.id}] ${message}`)

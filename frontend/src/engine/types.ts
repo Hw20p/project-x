@@ -110,6 +110,9 @@ export interface InterludeCondition {
  */
 export type FlowKind = 'ambient' | 'beat'
 
+/** 큰 줄거리의 막 */
+export type Act = 1 | 2 | 3
+
 /**
  * 선택 없이 흘러가는 서술 조각. 시간이 흐르는 전환마다 조건에 맞는 것이 골라져 다음 화면 위에 붙는다.
  * 등장 조건은 막간 이벤트와 같은 구조(`InterludeCondition`)를 쓴다.
@@ -135,6 +138,12 @@ export interface FlowDef {
   after?: string
   /** `after`가 나온 뒤 최소 몇 년이 지나야 열리는지. 기본 0. */
   afterYears?: number
+  /**
+   * 큰 줄거리의 몇 막인지 (1 낯선 규칙 / 2 규칙의 균열 / 3 문 앞). 큰 줄거리를 이루는 이야기 비트에만 붙인다.
+   * 인물(NPC) 후속 이야기처럼 막에 속하지 않는 비트는 비운다. 화면에는 보이지 않고, 작성·검증용 표시다
+   * (검증기가 막마다 닫는 비트(`act{n}-done`)가 하나 있는지, 사슬이 뒷막을 거슬러 가지 않는지 본다).
+   */
+  act?: Act
   /** 이 서술이 나오면 켜지는 플래그. 막간 이벤트·다른 서술의 `flags` 조건으로 줄거리의 진행을 이을 수 있다. */
   setFlags?: string[]
   /**
