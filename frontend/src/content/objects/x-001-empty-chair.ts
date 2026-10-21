@@ -149,6 +149,28 @@ export default {
             effects: { reputation: -10 },
           },
         },
+        {
+          // 조건부 선택지: 입사 배경이 연구원 출신일 때 나타난다.
+          id: 'research-method',
+          text: '연구소의 복원 절차대로 흔적을 단계별로 복원한다',
+          story: '가방에서 연구소 시절의 복원 체크리스트를 꺼냈다. 지우개 자국 위에 투명지를 덮고 한 칸씩 짚어 나갔다.',
+          requires: {
+            when: { backgrounds: ['researcher'] },
+            note: '입사 배경이 연구원 출신일 때 나타난다.',
+          },
+          risk: 1,
+          baseChance: 0.85,
+          statWeights: { knowledge: 0.003 },
+          success: {
+            text: '투명지 위에 흐릿한 필압이 문장 모양으로 올라왔다. 절차대로 하자 복원은 허무할 만큼 조용히 끝났다.',
+            effects: { knowledge: 8, reputation: 4 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '투명지 위에는 빈칸만 남았다. 절차는 맞았는데 누군가 먼저 복원해 간 것처럼 흔적이 얕았다.',
+            effects: { knowledge: 2, sanity: -4 },
+          },
+        },
       ],
     },
   ],

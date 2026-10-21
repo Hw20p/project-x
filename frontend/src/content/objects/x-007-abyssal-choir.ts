@@ -207,6 +207,28 @@ export default {
             text: '합창은 두 이름을 모두 가져갔다. 사무실에는 사원증 두 장과 아직 따뜻한 의자 두 개가 남았다.',
           },
         },
+        {
+          // 조건부 선택지: 문하린의 노트를 읽어야(harin-secret) 나타난다.
+          id: 'read-erased-line',
+          text: '선임에게서 들은 지워진 줄을 팀원의 귀에 읽어 준다',
+          story: '팀원 곁에 무릎을 꿇고 앉았다. 선임이 낮게 읽어 주던 줄을 한 음절씩 따라 읽었다.',
+          requires: {
+            when: { flags: ['harin-secret'] },
+            note: '문하린의 노트를 읽어야(harin-secret) 나타난다.',
+          },
+          risk: 3,
+          baseChance: 0.5,
+          statWeights: { sanity: 0.004, knowledge: 0.004 },
+          success: {
+            text: '팀원의 입술이 한 글자를 따라 움직였다. 이름은 돌아오지 않았지만, 자기 이름이 있었다는 사실은 돌아왔다.',
+            effects: { knowledge: 10, reputation: 6, sanity: -5 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '줄을 읽는 사이 합창이 반 음 높아졌다. 팀원은 눈을 감았고, 나는 한동안 내 이름이 입에 걸렸다.',
+            effects: { sanity: -12 },
+          },
+        },
       ],
     },
   ],

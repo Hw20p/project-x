@@ -141,6 +141,28 @@ export default {
             text: '대답은 아래에서도 위에서도 왔다. 계단은 그날 이후 열일곱 칸이 되었다.',
           },
         },
+        {
+          // 조건부 선택지: 입사 배경이 현장직 출신일 때 나타난다.
+          id: 'patrol-signal',
+          text: '경비 시절 배운 대로 손전등 신호를 보낸다',
+          story: '벽에 등을 대고 손전등을 세 번 길게 깜빡였다. 외곽 초소에서 쓰던 신호를 한 박자씩 천천히 보냈다.',
+          requires: {
+            when: { backgrounds: ['field'] },
+            note: '입사 배경이 현장직 출신일 때 나타난다.',
+          },
+          risk: 1,
+          baseChance: 0.82,
+          statWeights: { health: 0.002 },
+          success: {
+            text: '아래쪽 어둠에서 물소리가 한 박자 멈췄다가 같은 순서로 돌아왔다. 신호가 통하는 곳이라는 것만으로 마음이 가라앉았다.',
+            effects: { sanity: 6, reputation: 4 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '손전등이 깜빡이는 사이 물소리가 한 칸씩 더 가까이 올라왔다. 신호는 끝내 대답을 얻지 못했다.',
+            effects: { sanity: -6 },
+          },
+        },
       ],
     },
   ],

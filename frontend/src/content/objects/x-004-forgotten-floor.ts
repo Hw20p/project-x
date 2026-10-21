@@ -145,6 +145,29 @@ export default {
             effects: { reputation: -12, knowledge: -8 },
           },
         },
+        {
+          // 조건부 선택지: 서지안과의 관계가 20 이상이어야 나타난다.
+          id: 'entrust-memory',
+          text: '서지안에게 내 이야기를 맡기고 기억해 달라고 부탁한다',
+          story: '퇴근길에 서지안을 불러 세워 어제 먹은 점심부터 하나씩 이야기했다. 서지안은 수첩을 꺼내 받아 적었다.',
+          requires: {
+            when: { relations: { jian: { min: 20 } } },
+            note: '서지안과의 관계가 20 이상이어야 나타난다.',
+          },
+          risk: 2,
+          baseChance: 0.78,
+          statWeights: { sanity: 0.003 },
+          success: {
+            text: '수첩에는 내 하루가 서지안의 필체로 남았다. 비어 가는 기억 한쪽에 단단한 모서리가 생겼다.',
+            effects: { sanity: 8, knowledge: 4 },
+            relations: { jian: 4 },
+          },
+          failure: {
+            kind: 'setback',
+            text: '서지안은 받아 적다가 자기 이름이 적힌 줄에서 펜을 멈췄다. 우리는 한동안 서로의 얼굴만 확인했다.',
+            effects: { sanity: -5 },
+          },
+        },
       ],
     },
   ],

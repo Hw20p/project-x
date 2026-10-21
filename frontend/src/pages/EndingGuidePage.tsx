@@ -1,12 +1,12 @@
 // 개발용 안내 페이지 (/dev/endings, 개발 서버에서 스위치(devTools.ts)가 켜졌을 때만 열림).
-// 큰 줄거리의 막이 바뀌는 조건, 최종 객체가 열리는 조건, 엔딩마다의 도달 조건, 후일담 조건을 한곳에 정리해 보여 준다.
-// 가능한 한 콘텐츠 데이터에서 읽어 와서 데이터를 고치면 이 페이지도 따라 바뀐다 (손으로 쓴 설명은 엔딩 종류 표뿐).
+// 큰 줄거리의 막이 바뀌는 조건, 최종 객체가 열리는 조건, 최종 객체마다의 배정 조건과 엔딩, 후일담 조건을 한곳에 정리해 보여 준다.
+// 가능한 한 콘텐츠 데이터에서 읽어 와서 데이터를 고치면 이 페이지도 따라 바뀐다 (손으로 쓴 설명은 그 밖의 종료 표뿐).
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { afterwords, endings, flows, objects } from '../content'
+import { afterwords, endings, endingTitles, flows, interludes, npcs, objects } from '../content'
 import { FINALE, MAX_AGE, PROMOTION_REQUIREMENTS, RANK_LABELS } from '../engine/config'
 import { ACT_TITLES } from '../engine/flow'
-import type { Act, FlowDef } from '../engine/types'
+import type { Act, ContainmentObject, FlowDef } from '../engine/types'
 import { describeCondition } from '../game/describeCondition'
 
 const ACTS: readonly Act[] = [1, 2, 3]
@@ -55,29 +55,59 @@ function BeatRow({ def }: { def: FlowDef }) {
   )
 }
 
-/** 최종 객체의 선택지 중 엔딩으로 이어지는 것들 */
-function finaleRoutes() {
-  const routes: { endingId: string; objectLabel: string; stageTitle: string; choiceText: string; chance: number; failure: string }[] = []
-  for (const object of objects.filter((candidate) => candidate.finale)) {
-    for (const stage of object.stages) {
-      for (const choice of stage.choices) {
-        if (choice.success.endingId) {
-          routes.push({
-            endingId: choice.success.endingId,
-            objectLabel: `${object.code} 「${object.name}」`,
-            stageTitle: stage.title,
-            choiceText: choice.text,
-            chance: choice.baseChance,
-            failure: choice.failure.kind,
-          })
-        }
-      }
-    }
-  }
-  return routes
+// 엔딩이 걸린 선택은 마지막 단계에 있으므로, 실패(setback)하면 그 자리에서 다시 고르는 것이 아니라 엔딩 없이 그 객체의 관리가 끝난다.
+const FAILURE_LABELS: Record<string, string> = {
+  setback: '실패하면 엔딩 없이 이 객체가 끝남',
+  demotion: '실패하면 좌천',
+  death: '실패하면 즉사',
 }
 
-const FAILURE_LABELS: Record<string, string> = { setback: '실패 시 단계 손실', demotion: '실패 시 좌천', death: '실패 시 즉사' }
+/** 최종 객체의 선택지 하나가 어느 엔딩으로 이어지는지 (기본 엔딩과, 이력에 따라 바뀌는 변주) */
+interface FinaleRoute {
+  stageTitle: string
+  choiceText: string
+  chance: number
+  failure: string
+  ending: string
+  endingId: string
+  variants: { ending: string; endingId: string; when: string[] }[]
+  /** 실패하면 재도전 없이 닿는 엔딩 (실패 엔딩). 없으면 실패는 "관리 실패"로 끝난다. */
+  failureEnding?: { ending: string; endingId: string }
+  /** 성공 확률에 더해지는 관계 보너스 설명 (예: "문하린 관계 1점당 +0.2%p") */
+  relationBonus: string[]
+  /** 항상 성공하는(확률 100%) 선택지인지 */
+  certain: boolean
+}
+
+function routesOf(object: ContainmentObject): FinaleRoute[] {
+  return object.stages.flatMap((stage) =>
+    stage.choices
+      .filter((choice) => choice.success.endingId)
+      .map((choice) => {
+        const endingId = choice.success.endingId ?? ''
+        return {
+          stageTitle: stage.title,
+          choiceText: choice.text,
+          chance: choice.baseChance,
+          certain: Boolean(choice.certain),
+          failure: choice.failure.kind,
+          ending: endingTitles[endingId] ?? endingId,
+          endingId,
+          failureEnding: choice.failure.endingId
+            ? { ending: endingTitles[choice.failure.endingId] ?? choice.failure.endingId, endingId: choice.failure.endingId }
+            : undefined,
+          relationBonus: Object.entries(choice.relationWeights ?? {}).map(
+            ([npcId, weight]) => `${npcs.find((npc) => npc.id === npcId)?.name ?? npcId} 관계 1점당 +${(weight * 100).toFixed(1)}%p`,
+          ),
+          variants: (choice.success.endingVariants ?? []).map((variant) => ({
+            ending: endingTitles[variant.endingId] ?? variant.endingId,
+            endingId: variant.endingId,
+            when: describeCondition(variant.when),
+          })),
+        }
+      }),
+  )
+}
 
 /** 최종 객체가 아닌 종료들. 엔진 규칙(`engine/game.ts`)을 손으로 옮겨 적은 설명이라, 규칙을 고치면 여기도 고친다. */
 const OTHER_ENDINGS: { title: string; condition: string }[] = [
@@ -91,9 +121,131 @@ const OTHER_ENDINGS: { title: string; condition: string }[] = [
   { title: '천수', condition: `나이가 ${MAX_AGE}세에 닿았을 때.` },
 ]
 
+/** 최종 객체 하나의 영역: 배정 조건과 그 객체에서 닿는 엔딩 */
+function FinaleCard({ object }: { object: ContainmentObject }) {
+  const routes = routesOf(object)
+  const offered = Boolean(object.when)
+  return (
+    <article className={`grid gap-3 rounded-lg border px-4 py-3 ${offered ? 'border-glow/40 bg-glow/5' : 'border-edge bg-panel/40'}`}>
+      <header className="grid gap-1.5">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-serif-kr text-lg text-bone">
+            {object.code} 「{object.name}」
+          </h3>
+          <span className={`rounded px-2 py-0.5 text-xs ${offered ? 'bg-glow/15 text-glow' : 'bg-edge/60 text-fog'}`}>
+            {offered ? `제안되는 객체 · 우선순위 ${object.priority ?? 0}` : '기본 최종 객체'}
+          </span>
+        </div>
+        <div className="grid gap-1 text-xs text-ash">
+          <p>
+            <span className="text-fog">언제 맡나</span> —{' '}
+            {offered
+              ? '최종 객체가 열렸을 때, 아래 이력 조건을 모두 만족하면 제안된다. 받아들이거나 거절할 수 있다.'
+              : '최종 객체가 열렸는데 제안되는 객체가 없거나, 제안을 거절했을 때.'}
+          </p>
+          {object.when && <Chips items={describeCondition(object.when)} />}
+          {object.decline && <p>거절 해설: {object.decline}</p>}
+          {object.retryChanceBonus ? (
+            <p>
+              <span className="text-fog">재도전</span> — 다시 맡을 때마다 모든 선택의 성공 확률이 +{Math.round(object.retryChanceBonus * 100)}%p씩 오른다 (두 번째 진입 +
+              {Math.round(object.retryChanceBonus * 100)}%p, 세 번째 +{Math.round(object.retryChanceBonus * 200)}%p). 재배정의 지식 보너스와 별개다.
+            </p>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="grid gap-2">
+        <p className="text-xs tracking-[0.15em] text-fog">
+          이 객체에서 닿는 엔딩 (
+          {new Set(routes.flatMap((r) => [r.endingId, ...(r.failureEnding ? [r.failureEnding.endingId] : []), ...r.variants.map((v) => v.endingId)])).size}
+          종)
+        </p>
+        <ul className="grid gap-2">
+          {routes.map((route) => (
+            <li key={`${route.stageTitle}-${route.choiceText}`} className="grid gap-1 rounded border border-edge/70 bg-ink/40 px-3 py-2">
+              <p className="text-sm text-bone">
+                “{route.choiceText}”{' '}
+                <span className="text-xs text-ash">
+                  · {route.stageTitle} · {route.certain ? '확정 성공(100%)' : `기본 성공률 ${Math.round(route.chance * 100)}%`}
+                  {route.relationBonus.length > 0 ? ` (+ ${route.relationBonus.join(', ')})` : ''}
+                </span>
+              </p>
+              <p className="text-sm text-fog">
+                성공하면 → <b className="text-bone">「{route.ending}」</b>
+                {route.variants.length > 0 && <span className="text-xs text-ash"> (이력이 맞으면 아래로 바뀜)</span>}
+              </p>
+              <p className="text-sm text-fog">
+                실패하면 →{' '}
+                {route.failureEnding ? (
+                  <>
+                    <b className="text-loss">「{route.failureEnding.ending}」</b>
+                    <span className="text-xs text-ash"> (실패 엔딩: 재도전 없이 판이 끝남)</span>
+                  </>
+                ) : (
+                  <span className="text-xs text-ash">{FAILURE_LABELS[route.failure] ?? route.failure}</span>
+                )}
+              </p>
+              {route.variants.map((variant) => (
+                <div key={variant.endingId} className="grid gap-1 border-l-2 border-glow/40 pl-3">
+                  <p className="text-sm text-fog">
+                    → <b className="text-glow">「{variant.ending}」</b> <span className="text-xs text-ash">변주 · 아래 조건을 모두 만족하면</span>
+                  </p>
+                  <Chips items={variant.when} />
+                </div>
+              ))}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  )
+}
+
 export function EndingGuidePage() {
   const beatsByAct = ACTS.map((act) => ({ act, beats: flows.filter((def) => def.kind === 'beat' && def.act === act) }))
-  const routes = finaleRoutes()
+  // 기본 최종 객체가 먼저, 제안되는 객체는 우선순위가 높은 순
+  const finaleObjects = objects
+    .filter((object) => object.finale)
+    .sort((a, b) => Number(Boolean(a.when)) - Number(Boolean(b.when)) || (b.priority ?? 0) - (a.priority ?? 0))
+  // 엔딩 한눈에 보기: 엔딩 → 그 엔딩에 닿는 최종 객체
+  const endingSources = endings.map((ending) => ({
+    ending,
+    sources: finaleObjects
+      .filter((object) =>
+        routesOf(object).some(
+          (route) =>
+            route.endingId === ending.id ||
+            route.failureEnding?.endingId === ending.id ||
+            route.variants.some((variant) => variant.endingId === ending.id),
+        ),
+      )
+      .map((object) => object.code),
+  }))
+  // 조건부 선택지(숨은 길): 객체 단계와 막간 이벤트 모두
+  const hiddenChoices = [
+    ...objects.flatMap((object) =>
+      object.stages.flatMap((stage) =>
+        stage.choices
+          .filter((choice) => choice.requires)
+          .map((choice) => ({
+            where: `${object.code} 「${object.name}」 · ${stage.title}`,
+            choiceText: choice.text,
+            note: choice.requires?.note ?? '',
+            conditions: describeCondition(choice.requires?.when),
+          })),
+      ),
+    ),
+    ...interludes.flatMap((def) =>
+      def.choices
+        .filter((choice) => choice.requires)
+        .map((choice) => ({
+          where: `막간 · ${def.title}`,
+          choiceText: choice.text,
+          note: choice.requires?.note ?? '',
+          conditions: describeCondition(choice.requires?.when),
+        })),
+    ),
+  ]
   const deathChoices = objects.flatMap((object) =>
     object.stages.flatMap((stage) =>
       stage.choices.filter((choice) => choice.failure.kind === 'death').map((choice) => `${object.code} · ${stage.title} · ${choice.text}`),
@@ -141,29 +293,44 @@ export function EndingGuidePage() {
         </p>
       </Section>
 
-      <Section title="엔딩 조건">
-        <h3 className="text-lg text-glow">최종 객체의 엔딩 (모두 최종 객체의 선택이 성공해야 한다)</h3>
-        <ul className="grid gap-2">
-          {endings.map((ending) => {
-            const route = routes.filter((candidate) => candidate.endingId === ending.id)
-            return (
-              <li key={ending.id} className="grid gap-1 rounded border border-edge px-3 py-2">
-                <p className="text-bone">
-                  {ending.title} <span className="text-xs text-ash">({ending.id})</span>
-                </p>
-                {route.map((item) => (
-                  <p key={item.choiceText} className="text-sm text-fog">
-                    {item.objectLabel} · {item.stageTitle} 단계에서 “{item.choiceText}” 선택이 성공하면 (기본 성공률 {Math.round(item.chance * 100)}%,{' '}
-                    {FAILURE_LABELS[item.failure] ?? item.failure})
-                  </p>
-                ))}
-                {route.length === 0 && <p className="text-sm text-loss">이 엔딩으로 이어지는 선택지가 없다</p>}
-              </li>
-            )
-          })}
-        </ul>
+      <Section title={`최종 객체별 엔딩 (엔딩 ${endings.length}종)`}>
+        <p className="text-sm leading-relaxed text-fog">
+          최종 객체가 열리면 이력이 조건에 맞는 <b>제안되는 객체</b>가 먼저 제안되고(우선순위가 높은 하나), 배정 팝업에서 <b>받아들이거나 거절</b>할 수 있다.
+          거절하면 거절 해설이 줄거리에 흐른 뒤 <b>기본 최종 객체</b>의 팝업이 이어서 열린다. 맞는 객체가 없으면 바로 기본 최종 객체다. 엔딩은 모두 그
+          객체의 선택이 <b>성공</b>해야 닿는다. (봇 시뮬레이션은 제안을 항상 받아들인다.)
+        </p>
 
-        <h3 className="mt-3 text-lg text-glow">그 밖의 종료</h3>
+        <div className="overflow-x-auto rounded border border-edge">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-edge/30 text-xs text-ash">
+              <tr>
+                <th className="px-3 py-1.5 font-normal">엔딩</th>
+                <th className="px-3 py-1.5 font-normal">닿는 객체</th>
+              </tr>
+            </thead>
+            <tbody>
+              {endingSources.map(({ ending, sources }) => (
+                <tr key={ending.id} className="border-t border-edge/60">
+                  <td className="px-3 py-1.5 text-bone">
+                    {ending.title} <span className="text-xs text-ash">({ending.id})</span>
+                  </td>
+                  <td className={`px-3 py-1.5 ${sources.length === 0 ? 'text-loss' : 'text-fog'}`}>
+                    {sources.length > 0 ? sources.join(', ') : '닿는 선택지가 없다'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="grid gap-4">
+          {finaleObjects.map((object) => (
+            <FinaleCard key={object.id} object={object} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="그 밖의 종료">
         <ul className="grid gap-2">
           {OTHER_ENDINGS.map((ending) => (
             <li key={ending.title} className="grid gap-0.5 rounded border border-edge px-3 py-2">
@@ -180,6 +347,23 @@ export function EndingGuidePage() {
             ))}
           </ul>
         </details>
+      </Section>
+
+      <Section title={`조건부 선택지 (숨은 길, ${hiddenChoices.length}개)`}>
+        <p className="text-sm text-fog">
+          조건을 채워야 선택지 목록에 나타나는 선택지다(못 채우면 아예 안 보인다). 나타나면 테두리가 하늘색으로 밝아진다. 객체 단계와 막간 이벤트에 있다.
+        </p>
+        <ul className="grid gap-2">
+          {hiddenChoices.map((item) => (
+            <li key={`${item.where}-${item.choiceText}`} className="grid gap-1 rounded border border-glow/30 px-3 py-2">
+              <p className="text-sm text-bone">
+                {item.where} <span className="text-xs text-ash">· “{item.choiceText}”</span>
+              </p>
+              <p className="text-xs text-ash">{item.note}</p>
+              <Chips items={item.conditions} />
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section title="후일담 조건 (종료 화면에 붙는 짧은 글)">

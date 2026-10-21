@@ -59,6 +59,27 @@ export default [
           effects: { sanity: -4 },
         },
       },
+      {
+        // 조건부 선택지: 연인(서지안 또는 문하린)이 있어야 나타난다.
+        id: 'with-partner',
+        text: '연인과 함께 떠난다',
+        story: '일정표에 두 사람의 이름을 나란히 적었다. 사원증은 둘 다 가방 가장 깊은 곳에 넣었다.',
+        requires: {
+          when: { anyFlags: ['jian-lover', 'harin-lover'] },
+          note: '연인(서지안 또는 문하린)이 있어야 나타난다.',
+        },
+        risk: 1,
+        baseChance: 0.94,
+        success: {
+          text: '이름을 부르는 소리도, 객체 이야기도 없는 사흘이었다. 돌아오는 기차에서 서로의 어깨에 기대 잠들었다.',
+          effects: { sanity: 18, health: 4 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '짧은 여행이 어긋났다. 그래도 같은 방향으로 돌아오는 표를 끊었다.',
+          effects: { sanity: 7 },
+        },
+      },
     ],
   },
   {
@@ -143,6 +164,27 @@ export default [
           effects: { sanity: -5, health: -2 },
         },
       },
+      {
+        // 조건부 선택지: 연인(서지안 또는 문하린)이 있어야 나타난다.
+        id: 'walk-together',
+        text: '연인에게 연락해 함께 걷는다',
+        story: '새벽에 전화기를 들고 이름 하나를 눌렀다. 신호음이 두 번 울리기 전에 받는 소리가 들렸다.',
+        requires: {
+          when: { anyFlags: ['jian-lover', 'harin-lover'] },
+          note: '연인(서지안 또는 문하린)이 있어야 나타난다.',
+        },
+        risk: 1,
+        baseChance: 0.95,
+        success: {
+          text: '동이 틀 때까지 말없이 걸었다. 둘이 걷는 길은 같은 길인데 훨씬 짧았다.',
+          effects: { sanity: 12, health: 2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '통화가 닿지 않았다. 혼자 건물 주변만 한 바퀴 돌았다.',
+          effects: { sanity: 2 },
+        },
+      },
     ],
   },
   {
@@ -183,6 +225,28 @@ export default [
           kind: 'setback',
           text: '돌아오는 열차에서 오래 창밖을 봤다.',
           effects: { sanity: 1 },
+        },
+      },
+      {
+        // 조건부 선택지: 연인(서지안 또는 문하린)이 있어야 나타난다.
+        id: 'bring-partner',
+        text: '연인을 데리고 간다',
+        story: '기차표 두 장을 끊었다. 현관 앞에서 서로의 손바닥을 한 번 꽉 쥐었다.',
+        requires: {
+          when: { anyFlags: ['jian-lover', 'harin-lover'] },
+          note: '연인(서지안 또는 문하린)이 있어야 나타난다.',
+        },
+        risk: 2,
+        baseChance: 0.85,
+        statWeights: { sanity: 0.002 },
+        success: {
+          text: '낡은 식탁 위에 숟가락이 하나 더 놓였다. 가족들은 아무것도 묻지 않았고, 그것이 처음으로 환영처럼 느껴졌다.',
+          effects: { sanity: 16, health: 2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '식사 자리가 어색하게 끝났다. 돌아오는 열차에서 서로 오래 창밖만 보았다.',
+          effects: { sanity: 3 },
         },
       },
     ],

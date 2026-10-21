@@ -68,6 +68,10 @@ export interface ChanceContext {
   tier?: Rank
   /** 현재 나이. 주어지면 나이에 따른 감소(`AGE_CHANCE_PENALTY`)가 적용된다. */
   age?: number
+  /** NPC 관계 값. 주어지면 선택지의 `relationWeights`에 따른 보너스가 더해진다. */
+  relations?: Readonly<Record<string, number>>
+  /** 재도전 보너스: 확률에 직접 더하는 값 (객체의 `retryChanceBonus` × 이미 맡은 횟수). */
+  retryBonus?: number
 }
 
 /** 나이에 따른 성공 확률 감소량 (0 이상). */
@@ -83,6 +87,10 @@ export function agePenalty(age: number): number {
 
 /** 선택지의 최종 성공 확률 (0.03~0.97). 화면에 그대로 보여 주는 값이기도 함. */
 export function calcSuccessChance(choice: Choice, stats: Stats, context: ChanceContext = {}): number {
+  // 확정 성공 선택지는 어떤 보정도 받지 않고 항상 성공한다
+  if (choice.certain) {
+    return 1
+  }
   let chance = choice.baseChance
   for (const key of STAT_KEYS) {
     const weight = choice.statWeights?.[key]
@@ -91,12 +99,17 @@ export function calcSuccessChance(choice: Choice, stats: Stats, context: ChanceC
       chance += weight * (effective - STAT_BASELINE)
     }
   }
+  for (const [npcId, weight] of Object.entries(choice.relationWeights ?? {})) {
+    // 만난 적 없는 NPC는 관계 값이 0인 것으로 본다
+    chance += weight * (context.relations?.[npcId] ?? 0)
+  }
   if (context.tier) {
     chance += TIER_CHANCE_MODIFIER[context.tier]
   }
   if (context.age !== undefined) {
     chance -= agePenalty(context.age)
   }
+  chance += context.retryBonus ?? 0
   return clamp(chance, CHANCE_MIN, CHANCE_MAX)
 }
 

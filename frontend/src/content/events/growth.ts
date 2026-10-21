@@ -86,6 +86,28 @@ export default [
           effects: { knowledge: 3, sanity: -12 },
         },
       },
+      {
+        // 조건부 선택지: 문하린의 노트를 읽어야(harin-secret) 나타난다.
+        id: 'known-shelf',
+        text: '문하린에게서 들은 서가로 곧장 간다',
+        story: '선임이 알려 준 서가 번호를 입속으로 되뇌며 걸었다. 먼지가 쌓이지 않은 책등 하나가 눈에 들어왔다.',
+        requires: {
+          when: { flags: ['harin-secret'] },
+          note: '문하린의 노트를 읽어야(harin-secret) 나타난다.',
+        },
+        risk: 2,
+        baseChance: 0.7,
+        statWeights: { sanity: 0.003, knowledge: 0.003 },
+        success: {
+          text: '찾던 기록은 한 장만 펼쳐져 있었다. 필요한 것만 읽고 덮을 수 있었다.',
+          effects: { knowledge: 14, sanity: -2 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '서가 번호는 맞았지만 책등의 순서가 하나씩 어긋나 있었다. 한참을 헤매다 빈손으로 나왔다.',
+          effects: { knowledge: 3, sanity: -5 },
+        },
+      },
     ],
   },
   {
@@ -170,6 +192,28 @@ export default [
           kind: 'setback',
           text: '졸음이 왔다. 필기는 한 줄도 남지 않았다.',
           effects: { reputation: -1 },
+        },
+      },
+      {
+        // 조건부 선택지: 오태성과의 관계가 20 이상이어야 나타난다.
+        id: 'rehearse-with-lead',
+        text: '팀장에게 미리 검토를 부탁하고 발표를 맡는다',
+        story: '발표 전날 팀장실 문을 두드렸다. 슬라이드를 한 장씩 넘기며 팀장의 표정을 살폈다.',
+        requires: {
+          when: { relations: { taeseong: { min: 20 } } },
+          note: '오태성과의 관계가 20 이상이어야 나타난다.',
+        },
+        risk: 1,
+        baseChance: 0.88,
+        success: {
+          text: '팀장이 빨간 펜으로 두 줄을 고쳐 주었다. 발표 내내 그 두 줄이 가장 좋은 문장이었다.',
+          effects: { reputation: 8, knowledge: 2 },
+          relations: { taeseong: 3 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '팀장은 말없이 고개만 끄덕였다. 발표 중간에 고쳐 준 줄이 어느 쪽이었는지 헷갈렸다.',
+          effects: { reputation: 2 },
         },
       },
     ],
@@ -291,6 +335,29 @@ export default [
           kind: 'setback',
           text: '후임이 다음 날 부서 이동을 신청했다.',
           effects: { reputation: -5, sanity: -3 },
+        },
+      },
+      {
+        // 조건부 선택지: 문하린의 노트를 읽어야(harin-secret) 나타난다.
+        id: 'teach-her-way',
+        text: '문하린에게 배운 방식대로 가르친다',
+        story: '선임이 나를 가르치던 순서를 그대로 떠올렸다. 후임 옆에 앉아 첫 줄 대신 지워진 줄 옆의 여백부터 짚었다.',
+        requires: {
+          when: { flags: ['harin-secret'] },
+          note: '문하린의 노트를 읽어야(harin-secret) 나타난다.',
+        },
+        risk: 2,
+        baseChance: 0.8,
+        statWeights: { knowledge: 0.003 },
+        success: {
+          text: '후임은 질문을 두 개만 했고, 둘 다 정확했다. 가르치는 동안 선임의 목소리가 내 목소리와 겹쳐 들렸다.',
+          effects: { knowledge: 8, reputation: 3 },
+          relations: { harin: 3 },
+        },
+        failure: {
+          kind: 'setback',
+          text: '후임은 여백만 한참 바라보았다. 선임의 방식은 내게는 아직 조금 컸다.',
+          effects: { knowledge: 2, sanity: -3 },
         },
       },
     ],

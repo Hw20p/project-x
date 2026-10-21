@@ -102,6 +102,14 @@ function describeChoice(ctx: GameContext, state: GameState, age: number): FeedDr
   if (!entry) {
     return []
   }
+  // 제안된 최종 객체를 거절했다면: 거절한 한 줄과 그 해설이 먼저 흐르고, 이어서 기본 최종 객체의 안내가 나온다
+  if ('declinedObjectId' in entry) {
+    const declined = findObject(ctx, entry.declinedObjectId)
+    return [
+      { age, kind: 'choice', text: `「${declined.name}」의 길을 거절하고 원래의 문으로 간다` },
+      ...toParagraphs(declined.decline ?? '').map((text) => ({ age, kind: 'story' as const, text })),
+    ]
+  }
   const choice =
     'interludeId' in entry
       ? findInterlude(ctx, entry.interludeId).choices.find((candidate) => candidate.id === entry.choiceId)
@@ -264,10 +272,21 @@ export function describeTransition(
     if (lead) {
       drafts.push(...toParagraphs(lead).map((text) => ({ age, kind: 'story' as const, text })))
     }
-  } else if (next.phase === 'briefing' && next.progress && prev?.phase !== 'briefing') {
+  } else if (
+    next.phase === 'briefing' &&
+    next.progress &&
+    // 새로 배정되었을 때, 또는 제안을 거절해서 배정된 객체가 바뀌었을 때
+    (prev?.phase !== 'briefing' || prev.progress?.objectId !== next.progress.objectId)
+  ) {
     const object = findObject(ctx, next.progress.objectId)
     // 어떤 계기로 이 객체를 맡게 되었는지: 배정 안내 바로 앞에 한두 문장 (재배정이면 기본 문구)
-    const intro = pickIntro(object, next.progress.reassigned, next.seed, next.history.length)
+    const intro = pickIntro(
+      object,
+      next.progress.reassigned,
+      next.seed,
+      next.history.length,
+      next.managedCounts[object.id] ?? 0,
+    )
     if (intro) {
       drafts.push(...toParagraphs(intro).map((text) => ({ age, kind: 'story' as const, text })))
     }
@@ -275,9 +294,18 @@ export function describeTransition(
       age,
       kind: 'assign',
       text: `${object.code} 「${object.name}」 관리를 맡게 되었다.`,
-      ...(next.progress.reassigned && {
-        notes: [`이미 겪어 본 객체를 다시 맡는다 (지식 +${next.progress.knowledgeBonus})`],
-      }),
+      ...(next.progress.reassigned || next.progress.offered
+        ? {
+            notes: [
+              ...(next.progress.reassigned
+                ? [
+                    `이미 겪어 본 객체를 다시 맡는다 (지식 +${next.progress.knowledgeBonus}${object.retryChanceBonus ? ', 성공 확률도 오른다' : ''})`,
+                  ]
+                : []),
+              ...(next.progress.offered ? ['지금까지의 이력으로 열린 길이다. 받아들이거나, 거절하고 원래의 문으로 갈 수 있다.'] : []),
+            ],
+          }
+        : {}),
     })
   } else if (next.phase === 'interlude' && next.interlude && prev?.phase !== 'interlude') {
     drafts.push({ age, kind: 'system', text: `막간 — ${findInterlude(ctx, next.interlude.eventId).title}` })

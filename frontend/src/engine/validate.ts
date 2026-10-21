@@ -7,6 +7,7 @@ import type {
   Choice,
   ContainmentObject,
   FlowDef,
+  InterludeCondition,
   InterludeDef,
   NpcDef,
   OpeningDef,
@@ -39,6 +40,13 @@ function validateChoice(choice: Choice, where: string, npcIds: ReadonlySet<strin
       if (!npcIds.has(npcId)) {
         fail(`${where}: 정의되지 않은 NPC id(relations): ${npcId}`)
       }
+    }
+  }
+  for (const [npcId, weight] of Object.entries(choice.relationWeights ?? {})) {
+    if (!npcIds.has(npcId)) {
+      fail(`${where}: 정의되지 않은 NPC id(relationWeights): ${npcId}`)
+    } else if (!Number.isFinite(weight)) {
+      fail(`${where}: relationWeights 값이 올바르지 않음 (${npcId}=${weight})`)
     }
   }
 }
@@ -94,6 +102,12 @@ export function validateObject(
   }
   if (object.intro !== undefined && !object.intro.trim()) {
     fail('intro(객체를 맡게 된 계기)가 비어 있음')
+  }
+  if (object.retryChanceBonus !== undefined && !(object.retryChanceBonus >= 0 && object.retryChanceBonus <= 0.5)) {
+    fail(`retryChanceBonus는 0~0.5 사이여야 함 (${object.retryChanceBonus})`)
+  }
+  if (object.reintro?.some((text) => !text.trim())) {
+    fail('reintro(다시 맡을 때의 계기)에 빈 문장이 있음')
   }
   for (const [outcome, text] of Object.entries(object.closing ?? {})) {
     if (outcome !== 'cleared' && outcome !== 'failed' && outcome !== 'demoted') {
@@ -164,6 +178,19 @@ export function validateObject(
         }
         if (!endingIds.has(endingId)) {
           fail(`${where}: 정의되지 않은 엔딩 id: ${endingId}`)
+        }
+      }
+      // 실패 엔딩: 최종 객체에서만, 정의된 엔딩이어야 한다 (실패에 엔딩이 걸리면 재도전 없이 그 엔딩으로 판이 끝난다)
+      const failureEndingId = choice.failure.endingId
+      if (failureEndingId !== undefined) {
+        if (!object.finale) {
+          fail(`${where}: failure.endingId는 최종 객체(finale)에서만 쓸 수 있음`)
+        }
+        if (!endingIds.has(failureEndingId)) {
+          fail(`${where}: 정의되지 않은 엔딩 id(failure): ${failureEndingId}`)
+        }
+        if (choice.failure.kind !== 'setback') {
+          fail(`${where}: failure.endingId는 setback 실패에만 쓸 수 있음 (${choice.failure.kind}은 자체 결말이 있음)`)
         }
       }
       // 최종 객체가 엔딩 없이 "성공"으로 끝나 버리면 판이 안 끝나므로, 객체를 끝내는 성공에는 반드시 엔딩을 붙인다.
@@ -480,6 +507,107 @@ export function validateInterludes(
       if (choice.success.finish || choice.success.endingId !== undefined) {
         fail(`${where}: 막간 이벤트에서는 finish·endingId를 쓸 수 없음`)
       }
+    }
+  }
+  return errors
+}
+
+interface EndingRouteRefs {
+  npcIds: ReadonlySet<string>
+  /** 선택지·서술이 켜는 모든 플래그 (조건의 플래그가 오타인지 확인하는 용도) */
+  settableFlags: ReadonlySet<string>
+}
+
+/**
+ * 엔딩으로 가는 길 검증: 조건부 선택지(`requires`)와 엔딩 변주(`endingVariants`)의 조건이 가리키는 플래그·NPC가 실제로 있는지,
+ * 변주의 엔딩 id가 정의되어 있는지, 그리고 정의된 모든 엔딩에 닿는 선택지가 하나 이상 있는지 (도달할 수 없는 엔딩 방지).
+ */
+export function validateEndingRoutes(
+  objects: readonly ContainmentObject[],
+  endingIds: ReadonlySet<string>,
+  refs: EndingRouteRefs,
+): string[] {
+  const errors: string[] = []
+  const reachable = new Set<string>()
+
+  // 제안되는 최종 객체(`when`): 최종 객체여야 하고, 거절 해설(`decline`)이 있어야 하고, 조건이 가리키는 플래그·NPC가 실제로 있어야 한다.
+  // 그리고 제안이 없거나 거절했을 때 맡을 기본 최종 객체(`when`이 없는 최종 객체)가 반드시 있어야 한다.
+  const finales = objects.filter((object) => object.finale)
+  if (finales.length > 0 && !finales.some((object) => !object.when)) {
+    errors.push('[최종 객체] 기본 최종 객체(when이 없는 finale 객체)가 하나도 없음 (제안을 거절하거나 조건이 없을 때 갈 곳이 없다)')
+  }
+  for (const object of objects) {
+    if (object.when === undefined) {
+      continue
+    }
+    const where = `[객체 ${object.id}]`
+    if (!object.finale) {
+      errors.push(`${where} when(제안 조건)은 최종 객체(finale)에서만 쓸 수 있음`)
+    }
+    if (!object.decline?.trim()) {
+      errors.push(`${where} 제안되는 최종 객체에는 decline(거절했을 때의 해설)이 필요함`)
+    }
+    for (const flag of [...(object.when.flags ?? []), ...(object.when.anyFlags ?? []), ...(object.when.notFlags ?? [])]) {
+      if (!refs.settableFlags.has(flag)) {
+        errors.push(`${where} when의 플래그 "${flag}"를 켜는 선택지가 어디에도 없음 (오타 확인)`)
+      }
+    }
+    for (const npcId of Object.keys(object.when.relations ?? {})) {
+      if (!refs.npcIds.has(npcId)) {
+        errors.push(`${where} when의 NPC id가 정의되지 않음: ${npcId}`)
+      }
+    }
+  }
+
+  for (const object of objects) {
+    for (const stage of object.stages) {
+      for (const choice of stage.choices) {
+        const where = `[객체 ${object.id}/${stage.id}/${choice.id}]`
+        const checkCondition = (condition: InterludeCondition, label: string) => {
+          for (const flag of [...(condition.flags ?? []), ...(condition.anyFlags ?? []), ...(condition.notFlags ?? [])]) {
+            if (!refs.settableFlags.has(flag)) {
+              errors.push(`${where} ${label}의 플래그 "${flag}"를 켜는 선택지가 어디에도 없음 (오타 확인)`)
+            }
+          }
+          for (const npcId of Object.keys(condition.relations ?? {})) {
+            if (!refs.npcIds.has(npcId)) {
+              errors.push(`${where} ${label}의 NPC id가 정의되지 않음: ${npcId}`)
+            }
+          }
+        }
+
+        if (choice.requires) {
+          if (!choice.requires.note.trim()) {
+            errors.push(`${where} requires.note(어떻게 열리는지 적은 설명)가 비어 있음`)
+          }
+          checkCondition(choice.requires.when, 'requires')
+        }
+
+        const { endingId, endingVariants } = choice.success
+        if (endingId !== undefined) {
+          reachable.add(endingId)
+        }
+        // 실패 엔딩에도 닿을 수 있다
+        if (choice.failure.endingId !== undefined) {
+          reachable.add(choice.failure.endingId)
+        }
+        if ((endingVariants ?? []).length > 0 && endingId === undefined) {
+          errors.push(`${where} endingVariants는 endingId가 있는 선택지에만 쓸 수 있음 (변주가 없을 때의 기본 엔딩이 필요)`)
+        }
+        for (const variant of endingVariants ?? []) {
+          if (!endingIds.has(variant.endingId)) {
+            errors.push(`${where} endingVariants의 엔딩 id가 정의되지 않음: ${variant.endingId}`)
+          }
+          reachable.add(variant.endingId)
+          checkCondition(variant.when, 'endingVariants')
+        }
+      }
+    }
+  }
+
+  for (const endingId of endingIds) {
+    if (!reachable.has(endingId)) {
+      errors.push(`[엔딩 ${endingId}] 이 엔딩에 닿는 선택지(endingId·endingVariants)가 하나도 없음`)
     }
   }
   return errors

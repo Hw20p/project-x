@@ -200,7 +200,9 @@ function PlayView({ game, feed, resumed, act, restart }: PlayViewProps) {
         object={object}
         reassigned={game.progress.reassigned}
         knowledgeBonus={game.progress.knowledgeBonus}
+        offered={game.progress.offered}
         onBegin={() => act({ type: 'begin' })}
+        onDecline={() => act({ type: 'decline' })}
       />
     )
   } else if (game.phase === 'choosing' && object && stage && game.progress) {

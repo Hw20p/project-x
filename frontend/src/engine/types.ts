@@ -40,6 +40,11 @@ export interface SuccessOutcome extends OutcomeExtras {
   finish?: boolean
   /** 최종 객체(`finale`)에서만 사용. 이 선택이 성공하면 해당 엔딩으로 판이 끝난다. */
   endingId?: string
+  /**
+   * 엔딩 변주: 이 선택이 성공했을 때 살아온 이력이 조건(`when`)에 맞으면 `endingId` 대신 그 엔딩으로 끝난다.
+   * 위에서부터 처음 맞는 것 하나만 쓰고, 하나도 안 맞으면 `endingId`. 같은 선택이 이력(연인·관계·플래그)에 따라 다른 결말이 되게 한다.
+   */
+  endingVariants?: { when: InterludeCondition; endingId: string }[]
 }
 
 /** 최종 객체의 선택으로 도달하는 엔딩의 표시용 정의 (`content/endings.ts`) */
@@ -53,6 +58,11 @@ export interface FailureOutcome extends OutcomeExtras {
   kind: FailureKind
   text: string
   effects?: StatDelta
+  /**
+   * 최종 객체(`finale`)에서만 사용. 이 선택이 실패하면 재도전 없이 해당 엔딩(실패 엔딩)으로 판이 끝난다.
+   * 쓰지 않으면 실패는 "관리 실패"로 끝나고 나중에 다시 맡아 재도전한다.
+   */
+  endingId?: string
 }
 
 /**
@@ -89,6 +99,8 @@ export interface InterludeCondition {
   stats?: Partial<Record<StatKey, { min?: number; max?: number }>>
   /** 모두 켜져 있어야 하는 플래그 */
   flags?: string[]
+  /** 이 중 하나라도 켜져 있어야 하는 플래그 (둘 중 한 사람과 연인이었을 때처럼 "또는" 조건) */
+  anyFlags?: string[]
   /** 하나라도 켜져 있으면 안 되는 플래그 */
   notFlags?: string[]
   /** NPC id → 관계 값 범위 */
@@ -213,8 +225,25 @@ export interface Choice {
   risk: Risk
   /** 스탯 보정 전 성공 확률 (0~1) */
   baseChance: number
+  /**
+   * true면 항상 성공한다(확률 100%). 스탯·등급·나이·관계 보정과 3~97% 제한을 모두 무시한다. 마지막 안전한 길처럼 반드시 성공해야
+   * 하는 선택지에 쓴다. 이때 `baseChance`는 표시와 검증용 값일 뿐이니 0.97 같은 높은 값을 적어 둔다.
+   */
+  certain?: boolean
   /** 스탯이 기준값(50)보다 1점 높을 때마다 더해지는 확률. 예: { knowledge: 0.005 } */
   statWeights?: StatDelta
+  /**
+   * NPC와의 관계 값 1점마다 더해지는 성공 확률 (npc id → 가중치). 예: `{ harin: 0.002 }`이면 문하린과의 관계가 50일 때 +10%p,
+   * -50일 때 -10%p. 관계를 쌓은 만큼 유리한 선택지에 쓴다. 최종 성공 확률은 이전처럼 3~97%로 잘린다.
+   */
+  relationWeights?: Record<string, number>
+  /**
+   * 조건부 선택지(숨은 길): 조건(`when`)을 만족해야 선택지 목록에 나타난다. 만족하지 못하면 목록에 아예 나오지 않는다
+   * (연인이 있어야만 나오는 마지막 선택지처럼, 조건을 모르는 플레이어에게는 존재가 보이지 않는다).
+   * 조건은 지금 상태(플래그·관계·직급 등)로 판정한다. `note`는 어떻게 열리는지 적은 작성자용 설명으로, 화면에는 보이지 않고
+   * 개발용 조건 정리 페이지에 쓰인다.
+   */
+  requires?: { when: InterludeCondition; note: string }
   success: SuccessOutcome
   failure: FailureOutcome
 }
@@ -251,10 +280,30 @@ export type ObjectClosing = Partial<Record<ClosingOutcome, string | string[]>>
 export interface ContainmentObject {
   id: string
   /**
+   * 제안되는 최종 객체의 배정 조건 (최종 객체(`finale`)에서만 쓴다). 최종 객체가 열렸을 때 이 조건(플래그·관계 등)을 만족하면
+   * 이 객체가 "제안"된다: 배정 팝업에서 받아들이거나, 거절하고 기본 최종 객체(조건이 없는 최종 객체)로 갈 수 있다.
+   * 조건이 없는 최종 객체는 기본 객체로, 제안할 객체가 없거나 거절했을 때 맡는다.
+   */
+  when?: InterludeCondition
+  /** 제안되는 최종 객체가 둘 이상 조건에 맞을 때의 우선순위. 클수록 먼저 제안된다. 기본 0. */
+  priority?: number
+  /** 제안을 거절했을 때, 기본 최종 객체의 배정 안내 앞에 줄거리 스트림으로 흐르는 해설. `when`이 있는 객체에 필수. */
+  decline?: string
+  /**
    * 객체를 처음 맡게 된 계기: 객체 배정 안내 바로 앞에 줄거리 스트림에 흐르는 한두 문장 (왜 내가 이 객체를 맡게 되었는지).
    * 재배정(이미 관리해 본 객체를 다시 맡는 경우)에는 쓰지 않고 `content/intros.ts`의 기본 문구를 쓴다. 없으면 아무것도 흐르지 않는다.
    */
   intro?: string
+  /**
+   * 다시 맡을 때(재배정·재도전)의 계기: 몇 번째 재도전이냐에 따라 순서대로 쓴다 (첫 재도전은 0번째, 배열이 끝나면 마지막 문장을 반복).
+   * 같은 객체에 다시 설 때마다 해설이 달라지게 한다. 없으면 `content/intros.ts`의 공통 기본 문구를 쓴다.
+   */
+  reintro?: string[]
+  /**
+   * 다시 맡을 때(재도전)마다 이 객체의 모든 선택지에 더해지는 성공 확률(0~1, 확률 자체에 직접 더한다). 이미 맡은 횟수만큼 쌓인다:
+   * 예: 0.2이면 두 번째 진입 +20%p, 세 번째 +40%p. 3~97% 제한은 그대로다. 재도전이 있는 최종 객체(X-011)에서 쓴다.
+   */
+  retryChanceBonus?: number
   /** 표시용 관리 번호. 정렬 기준이기도 함. */
   code: string
   name: string

@@ -19,7 +19,23 @@ export default {
     '문은 안쪽에서 열 수 없다. 바깥쪽 손잡이를 쥘 수 있었던 사람은 지금까지 한 명뿐이다.',
     '(작성자 서명란은 비어 있다. 수석 관리자의 사번만 적혀 있다.)',
   ],
-  failureTolerance: 1,
+  // 최종 객체는 실패를 허용하지 않는다: 엔딩 선택이 실패하면 "관리 실패"로 끝나고, 나중에 다시 맡아 재도전한다(지식 보너스).
+  failureTolerance: 0,
+  // 재도전할 때마다 모든 선택지의 성공 확률이 +20%p씩 오른다 (두 번째 진입 +20%p, 세 번째 +40%p). 재배정의 지식 보너스와 별개로 더해진다.
+  retryChanceBonus: 0.2,
+  // 다시 맡을 때마다(재도전) 계기 해설이 달라진다. 몇 번째 재도전이냐에 따라 순서대로, 배열이 끝나면 마지막 문장을 반복한다.
+  reintro: [
+    '엘리베이터는 이번에도 이름 없는 층에서 멈췄다. 복도 바닥의 마지막 칸에는 지난번에 남긴 발자국이 아직 마르지 않은 채 찍혀 있었다.',
+    '세 번째로 같은 복도를 걸었다. 바닥의 번호가 한 칸씩 더 닳아 있었고, 문은 처음보다 가까워 보였다.',
+    '이제 복도는 눈을 감고도 걸을 수 있었다. 문은 기다리는 데 익숙한 사람처럼 같은 자리에 서 있었다.',
+  ],
+  closing: {
+    failed: [
+      '문은 이번에도 닫힌 채였다. 엘리베이터는 아무 일 없었다는 듯 지상으로 올라갔다.',
+      '결정은 내려지지 않았고, 복도의 번호는 한 칸씩 더 닳았다. 문은 기다리는 데 익숙한 듯 보였다.',
+      '문 앞에서 돌아온 사원증에는 새 서명이 하나 늘어 있었다. 다음에 다시 내려갈 때까지 문은 그대로일 것이다.',
+    ],
+  },
   stages: [
     {
       id: 's1',
@@ -65,18 +81,17 @@ export default {
           id: 'knock',
           text: '문을 두드려 안쪽의 응답을 기다린다',
           story: '문 앞에 서서 손등을 들어 올렸다. 숨을 한 번 고르고 세 번 천천히 두드린 뒤 귀를 문에 가져다 댔다.',
-          risk: 5,
-          baseChance: 0.2,
+          risk: 4,
+          baseChance: 0.3,
           statWeights: { sanity: 0.006, knowledge: 0.004 },
           success: {
-            text: '세 번째 노크에 응답이 왔다. 문 안쪽에서, 당신과 같은 박자로.',
-            effects: { knowledge: 14, reputation: 10, sanity: -12 },
-            finish: true,
-            endingId: 'answered',
+            text: '세 번째 노크에 응답이 왔다. 문 안쪽에서, 당신과 같은 박자로. 문은 열리지 않았고, 응답은 한 번뿐이었다.',
+            effects: { knowledge: 14, reputation: 10, sanity: -10 },
           },
           failure: {
-            kind: 'death',
-            text: '응답은 오지 않았다. 대신 당신이 문 너머에서 두드리는 쪽이 되었다.',
+            kind: 'setback',
+            text: '응답은 오지 않았다. 대신 문 너머에서 누군가 같은 박자로 두드리는 소리가 한동안 따라왔다.',
+            effects: { sanity: -16 },
           },
         },
       ],
@@ -156,8 +171,9 @@ export default {
           text: '아무것도 하지 않고 문을 등지고 걸어 나간다',
           story: '문을 등지고 서서 한 번도 돌아보지 않기로 마음먹었다. 첫 걸음을 떼자 발소리가 복도 끝까지 이어졌다.',
           risk: 1,
-          baseChance: 0.8,
-          statWeights: { sanity: 0.003 },
+          baseChance: 0.97,
+          // 마지막 안전한 길: 항상 성공한다 (확률 100%). 재도전 없이 언제든 퇴직으로 나갈 수 있다.
+          certain: true,
           success: {
             text: '엘리베이터는 정확히 한 번 멈췄다. 지상으로 나왔을 때는 아침이었다. 당신은 사원증을 반납했다.',
             effects: { sanity: 10 },
@@ -180,6 +196,10 @@ export default {
             text: '후임자는 열쇠를 받고 한참 문을 바라보았다. 그의 뒷모습이 첫 출근 날의 당신과 닮아 있었다.',
             effects: { reputation: 10 },
             endingId: 'succession',
+            // 팀장의 부탁을 받아들여 신뢰를 얻었고(taeseong-trust) 관계가 깊다면 팀장이 인수인계의 보증인이 된다
+            endingVariants: [
+              { when: { flags: ['taeseong-trust'], relations: { taeseong: { min: 20 } } }, endingId: 'succession-taeseong' },
+            ],
           },
           failure: {
             kind: 'setback',
@@ -209,8 +229,8 @@ export default {
           id: 'open-door',
           text: '바깥쪽 손잡이를 잡고 문을 연다',
           story: '문 앞에서 바깥쪽 손잡이를 쥐었다. 열쇠 구멍이 없다는 것을 그제야 처음 알아차렸다.',
-          risk: 5,
-          baseChance: 0.2,
+          risk: 4,
+          baseChance: 0.4,
           statWeights: { sanity: 0.006, knowledge: 0.005 },
           success: {
             text: '문이 열렸다. 그 너머를 본 당신은 문장 하나를 떠올렸다. “저는 처음부터 알고 있었습니다.”',
@@ -218,8 +238,9 @@ export default {
             endingId: 'opened',
           },
           failure: {
-            kind: 'death',
-            text: '문은 열렸다. 안쪽에서 열린 것인지 바깥쪽에서 열린 것인지는 기록되지 않았다. 이튿날 엘리베이터는 한 층 더 깊이 내려가 있었다.',
+            kind: 'setback',
+            text: '손잡이가 반쯤 돌아가다 멈췄다. 안쪽과 바깥쪽 중 어느 쪽의 힘인지는 기록되지 않았다. 이튿날 엘리베이터는 한 층 더 깊이 내려가 있었다.',
+            effects: { sanity: -20 },
           },
         },
       ],

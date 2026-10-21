@@ -62,6 +62,9 @@ export function meetsCondition(
   if (condition.flags?.some((flag) => !state.flags.includes(flag))) {
     return false
   }
+  if (condition.anyFlags && !condition.anyFlags.some((flag) => state.flags.includes(flag))) {
+    return false
+  }
   if (condition.notFlags?.some((flag) => state.flags.includes(flag))) {
     return false
   }
@@ -106,7 +109,7 @@ export function isSpecificEvent(def: InterludeDef): boolean {
   return Boolean(
     def.once ||
       (when &&
-        (when.flags || when.notFlags || when.relations || when.stats || when.backgrounds || when.objects || when.objectTiers)),
+        (when.flags || when.anyFlags || when.notFlags || when.relations || when.stats || when.backgrounds || when.objects || when.objectTiers)),
   )
 }
 

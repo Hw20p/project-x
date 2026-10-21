@@ -7,10 +7,57 @@ import type { AfterwordDef } from '../engine/afterword'
 //   background : 입사 배경 (위 그룹이 비었을 때만 보인다 — 최대 3줄)
 // 끝난 방식: endingKinds(사망·붕괴·해고·퇴직·천수·최종 객체), endingIds(최종 객체의 엔딩: succession·walkaway·sealed·opened·answered).
 // 새 후일담을 쓰려면 이 목록에 항목만 더하면 된다.
-const SURFACE = ['succession', 'walkaway']
-const VANISHED = ['opened', 'answered']
+const SURFACE = ['succession', 'walkaway', 'succession-taeseong']
+const SEALED = ['sealed', 'sealed-pair']
+const VANISHED = ['opened', 'opened-known', 'answered-name']
 
 export const afterwords: AfterwordDef[] = [
+  // ── 연인과 함께 나온 엔딩(동행·두 개의 점)과 낭독 ───────
+  {
+    id: 'aw-jian-lover-together',
+    group: 'love',
+    priority: 11,
+    when: { flags: ['jian-lover'], endingIds: ['together-jian'] },
+    text: '서지안은 그날 이후 매일 같은 우산을 썼다. 비가 오지 않는 날에도.',
+  },
+  {
+    id: 'aw-harin-lover-together',
+    group: 'love',
+    priority: 11,
+    when: { flags: ['harin-lover'], endingIds: ['together-harin'] },
+    text: '문하린의 노트에는 그날 이후 새 장이 시작되었다. 첫 줄은 “오늘은 이상 없음.”이었고, 필체는 둘이었다.',
+  },
+  {
+    id: 'aw-jian-lover-recited',
+    group: 'love',
+    priority: 10,
+    when: { flags: ['jian-lover'], endingIds: ['recited'] },
+    text: '서지안은 낭독이 끝난 뒤에도 한참 문 앞에서 기다렸다. 닫힌 문은 조용했고, 두 사람은 같은 엘리베이터로 올라왔다.',
+  },
+  {
+    id: 'aw-harin-lover-recited',
+    group: 'love',
+    priority: 10,
+    when: { flags: ['harin-lover'], endingIds: ['recited'] },
+    text: '문하린은 낭독이 끝나자 노트의 마지막 장에 점을 하나 찍고 덮었다. 두 개의 점은 같은 높이였다.',
+  },
+
+  // ── 연인과 함께한 길이 실패한 엔딩(놓친 손·두 개의 의자) ──
+  {
+    id: 'aw-jian-lover-failed',
+    group: 'love',
+    priority: 11,
+    when: { flags: ['jian-lover'], endingIds: ['lost-hand', 'two-chairs'] },
+    text: '서지안은 그날 이후에도 엘리베이터 앞에서 같은 시각에 멈춰 섰다. 놓친 손의 온도를 기억하는 사람처럼.',
+  },
+  {
+    id: 'aw-harin-lover-failed',
+    group: 'love',
+    priority: 11,
+    when: { flags: ['harin-lover'], endingIds: ['lost-hand', 'two-chairs'] },
+    text: '문하린의 노트에서 그날의 쪽은 비어 있었다. 쓰지 못한 문장 옆에 점 하나만 찍혀 있었다.',
+  },
+
   // ── 서지안과 연인이었다 ────────────────────────────
   {
     id: 'aw-jian-lover-surface',
@@ -23,7 +70,7 @@ export const afterwords: AfterwordDef[] = [
     id: 'aw-jian-lover-sealed',
     group: 'love',
     priority: 10,
-    when: { flags: ['jian-lover'], endingIds: ['sealed'] },
+    when: { flags: ['jian-lover'], endingIds: SEALED },
     text: '서지안은 매일 도시락을 문 앞 의자 옆에 두고 갔다. 빈 도시락통은 다음 날 아침 가지런히 놓여 있었다.',
   },
   {
@@ -67,7 +114,7 @@ export const afterwords: AfterwordDef[] = [
     id: 'aw-harin-lover-sealed',
     group: 'love',
     priority: 10,
-    when: { flags: ['harin-lover'], endingIds: ['sealed'] },
+    when: { flags: ['harin-lover'], endingIds: SEALED },
     text: '문하린은 매일 문 앞의 의자 곁을 지나며 일지를 한 줄씩 소리 내어 읽어 주었다.',
   },
   {

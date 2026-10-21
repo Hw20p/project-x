@@ -90,6 +90,17 @@ export interface ObjectStat {
   unfinished: number
 }
 
+/** 최종 객체 하나의 집계 */
+export interface FinaleObjectStat {
+  objectId: string
+  code: string
+  name: string
+  /** 이 객체를 맡은 판 수 (끝까지 못 간 것 포함) */
+  reached: number
+  /** 이 객체에서 끝난 판의 엔딩 id별 판 수 */
+  endings: Record<string, number>
+}
+
 /** 막간 이벤트 하나의 집계 */
 export interface InterludeStat {
   eventId: string
@@ -133,6 +144,8 @@ export interface SimulationSummary {
   finaleReached: number
   /** 최종 객체로 끝난 판의 엔딩 id별 판 수 */
   finaleEndings: Record<string, number>
+  /** 최종 객체별로 맡은 판 수와, 그 객체에서 끝난 엔딩 id별 판 수 */
+  finaleObjects: FinaleObjectStat[]
   deathCauses: Record<DeathCause, number>
   /** 종료 시점의 직급별 판 수 */
   finalRank: Record<Rank, number>
@@ -150,12 +163,22 @@ export interface SimulationSummary {
 }
 
 function pickChoiceId(strategy: BotStrategy, options: readonly ChoiceOption[], botRng: Rng): string {
+  // 확정 성공 선택지(X-011의 "문을 등지고 걸어 나간다", 항상 성공하는 퇴직 길)는 봇이 고르지 않는다. 고르면 모든 전략이
+  // 퇴직으로만 끝나서 다른 엔딩과 최종 객체 구간의 밸런스를 볼 수 없다. 다른 선택지가 없을 때만 고른다.
+  const brave = options.filter((option) => !option.choice.certain)
+  const pool = brave.length > 0 ? brave : options
   if (isEndingBot(strategy)) {
     const targetId = strategy.slice(ENDING_BOT_PREFIX.length)
-    const target = options.find((option) => option.choice.success.endingId === targetId)
-    return target ? target.choice.id : pickByStrategy('safest', options, botRng)
+    // 기본 엔딩이거나, 이력에 따라 그 엔딩으로 바뀌는 변주가 있는 선택지 (변주는 봇이 이력을 만들지 않아 거의 못 닿는다).
+    // 퇴직(walkaway)을 노리는 엔딩 선호 봇은 확정 성공 선택지도 골라야 하므로 전체 선택지에서 찾는다.
+    const target = options.find(
+      (option) =>
+        option.choice.success.endingId === targetId ||
+        option.choice.success.endingVariants?.some((variant) => variant.endingId === targetId),
+    )
+    return target ? target.choice.id : pickByStrategy('safest', pool, botRng)
   }
-  return pickByStrategy(strategy, options, botRng)
+  return pickByStrategy(strategy, pool, botRng)
 }
 
 function pickByStrategy(strategy: BaseStrategy, options: readonly ChoiceOption[], botRng: Rng): string {
@@ -203,6 +226,7 @@ export function playGame(
     if (state.phase === 'briefing') {
       state = reduce(ctx, state, { type: 'begin' })
     } else if (state.phase === 'choosing' || state.phase === 'interlude') {
+      // 조건을 못 채운 숨은 길은 선택지 목록에 아예 없어서 봇도 고를 수 없다
       const choiceId = pickChoiceId(strategy, getChoiceOptions(ctx, state), botRng)
       state = reduce(ctx, state, { type: 'choose', choiceId })
     } else {
@@ -259,6 +283,24 @@ export function simulate(
   const finaleEndings: Record<string, number> = {}
   const finaleObjectIds = new Set(ctx.objects.filter((object) => object.finale).map((object) => object.id))
   let finaleReached = 0
+  // 실패해도 엔딩으로 이어지는 선택지의 엔딩 id (객체 관리 결과로는 실패로 센다)
+  const failureEndingIds = new Set(
+    ctx.objects.flatMap((object) =>
+      object.stages.flatMap((stage) =>
+        stage.choices.flatMap((choice) => (choice.failure.endingId ? [choice.failure.endingId] : [])),
+      ),
+    ),
+  )
+  const finaleStats = new Map<string, FinaleObjectStat>(
+    ctx.objects
+      .filter((object) => object.finale)
+      .map(
+        (object): [string, FinaleObjectStat] => [
+          object.id,
+          { objectId: object.id, code: object.code, name: object.name, reached: 0, endings: {} },
+        ],
+      ),
+  )
   const deathCauses = zeroCounts(DEATH_CAUSES)
   const finalRank = zeroRankCounts()
   const reachedCount = zeroRankCounts()
@@ -315,6 +357,20 @@ export function simulate(
       (ending.objectId !== undefined && finaleObjectIds.has(ending.objectId))
     if (reachedFinale) {
       finaleReached += 1
+    }
+    // 같은 판에서 여러 최종 객체를 맡을 수 있다 (제안을 받고 실패한 뒤 X-011로 가는 경우 등)
+    const finaleManaged = new Set(state.history.map((report) => report.objectId).filter((id) => finaleStats.has(id)))
+    if (ending.objectId && finaleStats.has(ending.objectId)) {
+      finaleManaged.add(ending.objectId)
+    }
+    for (const objectId of finaleManaged) {
+      finaleStats.get(objectId)!.reached += 1
+    }
+    if (ending.kind === 'finale' && ending.endingId && ending.objectId) {
+      const stat = finaleStats.get(ending.objectId)
+      if (stat) {
+        stat.endings[ending.endingId] = (stat.endings[ending.endingId] ?? 0) + 1
+      }
     }
     finalRank[state.player.career.rank] += 1
     totalChoices += state.choiceLog.length
@@ -385,7 +441,12 @@ export function simulate(
       if (stat) {
         stat.assigned += 1
         if (ending.kind === 'finale') {
-          stat.cleared += 1
+          // 실패 엔딩(놓친 손 등)은 엔딩이 나와도 객체 관리로는 실패다
+          if (ending.endingId && failureEndingIds.has(ending.endingId)) {
+            stat.failed += 1
+          } else {
+            stat.cleared += 1
+          }
         } else if (ending.kind === 'breakdown') {
           stat.brokeDown += 1
         } else if (ending.deathCause === 'instant' || ending.deathCause === 'injury') {
@@ -445,6 +506,7 @@ export function simulate(
     endings,
     finaleReached,
     finaleEndings,
+    finaleObjects: [...finaleStats.values()],
     deathCauses,
     finalRank,
     reachedRank,

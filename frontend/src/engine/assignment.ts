@@ -41,13 +41,19 @@ export function pickNextObject(
   clearedIds: ReadonlySet<string>,
   /** 최종 객체가 열렸는지 (수석이 된 뒤 시간·줄거리 조건이 찼을 때). 열렸으면 일반 객체보다 최종 객체가 먼저다. */
   finaleOpen = false,
+  /** 최종 객체 후보에 넣어도 되는지. 이력 조건이 걸린(`when`) 최종 객체가 조건을 못 채웠으면 false를 돌려준다. */
+  isEligible: (object: ContainmentObject) => boolean = () => true,
 ): Assignment | null {
   // 최종 객체는 열렸을 때만 배정되므로 일반 배정 후보에서 뺀다.
   const regular = objects.filter((object) => !object.finale)
 
   // 최종 객체가 열렸다면 그 객체를 맡는다. 이전에 실패했다면 재도전(지식 보너스 적용).
+  // 이력 조건이 맞는 최종 객체(`when`)가 있으면 그것이 먼저 제안되고(우선순위가 높은 것), 없으면 기본 최종 객체를 맡는다.
   if (rank === 5 && finaleOpen) {
-    const finales = objects.filter((object) => object.finale && !clearedIds.has(object.id))
+    const available = objects.filter((object) => object.finale && !clearedIds.has(object.id) && isEligible(object))
+    const offered = available.filter((object) => object.when)
+    const bestPriority = Math.max(...offered.map((object) => object.priority ?? 0))
+    const finales = offered.length > 0 ? offered.filter((object) => (object.priority ?? 0) === bestPriority) : available
     if (finales.length > 0) {
       const object = rng.pickWeighted(finales, () => 1)
       const times = managedCounts[object.id] ?? 0

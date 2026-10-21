@@ -8,6 +8,7 @@ import {
   distributionText,
   ENDING_LABELS,
   finaleEndingsText,
+  finaleObjectLines,
   finaleReachedText,
   formatSimulationReport,
   percent,
@@ -71,6 +72,18 @@ function SummaryCard({ summary }: { summary: SimulationSummary }) {
           <div>
             <dt className="inline font-semibold">최종 엔딩별: </dt>
             <dd className="inline">{finaleText}</dd>
+          </div>
+        )}
+        {finaleText && (
+          <div>
+            <dt className="font-semibold">최종 객체별:</dt>
+            <dd>
+              <ul className="list-disc pl-5">
+                {finaleObjectLines(summary, endingTitles).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </dd>
           </div>
         )}
       </dl>

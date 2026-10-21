@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { PROMOTION_REQUIREMENTS, RANK_LABELS } from '../../engine/config'
+import { objects } from '../../content'
 import { ACT_TITLES, currentAct } from '../../engine/flow'
 import { STAT_LABELS } from '../../engine/report'
 import type { GameState } from '../../engine/state'
@@ -61,6 +62,8 @@ export function StatusPanel({ state, controls, view, gauge, relationsChanged = f
   const stats = view?.stats ?? state.player.stats
   const rank = view?.rank ?? state.player.career.rank
   const act = view?.act ?? currentAct(state.flags)
+  // 최종 객체(X-011 「바깥」)를 맡고 있는 동안은 막 표시가 "최종막"이 된다
+  const finaleObject = objects.find((object) => object.finale && object.id === state.progress?.objectId)
   const points = view?.points ?? state.player.career.promotionPoints
   const requirement = rank === 5 ? null : PROMOTION_REQUIREMENTS[rank]
 
@@ -109,11 +112,11 @@ export function StatusPanel({ state, controls, view, gauge, relationsChanged = f
         <div className="flex items-start gap-3">
           <div className="flex w-16 shrink-0 flex-col items-center gap-1">
             <Portrait backgroundId={state.backgroundId} age={age} sanity={stats.sanity} size={64} />
-            {/* 큰 줄거리의 막: 프로필 아래에 "2막 / 규칙의 균열"로 보인다 */}
+            {/* 큰 줄거리의 막: 프로필 아래에 "2막 / 규칙의 균열"로 보인다. 최종 객체를 맡고 있으면 "최종막 / 바깥". */}
             <p className="text-center text-[0.68rem] leading-tight text-ash">
-              <span className="text-fog">{act}막</span>
+              <span className={finaleObject ? 'text-glow' : 'text-fog'}>{finaleObject ? '최종막' : `${act}막`}</span>
               <br />
-              {ACT_TITLES[act]}
+              {finaleObject ? finaleObject.name : ACT_TITLES[act]}
             </p>
           </div>
           <div className="min-w-0 flex-1">

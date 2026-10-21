@@ -46,6 +46,8 @@ export interface Ending {
 /** 지금 관리 중인 객체의 진행 상황 */
 export interface ObjectProgress {
   objectId: string
+  /** 이력 조건으로 "제안된" 최종 객체인지. true면 배정 팝업에서 거절하고 기본 최종 객체로 갈 수 있다. */
+  offered?: boolean
   reassigned: boolean
   /** 이 객체를 관리하는 동안만 확률 계산에 더해지는 지식 보너스 */
   knowledgeBonus: number
@@ -155,6 +157,8 @@ export interface InterludeRecord {
 export type ChoiceLogEntry =
   | { objectId: string; stageId: string; choiceId: string }
   | { interludeId: string; choiceId: string }
+  /** 제안된 최종 객체를 거절하고 기본 최종 객체로 간 기록 */
+  | { declinedObjectId: string }
 
 export interface GameState {
   /** 최초 시드 (리플레이 때 필요) */

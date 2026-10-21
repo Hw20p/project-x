@@ -34,6 +34,9 @@ export function describeCondition(when: AfterwordCondition | undefined): string[
   for (const flag of when.flags ?? []) {
     parts.push(`플래그 ${flag}`)
   }
+  if (when.anyFlags) {
+    parts.push(`플래그 중 하나 ${when.anyFlags.join(' / ')}`)
+  }
   for (const flag of when.notFlags ?? []) {
     parts.push(`${flag} 아님`)
   }

@@ -9,6 +9,7 @@ import {
   collectSetFlags,
   validateAfterwords,
   validateBackgrounds,
+  validateEndingRoutes,
   validateFlows,
   validateInterludes,
   validateNpcs,
@@ -60,6 +61,7 @@ const errors = [
   ...validateObjects(objects, endingIds, npcIds),
   ...validateInterludes(interludes, npcIds, objects, flows),
   ...validateFlows(flows, openings, { backgroundIds, npcIds, objects, interludes }),
+  ...validateEndingRoutes(objects, endingIds, { npcIds, settableFlags: collectSetFlags(objects, interludes, flows) }),
   ...validateAfterwords(afterwords, {
     npcIds,
     endingIds,

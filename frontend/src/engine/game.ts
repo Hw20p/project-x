@@ -16,7 +16,7 @@
 import { pickNextObject } from './assignment'
 import { ENTRY_AGE, FINALE, MAX_AGE, OBJECT_SCHEDULE } from './config'
 import { currentAct, flagsSetBy, openingEntries, pickYearLines } from './flow'
-import { pickYearlyInterlude } from './interlude'
+import { meetsCondition, pickYearlyInterlude } from './interlude'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import {
@@ -25,6 +25,7 @@ import {
   applyOutcomeEffects,
   applyYearlyAging,
   calcBondEffects,
+  calcReassignKnowledgeBonus,
   calcSuccessChance,
   canPromote,
   createCareer,
@@ -90,12 +91,33 @@ export interface GameOptions {
 export type GameAction =
   | { type: 'begin' }
   | { type: 'choose'; choiceId: string }
+  /** 제안된 최종 객체를 거절하고 기본 최종 객체로 간다 (briefing 단계에서 제안된 객체일 때만) */
+  | { type: 'decline' }
   | { type: 'continue' }
 
 export interface ChoiceOption {
   choice: Choice
   /** 화면에 그대로 보여 줄 최종 성공 확률 (지식 보너스까지 반영) */
   chance: number
+}
+
+/**
+ * 최종 객체의 선택이 성공했을 때 도달하는 엔딩 id. 살아온 이력(`state`)이 `endingVariants`의 조건에 처음 맞는 변주가 있으면
+ * 그 엔딩, 없으면 기본 `endingId`. (선택의 결과로 바뀐 플래그·관계까지 반영된 상태로 판정한다.)
+ */
+export function resolveEndingId(choice: Choice, state: GameState): string | undefined {
+  const variant = choice.success.endingVariants?.find((candidate) => meetsCondition(candidate.when, state))
+  return variant ? variant.endingId : choice.success.endingId
+}
+
+/** 다시 맡는 객체의 재도전 보너스: 객체의 `retryChanceBonus` × 이미 맡은 횟수 (처음 맡을 때는 0) */
+function retryBonusOf(object: ContainmentObject, state: GameState): number {
+  return (object.retryChanceBonus ?? 0) * (state.managedCounts[object.id] ?? 0)
+}
+
+/** 지금 이 선택지를 고를 수 있는지. 조건부 선택지(`requires`)는 조건을 채웠을 때만 나타난다. */
+export function isChoiceAvailable(choice: Choice, state: GameState): boolean {
+  return !choice.requires || meetsCondition(choice.requires.when, state)
 }
 
 // ───────────────────────── 조회 ─────────────────────────
@@ -135,7 +157,14 @@ export function getChoiceOptions(ctx: GameContext, state: GameState): ChoiceOpti
   if (state.phase === 'interlude') {
     const def = getCurrentInterlude(ctx, state)
     // 막간 이벤트에는 등급·나이 보정을 적용하지 않는다.
-    return def ? def.choices.map((choice) => ({ choice, chance: calcSuccessChance(choice, state.player.stats) })) : []
+    return def
+      ? def.choices
+          .filter((choice) => isChoiceAvailable(choice, state))
+          .map((choice) => ({
+            choice,
+            chance: calcSuccessChance(choice, state.player.stats, { relations: state.relations }),
+          }))
+      : []
   }
   const object = getCurrentObject(ctx, state)
   const stage = getCurrentStage(ctx, state)
@@ -146,11 +175,12 @@ export function getChoiceOptions(ctx: GameContext, state: GameState): ChoiceOpti
     bonus: { knowledge: state.progress.knowledgeBonus },
     tier: object.tier,
     age: Math.floor(state.player.age),
+    relations: state.relations,
+    retryBonus: retryBonusOf(object, state),
   }
-  return stage.choices.map((choice) => ({
-    choice,
-    chance: calcSuccessChance(choice, state.player.stats, context),
-  }))
+  return stage.choices
+    .filter((choice) => isChoiceAvailable(choice, state))
+    .map((choice) => ({ choice, chance: calcSuccessChance(choice, state.player.stats, context) }))
 }
 
 // ───────────────────────── 시작 ─────────────────────────
@@ -212,8 +242,38 @@ export function reduce(ctx: GameContext, state: GameState, action: GameAction): 
       return state.phase === 'interlude'
         ? chooseInterlude(ctx, state, action.choiceId)
         : choose(ctx, state, action.choiceId)
+    case 'decline':
+      return decline(ctx, state)
     case 'continue':
       return continueGame(ctx, state)
+  }
+}
+
+/**
+ * 제안된 최종 객체를 거절하고 기본 최종 객체(조건이 없는 최종 객체)의 배정 안내로 넘어간다.
+ * 거절한 기록은 선택 기록에 남는다 (같은 판에서 같은 제안을 다시 하지 않는 근거이자 리플레이의 재료).
+ */
+function decline(ctx: GameContext, state: GameState): GameState {
+  const { progress } = state
+  if (state.phase !== 'briefing' || !progress?.offered) {
+    throw new Error('decline은 제안된 최종 객체의 briefing 단계에서만 가능')
+  }
+  const fallback = ctx.objects.find((object) => object.finale && !object.when)
+  if (!fallback) {
+    throw new Error('기본 최종 객체(when이 없는 finale 객체)가 없음')
+  }
+  const times = state.managedCounts[fallback.id] ?? 0
+  return {
+    ...state,
+    progress: {
+      ...progress,
+      objectId: fallback.id,
+      offered: false,
+      reassigned: times > 0,
+      knowledgeBonus: times > 0 ? calcReassignKnowledgeBonus(times) : 0,
+    },
+    choiceLog: [...state.choiceLog, { declinedObjectId: progress.objectId }],
+    events: [],
   }
 }
 
@@ -246,12 +306,17 @@ function choose(ctx: GameContext, state: GameState, choiceId: string): GameState
   if (!choice) {
     throw new Error(`${object.code}/${stage.id}에 없는 선택지: ${choiceId}`)
   }
+  if (!isChoiceAvailable(choice, state)) {
+    throw new Error(`${object.code}/${stage.id}의 선택지는 조건을 채우지 못해 고를 수 없음: ${choiceId}`)
+  }
 
   const rng = createRng(state.rngState)
   const { chance, success } = rollChoice(rng, choice, state.player.stats, {
     bonus: { knowledge: progress.knowledgeBonus },
     tier: object.tier,
     age: Math.floor(state.player.age),
+    relations: state.relations,
+    retryBonus: retryBonusOf(object, state),
   })
   const outcome = success ? choice.success : choice.failure
   const failureKind = success ? undefined : choice.failure.kind
@@ -300,8 +365,16 @@ function choose(ctx: GameContext, state: GameState, choiceId: string): GameState
   if (success && choice.success.endingId) {
     return finish(
       next,
-      { kind: 'finale', endingId: choice.success.endingId, age, objectId: object.id },
+      { kind: 'finale', endingId: resolveEndingId(choice, next), age, objectId: object.id },
       choice.success.text,
+    )
+  }
+  // 실패에 엔딩(실패 엔딩)이 걸려 있으면 재도전 없이 그 엔딩으로 끝난다
+  if (!success && choice.failure.endingId) {
+    return finish(
+      next,
+      { kind: 'finale', endingId: choice.failure.endingId, age, objectId: object.id },
+      choice.failure.text,
     )
   }
   return { ...next, phase: 'outcome' }
@@ -414,9 +487,12 @@ function chooseInterlude(ctx: GameContext, state: GameState, choiceId: string): 
   if (!choice) {
     throw new Error(`${def.id}에 없는 선택지: ${choiceId}`)
   }
+  if (!isChoiceAvailable(choice, state)) {
+    throw new Error(`${def.id}의 선택지는 조건을 채우지 못해 고를 수 없음: ${choiceId}`)
+  }
 
   const rng = createRng(state.rngState)
-  const { chance, success } = rollChoice(rng, choice, state.player.stats)
+  const { chance, success } = rollChoice(rng, choice, state.player.stats, { relations: state.relations })
   const outcome = success ? choice.success : choice.failure
   const stats = applyOutcomeEffects(state.player.stats, outcome.effects)
   const extras = applyExtras(state.flags, state.relations, outcome)
@@ -624,6 +700,11 @@ function assignObject(ctx: GameContext, state: GameState, rng: Rng): GameState {
     state.managedCounts,
     clearedIds,
     isFinaleOpen(state),
+    // 제안되는 최종 객체(`when`)는 이력이 조건에 맞고, 이번 판에서 이미 거절하지 않았을 때만 후보가 된다
+    (object) =>
+      !object.when ||
+      (meetsCondition(object.when, state) &&
+        !state.choiceLog.some((entry) => 'declinedObjectId' in entry && entry.declinedObjectId === object.id)),
   )
   if (!assignment) {
     return finish(state, { kind: 'retired', age: state.player.age })
@@ -633,6 +714,8 @@ function assignObject(ctx: GameContext, state: GameState, rng: Rng): GameState {
     phase: 'briefing',
     progress: {
       objectId: assignment.object.id,
+      // 이력 조건으로 제안된 최종 객체라면 배정 팝업에서 거절할 수 있다
+      ...(assignment.object.finale && assignment.object.when ? { offered: true } : {}),
       reassigned: assignment.reassigned,
       knowledgeBonus: assignment.knowledgeBonus,
       stageIndex: 0,
@@ -665,7 +748,14 @@ export function replayGame(
   let index = 0
   while (state.phase !== 'ended') {
     if (state.phase === 'briefing') {
-      state = reduce(ctx, state, { type: 'begin' })
+      // 제안된 최종 객체를 거절한 기록이 이어지면 거절하고, 아니면 받아들인다
+      const next = choices[index]
+      if (next && 'declinedObjectId' in next && state.progress?.objectId === next.declinedObjectId) {
+        index += 1
+        state = reduce(ctx, state, { type: 'decline' })
+      } else {
+        state = reduce(ctx, state, { type: 'begin' })
+      }
     } else if (state.phase === 'choosing' || state.phase === 'interlude') {
       if (index >= choices.length) {
         return state

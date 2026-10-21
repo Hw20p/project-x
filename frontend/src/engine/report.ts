@@ -83,6 +83,27 @@ export function finaleEndingsText(
     .join(', ')
 }
 
+/**
+ * 최종 객체별로 어떤 엔딩이 나왔는지 정리한 줄들. 맡은 판이 없는 객체는 "0판"으로 남겨서
+ * 어떤 객체에 한 번도 못 닿았는지도 보이게 한다. (엔딩 비율은 그 객체를 맡은 판 대비)
+ */
+export function finaleObjectLines(
+  summary: SimulationSummary,
+  endingTitles: Readonly<Record<string, string>>,
+): string[] {
+  return summary.finaleObjects.map((stat) => {
+    const head = `${stat.code} ${stat.name}: ${stat.reached}판 (${percent(stat.reached / summary.games)})`
+    const endings = Object.entries(stat.endings).sort((a, b) => b[1] - a[1])
+    if (endings.length === 0) {
+      return head
+    }
+    const text = endings
+      .map(([id, count]) => `${endingTitles[id] ?? id} ${count}판 (${percent(count / stat.reached)})`)
+      .join(', ')
+    return `${head} → ${text}`
+  })
+}
+
 /** 최종 객체 도달 비율 텍스트 */
 export function finaleReachedText(summary: SimulationSummary): string {
   return `${percent(summary.finaleReached / summary.games)} (${summary.finaleReached}판)`
@@ -129,6 +150,12 @@ function formatSummary(summary: SimulationSummary, endingTitles: Readonly<Record
     `- 종료 종류: ${endings}`,
     `- 최종 객체 도달: ${finaleReachedText(summary)}`,
     ...(finaleText ? [`- 최종 엔딩별: ${finaleText}`] : []),
+    ...(finaleText
+      ? [
+          '- 최종 객체별 (맡은 판 수 → 엔딩, 비율은 그 객체를 맡은 판 대비; 맡았지만 엔딩 없이 끝난 판은 붕괴·사망·중단):',
+          ...finaleObjectLines(summary, endingTitles).map((line) => `  - ${line}`),
+        ]
+      : []),
     `- 사망 원인(전체 판 대비): ${causes}`,
     '',
     '| 직급 | 도달 비율 | 평균 도달 시점(입사 후 년) | 종료 시 직급 |',
@@ -197,6 +224,7 @@ export function formatSimulationReport(
     `- 막간 이벤트: 최소 간격 ${INTERLUDE.minIntervalYears}년, 조건 이벤트는 해마다 ${percent(INTERLUDE.specificChancePerYear)}, 일상 이벤트는 ${INTERLUDE.freeIntervalYears}년 이상 지난 뒤 해마다 ${percent(INTERLUDE.freeChancePerYear)}, 기본 쿨다운 ${INTERLUDE.defaultCooldownYears}년, 정신력 낮을 때 회복 가중 최대 ×${1 + INTERLUDE.recoveryNeedBonus}`,
     `- 시간 모델: 객체 시작 간격 ${OBJECT_SCHEDULE.intervalYears}±${OBJECT_SCHEDULE.jitterYears}년(끝난 뒤 최소 ${OBJECT_SCHEDULE.minGapAfterObject}년), 승급 점수 자동 누적 해마다 ${PASSIVE_PROMOTION.basePerYear}(평판·지식 보정, ${PASSIVE_PROMOTION.minPerYear}~${PASSIVE_PROMOTION.maxPerYear}), 객체 실패 -${PROMOTION.failurePenalty}점`,
     `- 최종 객체: 수석이 된 지 ${FINALE.minYearsAtRank5}년 이상이고 3막 서술(${FINALE.storyFlag})이 끝났거나 ${FINALE.maxYearsAtRank5}년 이상 수석일 때`,
+    '- 봇의 선택: 확정 성공 선택지(최종 객체 X-011의 "문을 등지고 걸어 나간다", 퇴직)는 고르지 않는다 (퇴직을 노리는 엔딩 선호 봇만 고른다). 제안되는 최종 객체(X-016·X-017)는 항상 받아들인다.',
     '',
     ...summaries.flatMap((summary) => [formatSummary(summary, endingTitles), '']),
   ].join('\n')

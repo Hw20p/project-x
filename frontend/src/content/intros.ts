@@ -22,10 +22,26 @@ function hashIndex(length: number, seed: number, ...parts: number[]): number {
 }
 
 /**
- * 객체를 맡게 된 계기 문장. 재배정이면 기본 문구 중 하나, 처음이면 객체의 `intro`(없으면 null).
+ * 객체를 맡게 된 계기 문장. 처음이면 객체의 `intro`(없으면 null).
+ * 다시 맡는 것(재배정·재도전)이면 객체에 `reintro`가 있을 때 몇 번째 재도전이냐에 맞춰 그 순서의 문장을 쓰고(배열이 끝나면 마지막 문장),
+ * 없으면 공통 기본 문구 중 하나를 쓴다.
  * @param order 이번 판에서 몇 번째로 맡는 객체인지 (같은 객체를 다시 맡아도 다른 문장이 나올 수 있게)
+ * @param attempts 이 객체를 이미 맡은 횟수 (재도전일 때 1 이상)
  */
-export function pickIntro(object: ContainmentObject, reassigned: boolean, seed: number, order: number): string | null {
-  const text = reassigned ? reassignIntros[hashIndex(reassignIntros.length, seed, order)] : object.intro
+export function pickIntro(
+  object: ContainmentObject,
+  reassigned: boolean,
+  seed: number,
+  order: number,
+  attempts = 0,
+): string | null {
+  let text: string | undefined
+  if (!reassigned) {
+    text = object.intro
+  } else if (object.reintro && object.reintro.length > 0) {
+    text = object.reintro[Math.min(Math.max(attempts, 1) - 1, object.reintro.length - 1)]
+  } else {
+    text = reassignIntros[hashIndex(reassignIntros.length, seed, order)]
+  }
   return text ? text.replace(/\{object\}/g, object.name) : null
 }
